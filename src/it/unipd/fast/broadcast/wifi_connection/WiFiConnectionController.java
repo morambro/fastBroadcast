@@ -214,6 +214,7 @@ public class WiFiConnectionController {
 				Log.d(TAG, this.getClass().getSimpleName()+": Failed to remove group, reason = "+reason);
 			}
 		});
+		context.unbindService(serviceConnection);
 		dataInterface.unregisterHandler(collectionHandler);
 
 	}
