@@ -1,8 +1,5 @@
 package it.unipd.fast.broadcast;
 
-
-import it.unipd.fast.broadcast.MainActivity.OnPeerSelectedCallback;
-
 import java.util.ArrayList;
 import java.util.List;
 

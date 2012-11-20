@@ -66,8 +66,10 @@ public class TcpTransmissionManager implements ITranmissionManager {
 
 	@Override
 	public void send(List<String> IDs, IMessage msg) {
-		// TODO Auto-generated method stub
-
+		for(String ID : IDs){
+			send(ID,msg);
+		}
 	}
+	
 
 }

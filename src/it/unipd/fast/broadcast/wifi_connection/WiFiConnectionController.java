@@ -2,6 +2,7 @@ package it.unipd.fast.broadcast.wifi_connection;
 
 import it.unipd.fast.broadcast.GuiHandlerInterface;
 import it.unipd.fast.broadcast.wifi_connection.connectionmanager.ConnectionManagerFactory;
+import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
 import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverServiceInterface;
 import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverService;
 import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverService.DataReceiverBinder;
@@ -222,19 +223,10 @@ public class WiFiConnectionController {
 	 */
 	public void sendBroadcast(final String msg) {
 		if(peer_id_ip_map != null && !peer_id_ip_map.isEmpty()){
-			new Thread(){
-				public void run(){
-					for(String peer_id : peer_id_ip_map.keySet()){
-						try {
-							TransmissionManagerFactory.getInstance().getTransmissionManager().send(peer_id_ip_map.get(peer_id),msg);
-						} catch (Exception e) {
-							e.printStackTrace();
-							Log.d(TAG,this.getClass().getSimpleName()+": Impossibile inviare broadcast: "+e.getMessage());
-						}
-					}
-				}
-			}.start();
-
+			TransmissionManagerFactory.getInstance().getTransmissionManager().send(
+				new ArrayList<String>(peer_id_ip_map.keySet()), 
+				MessageBuilder.getInstance().getMessage(msg)
+			);
 		}
 	}
 

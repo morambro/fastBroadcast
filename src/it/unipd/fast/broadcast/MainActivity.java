@@ -99,8 +99,7 @@ public class MainActivity extends FragmentActivity implements LocationServiceLis
 	}
 
 	/**
-	 * Metodo che riceve la lista aggiornata dei peers connessi e aggiorna il fragment che la mostra, impostando 
-	 * l'handler per il click di un item della lista.
+	 * Receives the devices list and updates the textView
 	 * 
 	 * @param peers
 	 */
@@ -153,10 +152,15 @@ public class MainActivity extends FragmentActivity implements LocationServiceLis
 		isServiceBinded = false;
 	}
 	
+	/**
+	 * Does all the initial setup
+	 * 
+	 */
 	private void setupGui() {
 		connect_to_all_button = (Button)this.findViewById(R.id.connect_to_all_button);
 		send_to_all_button = (Button)this.findViewById(R.id.send_button);
 		found_devices = (TextView)this.findViewById(R.id.peers_list);
+		
 		send_to_all_button.setOnClickListener(new OnClickListener() {
 
 			public void onClick(View v) {

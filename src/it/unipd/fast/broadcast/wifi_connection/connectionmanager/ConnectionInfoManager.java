@@ -39,26 +39,26 @@ public class ConnectionInfoManager implements IConnectionInfoManager {
 						Log.d(TAG, this.getClass().getSimpleName()+": I'am the group owner");
 
 						// Waits 10 sec for the handshake, after it send map to all
-													new Timer().schedule(new TimerTask() {
-						
-														@Override
-														public void run() {
-															try{
-																Log.d(TAG, this.getClass().getSimpleName()+": Sending map to all!!");
-																IMessage message = MessageBuilder.getInstance().getMessage(IMessage.CLIENT_MAP_MESSAGE_TYPE, "doesn't matter");
-																for(String key : peer_id_ip_map.keySet())
-																	message.addContent(key, peer_id_ip_map.get(key));
-																for(String key : peer_id_ip_map.keySet()){
-																	message.setRecipientAddress(key);
-																	TransmissionManagerFactory.getInstance().getTransmissionManager().send(
-																			peer_id_ip_map.get(key),
-																			message);
-																}
-															}catch(Exception e){
-						
-															}
-														}
-													},10000);
+						new Timer().schedule(new TimerTask() {
+
+							@Override
+							public void run() {
+								try{
+									Log.d(TAG, this.getClass().getSimpleName()+": Sending map to all!!");
+									IMessage message = MessageBuilder.getInstance().getMessage(IMessage.CLIENT_MAP_MESSAGE_TYPE, "doesn't matter");
+									for(String key : peer_id_ip_map.keySet())
+										message.addContent(key, peer_id_ip_map.get(key));
+									for(String key : peer_id_ip_map.keySet()){
+										message.setRecipientAddress(key);
+										TransmissionManagerFactory.getInstance().getTransmissionManager().send(
+												peer_id_ip_map.get(key),
+												message);
+									}
+								}catch(Exception e){
+
+								}
+							}
+						},10000);
 
 					}else{
 						// Not group Owner, so send an Hello Message to the GroupOwner
