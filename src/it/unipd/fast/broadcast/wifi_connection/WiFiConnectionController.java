@@ -57,6 +57,7 @@ public class WiFiConnectionController {
 		public void onServiceConnected(ComponentName arg0, IBinder binder) {
 			dataInterface = ((DataReceiverBinder)binder).getService();
 			dataInterface.registerHandler(collectionHandler);
+			Log.d(TAG, this.getClass().getSimpleName()+": Servizio ricezione dati binded");
 		}
 
 		@Override
@@ -104,6 +105,7 @@ public class WiFiConnectionController {
 		intent_filter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
 		intent_filter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
+		Log.d(TAG, this.getClass().getSimpleName()+": Bindo il servizio di ricezione dati");
 		Intent locService = new Intent(context, DataReceiverService.class);
 		context.startService(locService);
 		context.bindService(locService, serviceConnection, Context.BIND_AUTO_CREATE);

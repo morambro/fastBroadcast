@@ -80,6 +80,7 @@ public class DataReceiverService extends Service implements Runnable, DataReceiv
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		Log.d(TAG, this.getClass().getSimpleName()+": Servizio creato");
 		new Thread(this).start();
 	}
 

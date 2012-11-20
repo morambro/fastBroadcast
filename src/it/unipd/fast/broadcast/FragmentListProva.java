@@ -19,12 +19,10 @@ public class FragmentListProva extends ListFragment {
 	protected final String TAG = "it.unipd.fast.broadcast";
 
 	private List<WifiP2pDevice> peers;
-	private OnPeerSelectedCallback callback;
 	
-	public FragmentListProva(List<WifiP2pDevice> peers,OnPeerSelectedCallback callback) {
+	public FragmentListProva(List<WifiP2pDevice> peers) {
 		this.peers = peers;
 		if(this.peers == null) this.peers = new ArrayList<WifiP2pDevice>();
-		this.callback = callback;
 	}
 
 	@Override
@@ -37,7 +35,6 @@ public class FragmentListProva extends ListFragment {
 				WifiP2pDevice selected_device = (WifiP2pDevice)parent.getItemAtPosition(position);
 				if(selected_device != null){
 					Log.d(TAG, this.getClass().getSimpleName()+": "+selected_device.deviceAddress);
-					callback.doConnection(selected_device);
 				}
 			}
 			
