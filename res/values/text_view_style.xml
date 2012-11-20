@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+   <style name="text_view_font" parent="@android:style/TextAppearance.Medium">
+        <item name="android:layout_width">262dp</item>
+        <item name="android:layout_height">288dp</item>
+        <item name="android:layout_gravity">center_horizontal</item>
+        <item name="android:background">@drawable/rounded_background</item>
+        <item name="android:layout_marginTop">10dp</item>
+        <item name="android:padding">5dp</item>
+   </style>
+   
+   <style name="button_style" parent="@android:style/Widget.DeviceDefault.Button">
+       <item name="android:layout_width">262dp</item>
+       <item name="android:layout_height">wrap_content</item>
+       <item name="android:layout_gravity">center_horizontal</item>
+       <item name="android:textColor">#FFFFFF</item>
+       <item name="android:background">@drawable/button_background</item>
+       <item name="android:layout_marginBottom">10dp</item>
+       
+   </style>
+</resources>

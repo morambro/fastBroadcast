@@ -1,0 +1,37 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_alignParentLeft="false"
+    android:layout_centerHorizontal="true"
+    android:gravity="center_vertical"
+    android:orientation="vertical" >
+
+    <!-- <FrameLayout -->
+    <!-- xmlns:android="http://schemas.android.com/apk/res/android" -->
+    <!-- android:id="@+id/fragment_container" -->
+    <!-- android:layout_width="322dp" -->
+    <!-- android:layout_height="456dp" -->
+    <!-- android:layout_gravity="center_horizontal" > -->
+
+
+    <!-- </FrameLayout> -->
+
+    <Button
+        android:id="@+id/connect_to_all_button"
+        style="@style/button_style"
+        android:text="Connect To All"
+        tools:ignore="HardcodedText" />
+
+    <Button
+        android:id="@+id/send_button"
+        style="@style/button_style"
+        android:text="Send ALERT"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:id="@+id/peers_list"
+        style="@style/text_view_font"
+        android:text="" />
+
+</LinearLayout>
