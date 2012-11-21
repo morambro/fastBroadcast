@@ -15,8 +15,8 @@ import android.util.Log;
  * ConnectionInfoListener implementation, used to react on connection available
  */
 public class ConnectionInfoManager implements IConnectionInfoManager {
-	protected final String TAG = "it.unipd.fast.broadcast";
 
+	protected final String TAG = "it.unipd.fast.broadcast";
 
 	public void onConnectionInfoAvailable(final WifiP2pInfo info) {
 		// Create a Thread to execute potentially blocking operations.
@@ -37,7 +37,7 @@ public class ConnectionInfoManager implements IConnectionInfoManager {
 					if(info.isGroupOwner){
 						// Do nothing, simply waits for other devices to send Hello messages
 						Log.d(TAG, this.getClass().getSimpleName()+": I'am the group owner");
-
+						
 						// Waits 10 sec for the handshake, after it send map to all
 //						new Timer().schedule(new TimerTask() {
 //

@@ -169,7 +169,7 @@ public class WiFiConnectionController {
 	 * 
 	 * @param map
 	 */
-	protected void setPeersIdIPmap(Map<String,String> map){
+	protected synchronized void setPeersIdIPmap(Map<String,String> map){
 		if(peer_id_ip_map == null) peer_id_ip_map = map;
 		else peer_id_ip_map.putAll(map);
 		String s = "Map updated! \n";
