@@ -5,8 +5,6 @@ import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
 import it.unipd.fast.broadcast.wifi_connection.transmissionmanager.TransmissionManagerFactory;
 
 import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Map;
 
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.provider.Settings;
@@ -19,16 +17,11 @@ import android.util.Log;
 public class ConnectionInfoManager implements IConnectionInfoManager{
 
 	protected final String TAG = "it.unipd.fast.broadcast";
-	protected Object synchPoint = new Object();
-	protected Map<String,String> peersMap;
-
+	protected boolean isGroupOwner = false;
 	
 	@Override
-	public void newPeerAddedNotification(Map<String,String> map, int deviceNumber){
-		// If all the connected devices sends out their IP address, 
-		peersMap = map;
-		if(map != null && map.keySet().size() == deviceNumber) synchPoint.notify();
-		
+	public boolean isGroupOwner(){
+		return isGroupOwner; 
 	}
 	
 	
@@ -53,32 +46,7 @@ public class ConnectionInfoManager implements IConnectionInfoManager{
 						// Do nothing, simply waits for other devices to send Hello messages
 						Log.d(TAG, this.getClass().getSimpleName()+": I'am the group owner");
 						
-						// Waits until all the Hello Messages are received
-						synchronized (synchPoint) {
-							try {
-								synchPoint.wait();
-							} catch (InterruptedException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-						}
-						
-						try{
-							Log.d(TAG, this.getClass().getSimpleName()+": Sending map to all!!");
-							
-							IMessage message = MessageBuilder.getInstance().getMessage(IMessage.CLIENT_MAP_MESSAGE_TYPE, "doesn't matter");
-							
-							// Insert into the message couples <ID,IP address>
-							for(String key : peersMap.keySet()) message.addContent(key, peersMap.get(key));
-							// Send broadcast
-							TransmissionManagerFactory.getInstance().getTransmissionManager().send(
-									new ArrayList<String>(peersMap.values()),
-									message);
-							
-						}catch(Exception e){
-							e.printStackTrace();
-						}
-
+						isGroupOwner = true;
 					}else{
 						// Not group Owner, so send an Hello Message to the GroupOwner
 						final WifiP2pInfo info2 = info;

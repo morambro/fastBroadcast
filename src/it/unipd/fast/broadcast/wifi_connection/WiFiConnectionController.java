@@ -3,6 +3,7 @@ package it.unipd.fast.broadcast.wifi_connection;
 import it.unipd.fast.broadcast.GuiHandlerInterface;
 import it.unipd.fast.broadcast.wifi_connection.connectionmanager.ConnectionManagerFactory;
 import it.unipd.fast.broadcast.wifi_connection.connectionmanager.IConnectionInfoManager;
+import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
 import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
 import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverServiceInterface;
 import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverService;
@@ -90,7 +91,6 @@ public class WiFiConnectionController {
 	};
 
 
-
 	/**
 	 * Constructor
 	 * 
@@ -132,7 +132,7 @@ public class WiFiConnectionController {
 			public void onSuccess() {
 				showToast("Richiesta di connessione effettuata");
 				// Increment the number of connected devices
-				deviceConnected++;
+				deviceConnected ++;
 			}
 
 			public void onFailure(int reason) {
@@ -173,19 +173,34 @@ public class WiFiConnectionController {
 	}
 
 	/**
-	 * Setter method for the map
+	 * Setter method for the map. If current device is the GroupOwner, it sends back to
+	 * all the devices connected to his group the complete map of all the peers
 	 * 
 	 * @param map
 	 */
 	protected synchronized void setPeersIdIPmap(Map<String,String> map){
-		if(peerIdIpMap == null) peerIdIpMap = map;
-		else peerIdIpMap.putAll(map);
+		
+		if(peerIdIpMap == null){
+			peerIdIpMap = map;
+		}else{
+			peerIdIpMap.putAll(map);
+		}
+		// If all connected devices sent their PING message, sent to all of them the 
+		// complete map <ID,IP>; all this if and only if I'am the group Owner!
+		if(connectionInfoListener.isGroupOwner() && deviceConnected == peerIdIpMap.keySet().size()){
+			Log.d(TAG, this.getClass().getSimpleName()+": Sending complete map to all other devices");
+
+			IMessage message = MessageBuilder.getInstance().getMessage(IMessage.CLIENT_MAP_MESSAGE_TYPE, "doesn't matter");
+			// Insert into the message couples <ID,IP address>
+			for(String key : peerIdIpMap.keySet()) message.addContent(key, peerIdIpMap.get(key));
+			// Send broadcast
+			sendBroadcast(message);
+		}
+		
 		String s = "Map updated! \n";
 		for(String k : peerIdIpMap.keySet()){
 			s += k + "  " + peerIdIpMap.get(k)+"\n";
 		}
-		// Notify connectionInfoListener
-		connectionInfoListener.newPeerAddedNotification(peerIdIpMap, deviceConnected);
 		showToast(s);
 	}
 
@@ -230,20 +245,6 @@ public class WiFiConnectionController {
 	}
 
 	/**
-	 * Method used to send broadcast an XML message
-	 * 
-	 * @param msg
-	 */
-	public void sendBroadcast(final String msg) {
-		if(peerIdIpMap != null && !peerIdIpMap.isEmpty()){
-			TransmissionManagerFactory.getInstance().getTransmissionManager().send(
-				new ArrayList<String>(peerIdIpMap.keySet()), 
-				MessageBuilder.getInstance().getMessage(msg)
-			);
-		}
-	}
-
-	/**
 	 * Calls connect for each device found
 	 * 
 	 */
@@ -262,6 +263,13 @@ public class WiFiConnectionController {
 		msg.obj = string;
 		msg.what = GuiHandlerInterface.SHOW_TOAST_MSG;
 		guiHandler.sendMessage(msg);
+	}
+
+
+	public void sendBroadcast(IMessage message) {
+		TransmissionManagerFactory.getInstance().getTransmissionManager().send(
+				new ArrayList<String>(peerIdIpMap.values()),
+				message);
 	}
 	
 }

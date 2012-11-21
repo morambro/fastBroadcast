@@ -3,6 +3,7 @@ package it.unipd.fast.broadcast;
 import it.unipd.fast.broadcast.location.LocationService;
 import it.unipd.fast.broadcast.location.LocationServiceListener;
 import it.unipd.fast.broadcast.wifi_connection.WiFiConnectionController;
+import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
 
 import java.util.List;
 
@@ -164,7 +165,12 @@ public class MainActivity extends FragmentActivity implements LocationServiceLis
 		send_to_all_button.setOnClickListener(new OnClickListener() {
 
 			public void onClick(View v) {
-				connection_controller.sendBroadcast("<message type='2'><content>ALERT!!!</content></message>");
+				connection_controller.sendBroadcast(
+					MessageBuilder.getInstance().getMessage("" +
+							"<message type='2'>" +
+								"<content> ALERT!!! </content>" +
+							"</message>")
+				);
 			}
 		});
 
