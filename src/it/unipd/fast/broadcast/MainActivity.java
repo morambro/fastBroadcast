@@ -89,7 +89,6 @@ public class MainActivity extends FragmentActivity implements LocationServiceLis
 			}
 		};
 		connection_controller = new WiFiConnectionController(this, this);
-		connection_controller.discoverPeers();
 		setupGui();
 	}
 

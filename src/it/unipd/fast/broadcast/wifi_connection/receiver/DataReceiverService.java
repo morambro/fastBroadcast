@@ -127,23 +127,24 @@ public class DataReceiverService extends Service implements Runnable, DataReceiv
 				InputStream inputstream;
 				try {
 					inputstream = socket.getInputStream();
-				InputStreamReader is = new InputStreamReader(inputstream);
-				StringBuilder sb = new StringBuilder();
-				BufferedReader br = new BufferedReader(is);
-				String read = br.readLine();
+					InputStreamReader is = new InputStreamReader(inputstream);
+					StringBuilder sb = new StringBuilder();
+					BufferedReader br = new BufferedReader(is);
+					String read = br.readLine();
 
-				while(read != null) {
-					sb.append(read);
-					read =br.readLine();
-				}
+					while(read != null) {
+						sb.append(read);
+						read =br.readLine();
+					}
 
-				String xml_msg = new String(sb.toString());
+					String xmlMsg = new String(sb.toString());
 
-				// call handler's onDataCollected method passing the message and sender's ip address
-				for (IDataCollectionHandler handler : handlers) {
-					handler.onDataCollected(MessageBuilder.getInstance().getMessage(xml_msg),socket.getInetAddress().getCanonicalHostName());
-				}
-				socket.close();
+					// call handler's onDataCollected method passing the message and sender's ip address
+					Log.d(TAG, this.getClass().getSimpleName()+": handlers = "+handlers);
+					for (IDataCollectionHandler handler : handlers) {
+						handler.onDataCollected(MessageBuilder.getInstance().getMessage(xmlMsg),socket.getInetAddress().getCanonicalHostName());
+					}
+					socket.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}

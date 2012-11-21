@@ -58,6 +58,10 @@ public class FastBroadcastReceiver extends BroadcastReceiver {
 			int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
 	        if (state == WifiP2pManager.WIFI_P2P_STATE_ENABLED) {
 	        	Log.d(TAG, this.getClass().getSimpleName()+": All OK, Wi-Fi Direct is enabled");
+	        	
+	        	// If Wifi is enabled, launch peers discovering
+	        	manager.discoverPeers(channel, null);
+	        
 	        } else {
 	            // Wi-Fi Direct is not enabled, show Wireless settings
 	        	AlertDialog.Builder alert = new AlertDialog.Builder(context);

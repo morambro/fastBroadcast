@@ -267,7 +267,8 @@ public class WiFiConnectionController {
 
 
 	public void sendBroadcast(IMessage message) {
-		TransmissionManagerFactory.getInstance().getTransmissionManager().send(
+		if(peerIdIpMap != null)
+			TransmissionManagerFactory.getInstance().getTransmissionManager().send(
 				new ArrayList<String>(peerIdIpMap.values()),
 				message);
 	}
