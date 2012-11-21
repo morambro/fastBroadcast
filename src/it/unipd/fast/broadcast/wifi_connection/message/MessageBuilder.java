@@ -27,10 +27,10 @@ public class MessageBuilder {
 	}
 	
 	private IMessage createMessage(int type, String recipientID) {
-		return new Xml_Message(type, recipientID);
+		return new XmlMessage(type, recipientID);
 	}
 	
 	private IMessage createMessage(String message) {
-		return new Xml_Message(message);
+		return new XmlMessage(message);
 	}
 }

@@ -87,10 +87,10 @@ public class DeviceDataReceiver extends Thread{
 					read =br.readLine();
 				}
 				
-				String xml_msg = new String(sb.toString());
+				String xmlMsg = new String(sb.toString());
 				
 				// call handler's onDataCollected method passing the message and sender's ip address
-				handler.onDataCollected(xml_msg,client.getInetAddress().getCanonicalHostName());
+				handler.onDataCollected(xmlMsg,client.getInetAddress().getCanonicalHostName());
 				
 				// Closing the client socket
 				client.close();

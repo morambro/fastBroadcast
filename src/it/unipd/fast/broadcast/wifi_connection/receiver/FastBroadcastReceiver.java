@@ -25,8 +25,8 @@ public class FastBroadcastReceiver extends BroadcastReceiver {
 
 	private WifiP2pManager manager;
     private Channel channel;
-    private PeerListListener peer_listener;
-	private ConnectionInfoListener connection_info_listener;
+    private PeerListListener peerListener;
+	private ConnectionInfoListener connectionInfoListener;
 	
     /**
      * Class Used to listen to Wi-fi channel events, and handles connection creation
@@ -38,12 +38,12 @@ public class FastBroadcastReceiver extends BroadcastReceiver {
     public FastBroadcastReceiver(
     		WifiP2pManager manager,
     		Channel channel,
-    		PeerListListener peer_listener,
-    		ConnectionInfoListener connection_info_listener) {
+    		PeerListListener peerListener,
+    		ConnectionInfoListener connectionInfoListener) {
     	this.manager = manager;
     	this.channel = channel;
-    	this.peer_listener = peer_listener;
-    	this.connection_info_listener = connection_info_listener;
+    	this.peerListener = peerListener;
+    	this.connectionInfoListener = connectionInfoListener;
     }
     
 	@Override
@@ -82,7 +82,7 @@ public class FastBroadcastReceiver extends BroadcastReceiver {
 			Log.d(TAG, this.getClass().getSimpleName()+": Peers Received on WIFI_P2P_PEERS_CHANGED_ACTION");
         	if (manager != null) {
         		Log.d(TAG, this.getClass().getSimpleName()+": Requesting peers...");
-        		manager.requestPeers(channel, peer_listener);
+        		manager.requestPeers(channel, peerListener);
             }else Log.d(TAG, this.getClass().getSimpleName()+": manager is null!");
         	
         } else if (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)) {
@@ -99,7 +99,7 @@ public class FastBroadcastReceiver extends BroadcastReceiver {
             	Toast.makeText(context, "We are connected to a Group", Toast.LENGTH_LONG).show();
                 // We are connected with the other device, request connection
                 // info to find group owner IP
-                manager.requestConnectionInfo(channel, connection_info_listener);
+                manager.requestConnectionInfo(channel, connectionInfoListener);
             }else{
             	Log.d(TAG, this.getClass().getSimpleName()+": Not connected anymore");
             }

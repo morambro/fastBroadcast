@@ -2,6 +2,7 @@ package it.unipd.fast.broadcast.wifi_connection;
 
 import it.unipd.fast.broadcast.GuiHandlerInterface;
 import it.unipd.fast.broadcast.wifi_connection.connectionmanager.ConnectionManagerFactory;
+import it.unipd.fast.broadcast.wifi_connection.connectionmanager.IConnectionInfoManager;
 import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
 import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverServiceInterface;
 import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverService;
@@ -27,7 +28,6 @@ import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.ActionListener;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
-import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
 import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
 import android.os.Handler;
 import android.os.IBinder;
@@ -36,6 +36,7 @@ import android.util.Log;
 
 public class WiFiConnectionController {
 	protected final String TAG = "it.unipd.fast.broadcast";
+	
 	public static final String MAC_ADDRESS = null;
 
 	private Handler guiHandler;
@@ -46,10 +47,14 @@ public class WiFiConnectionController {
 	private Channel channel;
 	private BroadcastReceiver receiver;
 	private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
-	private Map<String,String> peer_id_ip_map;
+	private Map<String,String> peerIdIpMap;
 	private Context context;
-	private IntentFilter intent_filter;
-	private ConnectionInfoListener connectionInfoListener = ConnectionManagerFactory.getInstance().getConnectionManager();
+	private IntentFilter intentFilter;
+	// Listener used to be notified, when connection info ara available
+	private IConnectionInfoManager connectionInfoListener = ConnectionManagerFactory.getInstance().getConnectionManager();
+	
+	// Holds the number of devices wich are connected to the group, to wait for the Hello phase
+	private int deviceConnected = 0;
 
 	private class DataServiceConnection implements ServiceConnection {
 
@@ -71,7 +76,7 @@ public class WiFiConnectionController {
 	 * PeerListListener implementation
 	 * 
 	 */
-	private PeerListListener peer_listener = new PeerListListener() {
+	private PeerListListener peerListener = new PeerListListener() {
 		public void onPeersAvailable(WifiP2pDeviceList peers_list) {
 			Log.d(TAG, this.getClass().getSimpleName()+": Peers Added to the List");
 			peers.clear();
@@ -99,11 +104,11 @@ public class WiFiConnectionController {
 		manager = (WifiP2pManager) context.getSystemService(Context.WIFI_P2P_SERVICE);
 		channel = manager.initialize(context, context.getMainLooper(), null);
 		// Register intent filter to receive specific intents
-		intent_filter = new IntentFilter();
-		intent_filter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
-		intent_filter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
-		intent_filter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-		intent_filter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
+		intentFilter = new IntentFilter();
+		intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
+		intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
+		intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
+		intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
 		Log.d(TAG, this.getClass().getSimpleName()+": Bindo il servizio di ricezione dati");
 		Intent locService = new Intent(context, DataReceiverService.class);
@@ -111,6 +116,7 @@ public class WiFiConnectionController {
 		context.bindService(locService, serviceConnection, Context.BIND_AUTO_CREATE);
 	}
 
+	
 	/**
 	 * Manages connection to the given device
 	 * 
@@ -125,6 +131,8 @@ public class WiFiConnectionController {
 
 			public void onSuccess() {
 				showToast("Richiesta di connessione effettuata");
+				// Increment the number of connected devices
+				deviceConnected++;
 			}
 
 			public void onFailure(int reason) {
@@ -142,8 +150,8 @@ public class WiFiConnectionController {
 	 */
 	public void setFastBroadCastReceiverRegistered(boolean registered){
 		if(registered) {
-			receiver = new FastBroadcastReceiver(manager, channel,peer_listener,this.connectionInfoListener);
-			context.registerReceiver(receiver, intent_filter);
+			receiver = new FastBroadcastReceiver(manager, channel,peerListener,connectionInfoListener);
+			context.registerReceiver(receiver, intentFilter);
 		}else{
 			context.unregisterReceiver(receiver);
 		}
@@ -153,8 +161,8 @@ public class WiFiConnectionController {
 	 * Registers BroadcastReceiver and requests DataReceiverService
 	 */
 	public void aquireResources() {
-		receiver = new FastBroadcastReceiver(manager, channel,peer_listener,this.connectionInfoListener);
-		context.registerReceiver(receiver, intent_filter);
+		receiver = new FastBroadcastReceiver(manager, channel,peerListener,this.connectionInfoListener);
+		context.registerReceiver(receiver, intentFilter);
 	}
 
 	/**
@@ -170,17 +178,19 @@ public class WiFiConnectionController {
 	 * @param map
 	 */
 	protected synchronized void setPeersIdIPmap(Map<String,String> map){
-		if(peer_id_ip_map == null) peer_id_ip_map = map;
-		else peer_id_ip_map.putAll(map);
+		if(peerIdIpMap == null) peerIdIpMap = map;
+		else peerIdIpMap.putAll(map);
 		String s = "Map updated! \n";
-		for(String k : peer_id_ip_map.keySet()){
-			s += k + "  " + peer_id_ip_map.get(k)+"\n";
+		for(String k : peerIdIpMap.keySet()){
+			s += k + "  " + peerIdIpMap.get(k)+"\n";
 		}
+		// Notify connectionInfoListener
+		connectionInfoListener.newPeerAddedNotification(peerIdIpMap, deviceConnected);
 		showToast(s);
 	}
 
 	public Map<String,String> getPeersMap(){
-		return peer_id_ip_map;
+		return peerIdIpMap;
 	}
 
 	/**
@@ -225,9 +235,9 @@ public class WiFiConnectionController {
 	 * @param msg
 	 */
 	public void sendBroadcast(final String msg) {
-		if(peer_id_ip_map != null && !peer_id_ip_map.isEmpty()){
+		if(peerIdIpMap != null && !peerIdIpMap.isEmpty()){
 			TransmissionManagerFactory.getInstance().getTransmissionManager().send(
-				new ArrayList<String>(peer_id_ip_map.keySet()), 
+				new ArrayList<String>(peerIdIpMap.keySet()), 
 				MessageBuilder.getInstance().getMessage(msg)
 			);
 		}
@@ -253,5 +263,5 @@ public class WiFiConnectionController {
 		msg.what = GuiHandlerInterface.SHOW_TOAST_MSG;
 		guiHandler.sendMessage(msg);
 	}
-
+	
 }

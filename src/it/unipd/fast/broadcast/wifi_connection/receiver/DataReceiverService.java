@@ -101,6 +101,7 @@ public class DataReceiverService extends Service implements Runnable, DataReceiv
 				
 				// Waits for an incoming connection
 				Socket client = server_socket.accept();
+				Log.d(TAG, this.getClass().getSimpleName()+": Incoming Socket ;)");
 				handleConnection(client);
 			}
 		}catch(IOException e){
