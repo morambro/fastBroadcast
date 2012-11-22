@@ -16,19 +16,19 @@ import android.util.Log;
 public class XmlMessage implements IMessage{
 	private static final String TAG = "it.unipd.fast.broadcast";
 	private static final String MSG_TAG = "message";
-	private static final String TYPE_TAG = "type";
+	private static final String TYPE_ATTRIBUTE = "type";
 	private static final String RECIPIENT_ID_TAG = "recipient_id";
 	private static final String CONTENT_BLOCK_TAG = "content_block";
 	private static final String CONTENT_TAG = "content";
 	private static final String KEY_TAG = "key";
 	
 	private int type = -1;
-	private String message;
+	private String message = "";
 	private Map<String, String> messageContent = null;
 	
 	public XmlMessage(int type, String recipientID) {
 		this.type = type;
-		message += "<"+MSG_TAG+" "+TYPE_TAG+"='"+type+"' "+RECIPIENT_ID_TAG+"='"+recipientID+"'>";
+		message += "<"+MSG_TAG+" "+TYPE_ATTRIBUTE+"='"+type+"' "+RECIPIENT_ID_TAG+"='"+recipientID+"'>";
 	}
 	
 	public XmlMessage(String message) {
@@ -98,11 +98,16 @@ public class XmlMessage implements IMessage{
 		Log.d(TAG, this.getClass().getSimpleName()+": "+message);
 	}
 	
+	@Override
+	public String toString(){
+		return message;
+	}
+	
 	private static class MessageParser {
 		private MessageParser(){}
 		
 		public static String getType(String xml) {
-			return XMLParser.estractTagAttributeFromXMLDoc(xml, MSG_TAG, TYPE_TAG);
+			return XMLParser.estractTagAttributeFromXMLDoc(xml, MSG_TAG, TYPE_ATTRIBUTE);
 		}
 		
 		public static String getRecipientId(String xml) {

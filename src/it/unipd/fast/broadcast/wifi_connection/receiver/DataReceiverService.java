@@ -73,6 +73,7 @@ public class DataReceiverService extends Service implements Runnable, DataReceiv
 		handlers.remove(handler);
 		if(handlers.size()==0) {
 			Log.d(TAG, this.getClass().getSimpleName()+": Service terminated");
+			disconnectSocket();
 			stopSelf();
 		}
 	}
@@ -101,7 +102,7 @@ public class DataReceiverService extends Service implements Runnable, DataReceiv
 				
 				// Waits for an incoming connection
 				Socket client = server_socket.accept();
-				Log.d(TAG, this.getClass().getSimpleName()+": Incoming Socket ;)");
+				Log.d(TAG, this.getClass().getSimpleName()+": connessione in ingresso");
 				handleConnection(client);
 			}
 		}catch(IOException e){
@@ -113,20 +114,19 @@ public class DataReceiverService extends Service implements Runnable, DataReceiv
 		
 		// close the TCP socket before exiting
 		finally{
-			disconnect_socket();
+			disconnectSocket();
 		}
 	}
 	
 	private void handleConnection(final Socket socket){
-		new Thread(new Runnable() {
+		new Thread() {
 			
 			@Override
 			public void run() {
 				Log.d(TAG, this.getClass().getSimpleName()+": Gestione connessione in nuovo thread");
 				// Read from the input stream
-				InputStream inputstream;
 				try {
-					inputstream = socket.getInputStream();
+					InputStream inputstream = socket.getInputStream();
 					InputStreamReader is = new InputStreamReader(inputstream);
 					StringBuilder sb = new StringBuilder();
 					BufferedReader br = new BufferedReader(is);
@@ -142,21 +142,24 @@ public class DataReceiverService extends Service implements Runnable, DataReceiv
 					// call handler's onDataCollected method passing the message and sender's ip address
 					Log.d(TAG, this.getClass().getSimpleName()+": handlers = "+handlers);
 					for (IDataCollectionHandler handler : handlers) {
-						handler.onDataCollected(MessageBuilder.getInstance().getMessage(xmlMsg),socket.getInetAddress().getCanonicalHostName());
+						handler.onDataCollected(
+								MessageBuilder.getInstance().getMessage(xmlMsg),
+								socket.getInetAddress().getCanonicalHostName()
+						);
 					}
 					socket.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
-		}).start();
+		}.start();
 	}
 	
 	/**
 	 * Method called to close the opened TCP socket if different to null and opened
 	 * 
 	 */
-	private void disconnect_socket(){
+	private void disconnectSocket(){
 		if(server_socket != null && !server_socket.isClosed()){
 			try{
 				server_socket.close();

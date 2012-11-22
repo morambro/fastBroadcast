@@ -1,11 +1,14 @@
 package it.unipd.fast.broadcast.wifi_connection.connectionmanager;
 
+import it.unipd.fast.broadcast.wifi_connection.WiFiConnectionController;
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
 import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
 import it.unipd.fast.broadcast.wifi_connection.transmissionmanager.TransmissionManagerFactory;
 
 import java.net.InetAddress;
 
+import android.content.Context;
+import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.provider.Settings;
 import android.util.Log;
@@ -55,15 +58,16 @@ public class ConnectionInfoManager implements IConnectionInfoManager{
 						new Thread(){
 							public void run() {
 								try{
-									Log.d(TAG, this.getClass().getSimpleName()+": Sending my address to Group owner");
 									String groupOwnerAddress = info2.groupOwnerAddress.getCanonicalHostName();
+									IMessage message = MessageBuilder.getInstance().getMessage(
+											IMessage.PING_MESSAGE_TYPE, 
+											groupOwnerAddress,
+											IMessage.PING_MESSAGE_ID_KEY, 
+											WiFiConnectionController.MAC_ADDRESS);
+									Log.d(TAG, this.getClass().getSimpleName()+": Sending my address to Group owner");
 									TransmissionManagerFactory.getInstance().getTransmissionManager().send(
 											groupOwnerAddress,	// GroupOwner IP
-											MessageBuilder.getInstance().getMessage(
-													IMessage.PING_MESSAGE_TYPE, 
-													groupOwnerAddress,
-													IMessage.PING_MESSAGE_ID_KEY, 
-													Settings.Secure.ANDROID_ID)); //PING message
+											message); //PING message
 								}catch(Exception e){
 									e.printStackTrace();
 								}
@@ -76,4 +80,5 @@ public class ConnectionInfoManager implements IConnectionInfoManager{
 			}
 		}.start();
 	}
+	
 }

@@ -22,6 +22,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.net.wifi.WifiManager;
 import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
@@ -35,11 +36,11 @@ import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
 
-public class WiFiConnectionController {
+public class WiFiConnectionController implements IWiFiConnectionController{
 	protected final String TAG = "it.unipd.fast.broadcast";
 	
-	public static final String MAC_ADDRESS = null;
-
+	public static String MAC_ADDRESS = null;
+	
 	private Handler guiHandler;
 	private ServiceConnection serviceConnection = new DataServiceConnection();
 	private IDataCollectionHandler collectionHandler = new CollectionHandler();
@@ -114,8 +115,23 @@ public class WiFiConnectionController {
 		Intent locService = new Intent(context, DataReceiverService.class);
 		context.startService(locService);
 		context.bindService(locService, serviceConnection, Context.BIND_AUTO_CREATE);
+		
+		// Setting static field which contains device MAC address
+		MAC_ADDRESS = getDeviceMacAddress();
+		Log.d(TAG, this.getClass().getSimpleName()+": il MAC address del dispositivo è = "+MAC_ADDRESS);
 	}
 
+	/**
+	 * Method used to get device's mac address
+	 * 
+	 * @return
+	 */
+	protected String getDeviceMacAddress(){
+		WifiManager wifiMan = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+		android.net.wifi.WifiInfo wifiInf = wifiMan.getConnectionInfo();
+		return wifiInf.getMacAddress();
+	}
+	
 	
 	/**
 	 * Manages connection to the given device
