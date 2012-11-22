@@ -4,6 +4,8 @@ import java.util.Map;
 
 //Interfaccia per i messaggi scambiati tra i peers
 public interface IMessage {
+	
+	public static final String BROADCAST_ADDRESS = "255.255.255.255";
 	//Hello message used to collect IP addresses
 	public static final int PING_MESSAGE_TYPE = 0;
 	//key used in getContext of PING_MESSAGE_TYPE messages to address the sender ID field

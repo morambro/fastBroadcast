@@ -16,8 +16,11 @@ public class CollectionHandler implements IDataCollectionHandler {
 	public void onDataCollected(IMessage message, String host_ip) {
 		String recipient = message.getRecipientAddress();
 		
-		if(rerouteMessage(recipient, message))
-			return;
+//		if(rerouteMessage(recipient, message))
+//			return;
+		
+		// Eventually reroute message
+		rerouteMessage(recipient, message);
 		
 		int messageType = message.getType();
 		Log.d(TAG, this.getClass().getSimpleName()+": Message received, of type = "+messageType);
@@ -32,10 +35,10 @@ public class CollectionHandler implements IDataCollectionHandler {
 	
 				// In case of message MAP, for client addresses distribution
 			case IMessage.CLIENT_MAP_MESSAGE_TYPE :
-				Map<String,String> all_peer_data = new HashMap<String, String>();
-				all_peer_data.putAll(message.getContent());
+				Map<String,String> allPeerData = new HashMap<String, String>();
+				allPeerData.putAll(message.getContent());
 				Log.d(TAG, this.getClass().getSimpleName()+": Ricevuta lista");
-				controller.setPeersIdIPmap(all_peer_data);
+				controller.setPeersIdIPmap(allPeerData);
 				break;
 	
 			case IMessage.ALERT_MESSAGE_TYPE :
@@ -58,7 +61,8 @@ public class CollectionHandler implements IDataCollectionHandler {
 	private boolean rerouteMessage(String recipient, IMessage msg) {
 		Log.d(TAG, this.getClass().getSimpleName()+": comparing IPs; "+controller.getGroupOwnerAddress()+" "+recipient);
 		if(controller.isGroupOwner())
-			if(!controller.getGroupOwnerAddress().equals(recipient)) {
+			if(!controller.getGroupOwnerAddress().equals(recipient) && !recipient.equals(IMessage.BROADCAST_ADDRESS)) {
+				Log.d(TAG, this.getClass().getSimpleName()+": comparing IPs; "+controller.getGroupOwnerAddress()+" "+recipient);
 				TransmissionManagerFactory.getInstance().getTransmissionManager().send(recipient, msg);
 				return true;
 			}

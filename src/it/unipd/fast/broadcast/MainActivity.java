@@ -166,7 +166,7 @@ public class MainActivity extends FragmentActivity implements LocationServiceLis
 			public void onClick(View v) {
 				connection_controller.sendBroadcast(
 					MessageBuilder.getInstance().getMessage("" +
-							"<message type='2'>" +
+							"<message type='2' recipient_id='255.255.255.255'>" +
 								"<content> ALERT!!! </content>" +
 							"</message>")
 				);

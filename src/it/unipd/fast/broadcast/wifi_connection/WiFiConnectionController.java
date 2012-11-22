@@ -5,6 +5,7 @@ import it.unipd.fast.broadcast.wifi_connection.connectionmanager.ConnectionInfoM
 import it.unipd.fast.broadcast.wifi_connection.connectionmanager.ConnectionManagerFactory;
 import it.unipd.fast.broadcast.wifi_connection.connectionmanager.IConnectionInfoManager;
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
+import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
 import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverService;
 import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverService.DataReceiverBinder;
 import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverService.IDataCollectionHandler;
@@ -13,6 +14,7 @@ import it.unipd.fast.broadcast.wifi_connection.receiver.FastBroadcastReceiver;
 import it.unipd.fast.broadcast.wifi_connection.transmissionmanager.TransmissionManagerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -53,6 +55,7 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 	private Map<String,String> peerIdIpMap;
 	private Context context;
 	private IntentFilter intentFilter;
+	private boolean mapSent = false;
 
 	private String groupOwnerAddress;
 	private boolean isGroupOwner = false;
@@ -210,26 +213,36 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 		}else{
 			peerIdIpMap.putAll(map);
 		}
-		// If all connected devices sent their PING message, sent to all of them the 
-		// complete map <ID,IP>; all this if and only if I'am the group Owner!
-//		if(connectionInfoListener.isGroupOwner() && deviceConnected == peerIdIpMap.keySet().size()){
-//			Log.d(TAG, this.getClass().getSimpleName()+": Sending complete map to all other devices");
-//
-//			IMessage message = MessageBuilder.getInstance().getMessage(IMessage.CLIENT_MAP_MESSAGE_TYPE, "doesn't matter");
-//			// Insert into the message couples <ID,IP address>
-//			for(String key : peerIdIpMap.keySet()) message.addContent(key, peerIdIpMap.get(key));
-//			// Send broadcast
-//			sendBroadcast(message);
-//		}
+		if(peerIdIpMap.containsKey(MAC_ADDRESS)) peerIdIpMap.remove(MAC_ADDRESS);
+		// If I'm the group owner and I haven't sent the map to all yet and the map is complete (all peers sent me their ID)
+		// Broadcast the map to all, after adding my <ID,IP> to it!
+		Map<String,String> mapToBroadcast = null;
+		if(isGroupOwner && !mapSent && peerIdIpMap.keySet().size() == peers.size()){
+			Log.d(TAG,this.getClass().getCanonicalName()+": Invio la mappa a tutti : \n");
+			mapToBroadcast = new HashMap<String, String>(peerIdIpMap);
+			mapToBroadcast.put(MAC_ADDRESS,groupOwnerAddress);
+			IMessage message = createMapMessage(mapToBroadcast, IMessage.BROADCAST_ADDRESS);
+			sendBroadcast(message);
+			mapSent = true;
+		}
 		
+		if(mapToBroadcast == null) mapToBroadcast = peerIdIpMap;
 		String s = "Map updated! \n";
-		for(String k : peerIdIpMap.keySet()){
-			s += k + "  " + peerIdIpMap.get(k)+"\n";
+		for(String k : mapToBroadcast.keySet()){
+			s += k + "  " + mapToBroadcast.get(k)+"\n";
 		}
 		Log.d(TAG, this.getClass().getSimpleName()+": Message received\n"+s);
-		//showToast(s);
 	}
 
+	private IMessage createMapMessage(Map<String,String> map, String recipient){
+		IMessage message = MessageBuilder.getInstance().getMessage(IMessage.CLIENT_MAP_MESSAGE_TYPE,recipient);
+		for(String k : map.keySet()){
+			message.addContent(k, map.get(k));
+		}
+		message.prepare();
+		return message;
+	}
+	
 	public Map<String,String> getPeersMap(){
 		return peerIdIpMap;
 	}
