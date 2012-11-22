@@ -1,14 +1,14 @@
 package it.unipd.fast.broadcast.wifi_connection;
 
 import it.unipd.fast.broadcast.GuiHandlerInterface;
+import it.unipd.fast.broadcast.wifi_connection.connectionmanager.ConnectionInfoManager.OnConnectionInfoCollected;
 import it.unipd.fast.broadcast.wifi_connection.connectionmanager.ConnectionManagerFactory;
 import it.unipd.fast.broadcast.wifi_connection.connectionmanager.IConnectionInfoManager;
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
-import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
-import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverServiceInterface;
 import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverService;
 import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverService.DataReceiverBinder;
 import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverService.IDataCollectionHandler;
+import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverServiceInterface;
 import it.unipd.fast.broadcast.wifi_connection.receiver.FastBroadcastReceiver;
 import it.unipd.fast.broadcast.wifi_connection.transmissionmanager.TransmissionManagerFactory;
 
@@ -27,6 +27,7 @@ import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
+import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.ActionListener;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
@@ -52,12 +53,10 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 	private Map<String,String> peerIdIpMap;
 	private Context context;
 	private IntentFilter intentFilter;
-	// Listener used to be notified, when connection info ara available
-	private IConnectionInfoManager connectionInfoListener = ConnectionManagerFactory.getInstance().getConnectionManager();
-	
-	// Holds the number of devices wich are connected to the group, to wait for the Hello phase
-	private int deviceConnected = 0;
 
+	private String groupOwnerAddress;
+	private boolean isGroupOwner = false;
+	
 	private class DataServiceConnection implements ServiceConnection {
 
 		@Override
@@ -74,7 +73,7 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 
 	}
 
-	/**
+	/**connectionInfoCallback
 	 * PeerListListener implementation
 	 * 
 	 */
@@ -90,8 +89,20 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 		}
 
 	};
+	
+	private OnConnectionInfoCollected connectionInfoCallback = new OnConnectionInfoCollected() {
+		
+		@Override
+		public void onInfoCollected(WifiP2pInfo info) {
+			groupOwnerAddress = info.groupOwnerAddress.getCanonicalHostName();
+			isGroupOwner = info.isGroupOwner;
+		}
+	};
 
-
+	// Listener used to be notified, when connection info ara available
+	private IConnectionInfoManager connectionInfoListener = ConnectionManagerFactory.getInstance().getConnectionManager(connectionInfoCallback);
+	
+	
 	/**
 	 * Constructor
 	 * 
@@ -147,8 +158,6 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 
 			public void onSuccess() {
 				showToast("Richiesta di connessione effettuata");
-				// Increment the number of connected devices
-				deviceConnected ++;
 			}
 
 			public void onFailure(int reason) {
@@ -194,7 +203,7 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 	 * 
 	 * @param map
 	 */
-	protected synchronized void setPeersIdIPmap(Map<String,String> map){
+	public void setPeersIdIPmap(Map<String,String> map){
 		
 		if(peerIdIpMap == null){
 			peerIdIpMap = map;
@@ -203,21 +212,22 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 		}
 		// If all connected devices sent their PING message, sent to all of them the 
 		// complete map <ID,IP>; all this if and only if I'am the group Owner!
-		if(connectionInfoListener.isGroupOwner() && deviceConnected == peerIdIpMap.keySet().size()){
-			Log.d(TAG, this.getClass().getSimpleName()+": Sending complete map to all other devices");
-
-			IMessage message = MessageBuilder.getInstance().getMessage(IMessage.CLIENT_MAP_MESSAGE_TYPE, "doesn't matter");
-			// Insert into the message couples <ID,IP address>
-			for(String key : peerIdIpMap.keySet()) message.addContent(key, peerIdIpMap.get(key));
-			// Send broadcast
-			sendBroadcast(message);
-		}
+//		if(connectionInfoListener.isGroupOwner() && deviceConnected == peerIdIpMap.keySet().size()){
+//			Log.d(TAG, this.getClass().getSimpleName()+": Sending complete map to all other devices");
+//
+//			IMessage message = MessageBuilder.getInstance().getMessage(IMessage.CLIENT_MAP_MESSAGE_TYPE, "doesn't matter");
+//			// Insert into the message couples <ID,IP address>
+//			for(String key : peerIdIpMap.keySet()) message.addContent(key, peerIdIpMap.get(key));
+//			// Send broadcast
+//			sendBroadcast(message);
+//		}
 		
 		String s = "Map updated! \n";
 		for(String k : peerIdIpMap.keySet()){
 			s += k + "  " + peerIdIpMap.get(k)+"\n";
 		}
-		showToast(s);
+		Log.d(TAG, this.getClass().getSimpleName()+": Message received\n"+s);
+		//showToast(s);
 	}
 
 	public Map<String,String> getPeersMap(){
@@ -287,6 +297,16 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 			TransmissionManagerFactory.getInstance().getTransmissionManager().send(
 				new ArrayList<String>(peerIdIpMap.values()),
 				message);
+	}
+
+	@Override
+	public boolean isGroupOwner() {
+		return isGroupOwner;
+	}
+
+	@Override
+	public String getGroupOwnerAddress() {
+		return groupOwnerAddress;
 	}
 	
 }

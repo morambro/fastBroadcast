@@ -17,9 +17,9 @@ public interface IMessage {
 	
 	//Fast Broadcast Protocol Hello Message
 	public static final int HELLO_MESSAGE_TYPE = 3;
-	//key used in getContext of HELLO_MESSAGE_TYPE messages to address the sender position field  
+	//key used in getContext of PING_MESSAGE_TYPE messages to address the sender position field  
 	public static final String HELLO_SENDER_POS_KEY = "send_pos_map_key";
-	//key used in getContext of HELLO_MESSAGE_TYPE messages to address the sender transmission range field
+	//key used in getContext of PING_MESSAGE_TYPE messages to address the sender transmission range field
 	public static final String HELLO_SENDER_RANGE_KEY = "send_range_map_key";
 	
 	public void addContent(String contentKey, String content);

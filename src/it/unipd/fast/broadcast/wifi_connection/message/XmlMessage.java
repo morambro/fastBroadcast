@@ -129,8 +129,8 @@ public class XmlMessage implements IMessage{
 				Node node = devices.item(i);
 				if (node.getNodeType() == Node.ELEMENT_NODE) {
 					Element element = (Element) node;
-					String client_id = XMLParser.getTagValue("KEY_TAG",element);
-					String client_ip = XMLParser.getTagValue("CONTENT_TAG",element);
+					String client_id = XMLParser.getTagValue(KEY_TAG,element);
+					String client_ip = XMLParser.getTagValue(CONTENT_TAG,element);
 					res.put(client_id, client_ip);
 				}
 			}

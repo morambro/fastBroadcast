@@ -27,7 +27,7 @@ public class DataReceiverService extends Service implements Runnable, DataReceiv
 	 */
 	public static final int PACKET_SIZE = 1024;
 	private boolean terminated = false;
-	private ServerSocket server_socket;
+	private ServerSocket serverSocket;
 	private List<IDataCollectionHandler> handlers = new ArrayList<DataReceiverService.IDataCollectionHandler>();
 	
 	/**
@@ -37,15 +37,6 @@ public class DataReceiverService extends Service implements Runnable, DataReceiv
 	 *
 	 */
 	public static interface IDataCollectionHandler {
-		//Hello message used to collect IP addresses
-		public static final int HELLO_MESSAGE_TYPE 		= 0;
-
-		//Message used to share IP address of the network peers
-		public static final int CLIENT_MAP_MESSAGE_TYPE = 1;
-
-		//Message used to send an ALERT message
-		public static final int ALERT_MESSAGE_TYPE 		= 2;
-
 		public void setWiFiController(WiFiConnectionController controller);
 		public void onDataCollected(IMessage message,String sender);
 		public void onError(String error);
@@ -72,8 +63,8 @@ public class DataReceiverService extends Service implements Runnable, DataReceiv
 	public void unregisterHandler(IDataCollectionHandler handler) {
 		handlers.remove(handler);
 		if(handlers.size()==0) {
-			Log.d(TAG, this.getClass().getSimpleName()+": Service terminated");
 			disconnectSocket();
+			Log.d(TAG, this.getClass().getSimpleName()+": Service terminated");
 			stopSelf();
 		}
 	}
@@ -97,11 +88,11 @@ public class DataReceiverService extends Service implements Runnable, DataReceiv
 			// Create a server socket and wait for client connections. This
 			// call blocks until a connection is accepted from a client
 			Log.d(TAG, this.getClass().getSimpleName()+": Tiro su un socket TCP");
-			server_socket = new ServerSocket(8888);
+			serverSocket = new ServerSocket(8888);
 			while(!terminated){
 				
 				// Waits for an incoming connection
-				Socket client = server_socket.accept();
+				Socket client = serverSocket.accept();
 				Log.d(TAG, this.getClass().getSimpleName()+": connessione in ingresso");
 				handleConnection(client);
 			}
@@ -160,9 +151,9 @@ public class DataReceiverService extends Service implements Runnable, DataReceiv
 	 * 
 	 */
 	private void disconnectSocket(){
-		if(server_socket != null && !server_socket.isClosed()){
+		if(serverSocket != null && !serverSocket.isClosed()){
 			try{
-				server_socket.close();
+				serverSocket.close();
 				Log.d(TAG, this.getClass().getSimpleName()+": Ho chiuso il socket");
 			}catch(Exception e){
 				Log.d(TAG, this.getClass().getSimpleName()+": Impossibile chiudere il socket");

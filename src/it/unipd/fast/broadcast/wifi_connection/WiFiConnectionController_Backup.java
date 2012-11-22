@@ -68,7 +68,7 @@ package it.unipd.fast.broadcast.wifi_connection;
 //			switch(message_type){
 //
 //			// In case of Hello message 
-//			case HELLO_MESSAGE_TYPE : 
+//			case PING_MESSAGE_TYPE : 
 //				Map<String,String> peer_data = new HashMap<String, String>();
 //				String client_id_address = XMLParser.estractTagFromXMLDoc(message, "client_id");
 //				peer_data.put(client_id_address,host_ip);

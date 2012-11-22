@@ -5,7 +5,8 @@
     android:layout_alignParentLeft="false"
     android:layout_centerHorizontal="true"
     android:gravity="center_vertical"
-    android:orientation="vertical" >
+    android:orientation="vertical"
+    android:keepScreenOn="true">
 
     <!-- <FrameLayout -->
     <!-- xmlns:android="http://schemas.android.com/apk/res/android" -->
