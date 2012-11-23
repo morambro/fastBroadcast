@@ -2,6 +2,8 @@ package it.unipd.fast.broadcast.range_estimation;
 
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
 import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
+import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverService;
+import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverServiceInterface;
 import it.unipd.fast.broadcast.wifi_connection.transmissionmanager.ITranmissionManager;
 import it.unipd.fast.broadcast.wifi_connection.transmissionmanager.TransmissionManagerFactory;
 
@@ -10,13 +12,18 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import android.app.Service;
+import android.content.Intent;
+import android.os.Binder;
+import android.os.IBinder;
+
 /**
  * An implementation of fast broadcast estimation phase.
  * 
  * @author Moreno Ambrosin
  *
  */
-public class FastBroadcastRangeEstimator implements IRangeEstimator{
+public class FastBroadcastRangeEstimator extends Service implements IRangeEstimator{
 	
 	/******************************************* DECLARATIONS ******************************************/
 	
@@ -49,21 +56,15 @@ public class FastBroadcastRangeEstimator implements IRangeEstimator{
 	}
 	
 	/**
-	 * Class used to handle the received Hello message
+	 * Binder to get service interface
 	 * 
 	 * @author Moreno Ambrosin
 	 *
 	 */
-	private class ReceivedHelloMessagesHandler extends Thread{
+	public class RangeEstimatorBinder extends Binder {
 		
-		private IMessage messageToHandle;
-		
-		public ReceivedHelloMessagesHandler(IMessage helloMessage) {
-			messageToHandle = helloMessage;
-		}
-		
-		public void run(){
-			// TODO: handle hello message, update integer variables
+		public IRangeEstimator getService() {
+			return FastBroadcastRangeEstimator.this;
 		}
 	}
 	
@@ -95,18 +96,6 @@ public class FastBroadcastRangeEstimator implements IRangeEstimator{
 	
 	/********************************************** METHODS ********************************************/
 	
-	public FastBroadcastRangeEstimator(List<String> devices) {
-		this.devices = devices;
-	}
-	
-	@Override
-	public void initHelloSender() {
-		// creating a timer to schedule hello message sending
-		scheduler = new Timer();
-		// Start scheduling
-		scheduler.schedule(new HelloMessageSender(),TURN_DURATION,TURN_DURATION);
-	}
-	
 	/**
 	 * Sends hello message to all the devices
 	 */
@@ -129,14 +118,34 @@ public class FastBroadcastRangeEstimator implements IRangeEstimator{
 	
 	@Override
 	public void helloMessageReceived(IMessage message){
-		// creates a new handle to extract information from the message
-		new ReceivedHelloMessagesHandler(message).start();
+		// TODO : Hello Message receiver
 	}
 	
+	@Override
 	public void stopExecuting(){
 		if(scheduler != null){
 			scheduler.cancel();
 		}
 	}
-
+	
+	@Override
+	public void setDevicesList(List<String> devices) {
+		this.devices = devices;
+	}
+	
+	@Override
+	public IBinder onBind(Intent intent) {
+		return new RangeEstimatorBinder();
+	}
+	
+	
+	@Override
+	public void onCreate() {
+		super.onCreate();
+		// On service creation, starts hello message sender Scheduler
+		// creating a timer to schedule hello message sending
+		scheduler = new Timer();
+		// Start scheduling
+		scheduler.schedule(new HelloMessageSender(),TURN_DURATION,TURN_DURATION);
+	}
 }

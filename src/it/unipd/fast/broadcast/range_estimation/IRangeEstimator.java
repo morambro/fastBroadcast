@@ -1,5 +1,7 @@
 package it.unipd.fast.broadcast.range_estimation;
 
+import java.util.List;
+
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
 
 /**
@@ -9,16 +11,11 @@ import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
  *
  */
 public interface IRangeEstimator {
-	
+
 	/**
 	 * Turn duration in milliseconds
 	 */
 	public static final int TURN_DURATION = 500;
-	
-	/**
-	 * Initiates hello message sender
-	 */
-	public void initHelloSender();
 	
 	/**
 	 * Method used to tell whether a hello message already arrived
@@ -33,4 +30,16 @@ public interface IRangeEstimator {
 	 * @param message
 	 */
 	public void helloMessageReceived(IMessage message);
+
+	/**
+	 * Stops the estimator execution
+	 */
+	public void stopExecuting();
+	
+	/**
+	 * Devices list setter
+	 * 
+	 * @param devices
+	 */
+	public void setDevicesList(List<String> devices);
 }

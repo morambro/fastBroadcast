@@ -1,6 +1,9 @@
 package it.unipd.fast.broadcast.wifi_connection;
 
 import it.unipd.fast.broadcast.GuiHandlerInterface;
+import it.unipd.fast.broadcast.range_estimation.FastBroadcastRangeEstimator;
+import it.unipd.fast.broadcast.range_estimation.FastBroadcastRangeEstimator.RangeEstimatorBinder;
+import it.unipd.fast.broadcast.range_estimation.IRangeEstimator;
 import it.unipd.fast.broadcast.wifi_connection.connectionmanager.ConnectionInfoManager.OnConnectionInfoCollected;
 import it.unipd.fast.broadcast.wifi_connection.connectionmanager.ConnectionManagerFactory;
 import it.unipd.fast.broadcast.wifi_connection.connectionmanager.IConnectionInfoManager;
@@ -60,6 +63,8 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 	private String groupOwnerAddress;
 	private boolean isGroupOwner = false;
 	
+	private IRangeEstimator rangeEstimator;
+	
 	private class DataServiceConnection implements ServiceConnection {
 
 		@Override
@@ -76,6 +81,20 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 
 	}
 
+	private class RangeEstiomatorConnection implements ServiceConnection{
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder binder) {
+			rangeEstimator = ((RangeEstimatorBinder)binder).getService();
+			rangeEstimator.setDevicesList(new ArrayList<String>(peerIdIpMap.values()));
+			Log.d(TAG, this.getClass().getSimpleName()+": Servizio ricezione dati binded");
+		}
+		
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			Log.d(TAG, this.getClass().getSimpleName()+": Estimation Service lost");
+		}
+	}
+	
 	/**connectionInfoCallback
 	 * PeerListListener implementation
 	 * 
@@ -217,13 +236,20 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 		// If I'm the group owner and I haven't sent the map to all yet and the map is complete (all peers sent me their ID)
 		// Broadcast the map to all, after adding my <ID,IP> to it!
 		Map<String,String> mapToBroadcast = null;
-		if(isGroupOwner && !mapSent && peerIdIpMap.keySet().size() == peers.size()){
-			Log.d(TAG,this.getClass().getCanonicalName()+": Invio la mappa a tutti : \n");
-			mapToBroadcast = new HashMap<String, String>(peerIdIpMap);
-			mapToBroadcast.put(MAC_ADDRESS,groupOwnerAddress);
-			IMessage message = createMapMessage(mapToBroadcast, IMessage.BROADCAST_ADDRESS);
-			sendBroadcast(message);
-			mapSent = true;
+		if(isGroupOwner){
+			if(!mapSent && peerIdIpMap.keySet().size() == peers.size()){
+				Log.d(TAG,this.getClass().getCanonicalName()+": Invio la mappa a tutti : \n");
+				mapToBroadcast = new HashMap<String, String>(peerIdIpMap);
+				mapToBroadcast.put(MAC_ADDRESS,groupOwnerAddress);
+				IMessage message = createMapMessage(mapToBroadcast, IMessage.BROADCAST_ADDRESS);
+				sendBroadcast(message);
+				mapSent = true;
+				// Now start estimation phase
+				startEstimator();
+			}
+		} else {
+			// If I'm not the group owner and I'm here, I received the map. So I can start estimation phase
+			startEstimator();
 		}
 		
 		if(mapToBroadcast == null) mapToBroadcast = peerIdIpMap;
@@ -232,6 +258,15 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 			s += k + "  " + mapToBroadcast.get(k)+"\n";
 		}
 		Log.d(TAG, this.getClass().getSimpleName()+": Message received\n"+s);
+	}
+
+	private void startEstimator() {
+		// TODO Creating the Estimator
+		Log.d(TAG, this.getClass().getSimpleName()+": Bindo il servizio di Range Estimation");
+		Intent estimationService = new Intent(context, FastBroadcastRangeEstimator.class);
+		context.startService(estimationService);
+		context.bindService(estimationService, serviceConnection, Context.BIND_AUTO_CREATE);
+		
 	}
 
 	private IMessage createMapMessage(Map<String,String> map, String recipient){
@@ -294,7 +329,7 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 	}
 
 	/**
-	 * Utility funtion unsed to post string messages
+	 * Utility function used to post string messages
 	 * @param string
 	 */
 	private void showToast(String string) {
