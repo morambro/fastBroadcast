@@ -15,7 +15,7 @@ public interface IRangeEstimator {
 	/**
 	 * Turn duration in milliseconds
 	 */
-	public static final int TURN_DURATION = 500;
+	public static final int TURN_DURATION = 1000;
 	
 	/**
 	 * Method used to tell whether a hello message already arrived

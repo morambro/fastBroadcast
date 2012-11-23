@@ -37,12 +37,13 @@ public class FastBroadcastRangeEstimator extends Service implements IRangeEstima
 		
 		@Override
 		public void run(){
-			randomGenerator.setSeed(TURN_DURATION);
+			int randomTime = 0;
 			synchronized (this) {
 				helloMessageArrived = false;
-				int randomTime = randomGenerator.nextInt();
+				randomTime = randomGenerator.nextInt(TURN_DURATION);
 				try{
-					this.wait(randomTime);
+					Log.d(TAG, "Going to sleep for "+randomTime+" ms");
+					Thread.sleep(randomTime);
 				}catch(InterruptedException ex){
 					stopExecuting();
 					ex.printStackTrace();
@@ -52,6 +53,10 @@ public class FastBroadcastRangeEstimator extends Service implements IRangeEstima
 			// and if not, sends an hello message
 			if(!helloMessageArrived){
 				sendHelloMessage();
+				Log.d(TAG,this.getClass().getSimpleName()+" : Sent Hello message to all after " +
+						""+(TURN_DURATION+randomTime)+" msec");
+			}else{
+				Log.d(TAG,this.getClass().getSimpleName()+" : Hello Message was already sent!!");
 			}
 		}
 	}
