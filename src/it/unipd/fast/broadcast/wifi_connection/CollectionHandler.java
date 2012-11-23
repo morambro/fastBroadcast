@@ -27,6 +27,7 @@ public class CollectionHandler implements IDataCollectionHandler {
 		switch(messageType){
 			// In case of Hello message 
 			case IMessage.PING_MESSAGE_TYPE : 
+				Log.d(TAG, this.getClass().getSimpleName()+": Ricevuto  PING: \n"+message);
 				Map<String,String> peerData = new HashMap<String, String>();
 				String client_id_address = message.getContent().get(IMessage.PING_MESSAGE_ID_KEY);
 				peerData.put(client_id_address,host_ip);
@@ -35,6 +36,7 @@ public class CollectionHandler implements IDataCollectionHandler {
 	
 				// In case of message MAP, for client addresses distribution
 			case IMessage.CLIENT_MAP_MESSAGE_TYPE :
+				Log.d(TAG, this.getClass().getSimpleName()+": Ricevuto MAP \n: "+message);
 				Map<String,String> allPeerData = new HashMap<String, String>();
 				allPeerData.putAll(message.getContent());
 				Log.d(TAG, this.getClass().getSimpleName()+": Ricevuta lista");
@@ -42,8 +44,13 @@ public class CollectionHandler implements IDataCollectionHandler {
 				break;
 	
 			case IMessage.ALERT_MESSAGE_TYPE :
-				Log.d(TAG, this.getClass().getSimpleName()+": Ricevuto : "+message);
+				Log.d(TAG, this.getClass().getSimpleName()+": Ricevuto ALERT : \n"+message);
 				break;
+				
+			// case of fast broadcast hello message
+			case IMessage.HELLO_MESSAGE_TYPE :
+				Log.d(TAG, this.getClass().getSimpleName()+": Ricevuto  HELLO : \n"+message);
+				controller.helloMessageArrived(message);
 	
 			default : 
 				Log.d(TAG, this.getClass().getSimpleName()+": Unknown message type "+messageType+", discarded.");

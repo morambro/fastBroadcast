@@ -43,12 +43,16 @@ import android.os.Message;
 import android.util.Log;
 
 public class WiFiConnectionController implements IWiFiConnectionController{
+	
+	/********************************************** DECLARATIONS *************************************************/
+	
 	protected final String TAG = "it.unipd.fast.broadcast";
 	
 	public static String MAC_ADDRESS = null;
 	
 	private Handler guiHandler;
-	private ServiceConnection serviceConnection = new DataServiceConnection();
+	private ServiceConnection dataReceiverServiceConnection = new DataServiceConnection();
+	private ServiceConnection estimatorServiceConnection = new RangeEstiomatorConnection();
 	private IDataCollectionHandler collectionHandler = new CollectionHandler();
 	private DataReceiverServiceInterface dataInterface = null;
 	private WifiP2pManager manager;
@@ -85,7 +89,6 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder binder) {
 			rangeEstimator = ((RangeEstimatorBinder)binder).getService();
-			rangeEstimator.setDevicesList(new ArrayList<String>(peerIdIpMap.values()));
 			Log.d(TAG, this.getClass().getSimpleName()+": Servizio ricezione dati binded");
 		}
 		
@@ -95,7 +98,7 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 		}
 	}
 	
-	/**connectionInfoCallback
+	/**
 	 * PeerListListener implementation
 	 * 
 	 */
@@ -112,6 +115,10 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 
 	};
 	
+	/**
+	 * Called when connection info are available
+	 * 
+	 */
 	private OnConnectionInfoCollected connectionInfoCallback = new OnConnectionInfoCollected() {
 		
 		@Override
@@ -121,9 +128,11 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 		}
 	};
 
-	// Listener used to be notified, when connection info ara available
+	// Listener used to be notified, when connection info are available
 	private IConnectionInfoManager connectionInfoListener = ConnectionManagerFactory.getInstance().getConnectionManager(connectionInfoCallback);
 	
+	
+	/******************************************************* METHODS ************************************************/
 	
 	/**
 	 * Constructor
@@ -147,7 +156,7 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 		Log.d(TAG, this.getClass().getSimpleName()+": Bindo il servizio di ricezione dati");
 		Intent locService = new Intent(context, DataReceiverService.class);
 		context.startService(locService);
-		context.bindService(locService, serviceConnection, Context.BIND_AUTO_CREATE);
+		context.bindService(locService, dataReceiverServiceConnection, Context.BIND_AUTO_CREATE);
 		
 		// Setting static field which contains device MAC address
 		MAC_ADDRESS = getDeviceMacAddress();
@@ -260,15 +269,25 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 		Log.d(TAG, this.getClass().getSimpleName()+": Message received\n"+s);
 	}
 
+	/**
+	 * Starts range estimator service
+	 * 
+	 */
 	private void startEstimator() {
-		// TODO Creating the Estimator
 		Log.d(TAG, this.getClass().getSimpleName()+": Bindo il servizio di Range Estimation");
 		Intent estimationService = new Intent(context, FastBroadcastRangeEstimator.class);
+		estimationService.putStringArrayListExtra("devices",new ArrayList<String>(peerIdIpMap.values()));
 		context.startService(estimationService);
-		context.bindService(estimationService, serviceConnection, Context.BIND_AUTO_CREATE);
-		
+		context.bindService(estimationService, estimatorServiceConnection, Context.BIND_AUTO_CREATE);
 	}
 
+	/**
+	 * Creates Map message for all the peers
+	 * 
+	 * @param map
+	 * @param recipient
+	 * @return
+	 */
 	private IMessage createMapMessage(Map<String,String> map, String recipient){
 		IMessage message = MessageBuilder.getInstance().getMessage(IMessage.CLIENT_MAP_MESSAGE_TYPE,recipient);
 		for(String k : map.keySet()){
@@ -278,6 +297,11 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 		return message;
 	}
 	
+	/**
+	 * Getter
+	 * 
+	 * @return
+	 */
 	public Map<String,String> getPeersMap(){
 		return peerIdIpMap;
 	}
@@ -298,8 +322,6 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 		});
 	}
 
-
-
 	/**
 	 * Disconnects the peer
 	 * 
@@ -313,8 +335,9 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 				Log.d(TAG, this.getClass().getSimpleName()+": Failed to remove group, reason = "+reason);
 			}
 		});
-		context.unbindService(serviceConnection);
+		context.unbindService(dataReceiverServiceConnection);
 		dataInterface.unregisterHandler(collectionHandler);
+		if(estimatorServiceConnection != null) context.unbindService(estimatorServiceConnection);
 
 	}
 
@@ -339,7 +362,11 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 		guiHandler.sendMessage(msg);
 	}
 
-
+	/**
+	 * Send the given message to all
+	 * 
+	 * @param message
+	 */
 	public void sendBroadcast(IMessage message) {
 		if(peerIdIpMap != null)
 			TransmissionManagerFactory.getInstance().getTransmissionManager().send(
@@ -355,6 +382,10 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 	@Override
 	public String getGroupOwnerAddress() {
 		return groupOwnerAddress;
+	}
+	
+	public void helloMessageArrived(IMessage message){
+		rangeEstimator.helloMessageReceived(message);
 	}
 	
 }

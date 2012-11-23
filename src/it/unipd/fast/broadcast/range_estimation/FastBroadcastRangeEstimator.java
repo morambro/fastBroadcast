@@ -2,8 +2,6 @@ package it.unipd.fast.broadcast.range_estimation;
 
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
 import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
-import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverService;
-import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverServiceInterface;
 import it.unipd.fast.broadcast.wifi_connection.transmissionmanager.ITranmissionManager;
 import it.unipd.fast.broadcast.wifi_connection.transmissionmanager.TransmissionManagerFactory;
 
@@ -16,6 +14,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
+import android.util.Log;
 
 /**
  * An implementation of fast broadcast estimation phase.
@@ -24,6 +23,8 @@ import android.os.IBinder;
  *
  */
 public class FastBroadcastRangeEstimator extends Service implements IRangeEstimator{
+	
+	private String TAG = "it.unipd.fast.broadcast";
 	
 	/******************************************* DECLARATIONS ******************************************/
 	
@@ -36,16 +37,16 @@ public class FastBroadcastRangeEstimator extends Service implements IRangeEstima
 		
 		@Override
 		public void run(){
+			randomGenerator.setSeed(TURN_DURATION);
 			synchronized (this) {
 				helloMessageArrived = false;
-			}
-			randomGenerator.setSeed(TURN_DURATION);
-			int randomTime = randomGenerator.nextInt();
-			try{
-				wait(randomTime);
-			}catch(InterruptedException ex){
-				stopExecuting();
-				ex.printStackTrace();
+				int randomTime = randomGenerator.nextInt();
+				try{
+					this.wait(randomTime);
+				}catch(InterruptedException ex){
+					stopExecuting();
+					ex.printStackTrace();
+				}
 			}
 			// After waiting a random time check whether another hello message arrived,
 			// and if not, sends an hello message
@@ -118,13 +119,13 @@ public class FastBroadcastRangeEstimator extends Service implements IRangeEstima
 	
 	@Override
 	public void helloMessageReceived(IMessage message){
-		// TODO : Hello Message receiver
 	}
 	
 	@Override
 	public void stopExecuting(){
 		if(scheduler != null){
 			scheduler.cancel();
+			scheduler.purge();
 		}
 	}
 	
@@ -135,17 +136,24 @@ public class FastBroadcastRangeEstimator extends Service implements IRangeEstima
 	
 	@Override
 	public IBinder onBind(Intent intent) {
+		this.devices = intent.getStringArrayListExtra("devices");
+		scheduler.schedule(new HelloMessageSender(),TURN_DURATION,TURN_DURATION);
 		return new RangeEstimatorBinder();
 	}
 	
+	@Override
+	public boolean onUnbind(Intent intent) {
+		stopExecuting();
+		return super.onUnbind(intent);
+	}
 	
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		Log.d(TAG,this.getClass().getSimpleName()+" : Estimator Service is Up");
 		// On service creation, starts hello message sender Scheduler
 		// creating a timer to schedule hello message sending
 		scheduler = new Timer();
 		// Start scheduling
-		scheduler.schedule(new HelloMessageSender(),TURN_DURATION,TURN_DURATION);
 	}
 }
