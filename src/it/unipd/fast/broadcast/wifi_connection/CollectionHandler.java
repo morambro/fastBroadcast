@@ -51,7 +51,8 @@ public class CollectionHandler implements IDataCollectionHandler {
 			case IMessage.HELLO_MESSAGE_TYPE :
 				Log.d(TAG, this.getClass().getSimpleName()+": Ricevuto  HELLO : \n"+message);
 				controller.helloMessageArrived(message);
-	
+				break;
+				
 			default : 
 				Log.d(TAG, this.getClass().getSimpleName()+": Unknown message type "+messageType+", discarded.");
 				// TODO : unknown message type error handling
