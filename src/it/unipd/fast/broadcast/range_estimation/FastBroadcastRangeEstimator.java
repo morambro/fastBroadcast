@@ -29,7 +29,8 @@ public class FastBroadcastRangeEstimator extends Service implements IRangeEstima
 	/******************************************* DECLARATIONS ******************************************/
 	
 	/**
-	 * Task which is scheduled at a fixed time. 
+	 * Task scheduled at a fixed TURN_DURATION time, which sends out an hello message 
+	 * to perform Range estimation
 	 */
 	private class HelloMessageSender extends TimerTask{
 		
@@ -86,13 +87,23 @@ public class FastBroadcastRangeEstimator extends Service implements IRangeEstima
 	 * Current-turn Maximum Back Range
 	 */
 	private int cmbr = 300;
-	
+	/**
+	 * Last-turn Maximum Front Range
+	 */
 	private int lmfr = 300;
-	
+	/**
+	 * Last-turn Maximum Back Range
+	 */
 	private int lmbr = 300;
 	
+	/**
+	 * Timer for Hello message scheduling
+	 */
 	private Timer scheduler;
 	
+	/**
+	 * Trasmission manager used to send out messages
+	 */
 	private ITranmissionManager transmissionManager = TransmissionManagerFactory.getInstance().getTransmissionManager();
 	
 	/**

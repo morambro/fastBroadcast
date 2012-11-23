@@ -16,10 +16,6 @@ public class CollectionHandler implements IDataCollectionHandler {
 	public void onDataCollected(IMessage message, String host_ip) {
 		String recipient = message.getRecipientAddress();
 		
-//		if(rerouteMessage(recipient, message))
-//			return;
-		
-		// Eventually reroute message
 		rerouteMessage(recipient, message);
 		
 		int messageType = message.getType();
@@ -53,9 +49,9 @@ public class CollectionHandler implements IDataCollectionHandler {
 				controller.helloMessageArrived(message);
 				break;
 				
+			// Ignoring unknown messages
 			default : 
 				Log.d(TAG, this.getClass().getSimpleName()+": Unknown message type "+messageType+", discarded.");
-				// TODO : unknown message type error handling
 		}
 	}
 

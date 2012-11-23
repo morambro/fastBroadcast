@@ -64,6 +64,7 @@ public class MainActivity extends FragmentActivity implements LocationServiceLis
 	//Service listener implementation
 	public void onLocationChanged(Location location) {
 		curLocation = location;
+		Log.d(TAG,""+location);
 	}
 
 	@Override

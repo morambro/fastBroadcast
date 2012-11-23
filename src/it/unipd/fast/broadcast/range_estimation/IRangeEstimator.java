@@ -5,7 +5,7 @@ import java.util.List;
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
 
 /**
- * Range Estimator interface
+ * Range Estimator interface. 
  * 
  * @author Moreno Ambrosin
  *
