@@ -337,7 +337,7 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 		});
 		context.unbindService(dataReceiverServiceConnection);
 		dataInterface.unregisterHandler(collectionHandler);
-		if(estimatorServiceConnection != null) context.unbindService(estimatorServiceConnection);
+		if(rangeEstimator != null) context.unbindService(estimatorServiceConnection);
 
 	}
 

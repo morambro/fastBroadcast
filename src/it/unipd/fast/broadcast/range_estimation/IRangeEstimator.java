@@ -42,4 +42,5 @@ public interface IRangeEstimator {
 	 * @param devices
 	 */
 	public void setDevicesList(List<String> devices);
+	
 }
