@@ -153,6 +153,7 @@ public class FastBroadcastRangeEstimator extends Service implements IRangeEstima
 	@Override
 	public IBinder onBind(Intent intent) {
 		this.devices = intent.getStringArrayListExtra("devices");
+		// Start scheduling on service binding
 		scheduler.schedule(new HelloMessageSender(),TURN_DURATION,TURN_DURATION);
 		return new RangeEstimatorBinder();
 	}
@@ -170,6 +171,5 @@ public class FastBroadcastRangeEstimator extends Service implements IRangeEstima
 		// On service creation, starts hello message sender Scheduler
 		// creating a timer to schedule hello message sending
 		scheduler = new Timer();
-		// Start scheduling
 	}
 }

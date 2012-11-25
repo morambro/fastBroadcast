@@ -119,4 +119,10 @@ public class LocationService extends Service implements LocServiceBroadcastInter
 			return true;
 		return false;
 	}
+	
+	@Override
+	public Location getLastLocation() {
+		return locationManager.getLastKnownLocation(LOCATION_SERVICE);
+	}
+	
 }

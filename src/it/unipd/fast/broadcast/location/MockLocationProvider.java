@@ -11,7 +11,7 @@ import android.util.Log;
 
 public class MockLocationProvider {
 	protected final String TAG = "it.unipd.fast.broadcast";
-//	private static int counter = 0;
+	
 	private LocationManager manager;
 	private Context context;
 	private int positionNumber = 0;
@@ -30,16 +30,12 @@ public class MockLocationProvider {
 	public MockLocationProvider(LocationManager manager, Context context) {
 		Log.d(TAG, this.getClass().getSimpleName()+": registering provider: "+name);
 		this.manager = manager;
-		
-		
-		/*
-		 	Horrible Workaround: When shutting app from application manager (long press home+swipe) MainActivity.onDestroy and, consequently, doUnbindService get called,
-			but LocationService.onDestroy doesn't for some reason, leaving mockupprovider registered within the system and causing crash on next startup (Runtime Exception).
-		 */
-		if(manager.getProvider(name)!=null)
+		// Horrible Workaround: When shutting app from application manager (long press home+swipe) MainActivity.onDestroy and, 
+		// consequently, doUnbindService get called, but LocationService.onDestroy doesn't for some reason, leaving 
+		// mockup-provider registered within the system and causing crash on next startup (Runtime Exception).
+		if(manager.getProvider(name)!=null){
 			manager.removeTestProvider(name);
-		
-		
+		}
 		manager.addTestProvider(name, requiresNetwork, requiresSatellite, requiresCell, hasMonetaryCost, 
 				supportsAltitude, supportsSpeed, supportsBearing, powerRequirement, accuracy);
 		manager.setTestProviderEnabled(name, true);
@@ -67,7 +63,6 @@ public class MockLocationProvider {
 			location.setTime(System.currentTimeMillis());
 			manager.setTestProviderLocation(name, location);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

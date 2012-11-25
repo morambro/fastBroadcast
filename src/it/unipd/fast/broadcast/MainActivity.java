@@ -1,7 +1,9 @@
 package it.unipd.fast.broadcast;
 
+import it.unipd.fast.broadcast.location.LocServiceBroadcastInterface;
 import it.unipd.fast.broadcast.location.LocationService;
 import it.unipd.fast.broadcast.location.LocationServiceListener;
+import it.unipd.fast.broadcast.location.MockLocationService;
 import it.unipd.fast.broadcast.wifi_connection.WiFiConnectionController;
 import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
 
@@ -39,13 +41,16 @@ public class MainActivity extends FragmentActivity implements LocationServiceLis
 	private WiFiConnectionController connection_controller;
 	private TextView found_devices;
 
+	private LocServiceBroadcastInterface locationService;
+	
 	//ServiceConnection for LocationServiceListener
 	class LocServiceConnection implements ServiceConnection {
 
-		public void onServiceConnected(ComponentName name, IBinder service) {
+		public void onServiceConnected(ComponentName name, IBinder binder) {
 			isServiceBinded = true;
-			Log.d(TAG, this.getClass().getSimpleName()+": Service Bound");
-			((LocationService.LocServiceBinder) service).getService().addLocationListener(MainActivity.this);
+			locationService = ((LocationService.LocServiceBinder) binder).getService();
+			((LocationService.LocServiceBinder) binder).getService().addLocationListener(MainActivity.this);
+			Log.d(TAG, this.getClass().getSimpleName()+": Location Service Bound");
 		}
 
 		public void onServiceDisconnected(ComponentName name) {
@@ -64,7 +69,7 @@ public class MainActivity extends FragmentActivity implements LocationServiceLis
 	//Service listener implementation
 	public void onLocationChanged(Location location) {
 		curLocation = location;
-		Log.d(TAG,""+location);
+		Log.d(TAG,MainActivity.class.getSimpleName() + " : " + location);
 	}
 
 	@Override
@@ -139,7 +144,7 @@ public class MainActivity extends FragmentActivity implements LocationServiceLis
 	private void doBindService() {
 		if(isServiceBinded)
 			return;
-		Intent locService = new Intent(this, LocationService.class);
+		Intent locService = new Intent(this, MockLocationService.class);
 		serviceConn = new LocServiceConnection();
 		boolean temp = bindService(locService, serviceConn, BIND_AUTO_CREATE);
 		Log.d(TAG, this.getClass().getSimpleName()+": binding status: "+temp);
