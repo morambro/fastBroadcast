@@ -384,6 +384,7 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 		return groupOwnerAddress;
 	}
 	
+	@Override
 	public void helloMessageArrived(IMessage message){
 		rangeEstimator.helloMessageReceived(message);
 	}

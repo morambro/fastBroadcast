@@ -6,6 +6,7 @@ import it.unipd.fast.broadcast.wifi_connection.transmissionmanager.ITranmissionM
 import it.unipd.fast.broadcast.wifi_connection.transmissionmanager.TransmissionManagerFactory;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -32,7 +33,7 @@ public class FastBroadcastRangeEstimator extends Service implements IRangeEstima
 	 * Task scheduled at a fixed TURN_DURATION time, which sends out an hello message 
 	 * to perform Range estimation
 	 */
-	private class HelloMessageSender extends TimerTask{
+	private class HelloMessageSender extends TimerTask {
 		
 		private Random randomGenerator = new Random();
 		
@@ -120,8 +121,13 @@ public class FastBroadcastRangeEstimator extends Service implements IRangeEstima
 		IMessage helloMessage = MessageBuilder.getInstance().getMessage(
 				IMessage.HELLO_MESSAGE_TYPE,
 				IMessage.BROADCAST_ADDRESS);
-		// TODO : use location service to set a position
-		helloMessage.addContent("my_position","position");
+		
+		// TODO: prendere la POSIZIONEEEE!!!!
+		
+		helloMessage.addContent(IMessage.HELLO_SENDER_LATITUDE_KEY,"lat_100");
+		helloMessage.addContent(IMessage.HELLO_SENDER_LONGITUDE_KEY,"lon_100");
+		helloMessage.addContent(IMessage.HELLO_SENDER_RANGE_KEY,"400");
+		
 		// Adding max range 
 		helloMessage.addContent("max_range",Math.max(lmfr, cmfr)+"");
 		helloMessage.prepare();
@@ -134,7 +140,18 @@ public class FastBroadcastRangeEstimator extends Service implements IRangeEstima
 	}
 	
 	@Override
-	public void helloMessageReceived(IMessage message){
+	public void helloMessageReceived(final IMessage message){
+		setHelloMessageArrived(true);
+		new Thread(){
+			public void run() {
+				Map<String,String> content = message.getContent();
+				String latitude 	= content.get(IMessage.HELLO_SENDER_LATITUDE_KEY);
+				String longitude 	= content.get(IMessage.HELLO_SENDER_LONGITUDE_KEY);
+				String range  		= content.get(IMessage.HELLO_SENDER_RANGE_KEY);
+				
+				//TODO: range update
+			}
+		}.start();
 	}
 	
 	@Override
@@ -145,10 +162,6 @@ public class FastBroadcastRangeEstimator extends Service implements IRangeEstima
 		}
 	}
 	
-	@Override
-	public void setDevicesList(List<String> devices) {
-		this.devices = devices;
-	}
 	
 	@Override
 	public IBinder onBind(Intent intent) {

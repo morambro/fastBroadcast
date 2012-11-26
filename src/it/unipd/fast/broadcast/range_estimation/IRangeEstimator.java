@@ -36,11 +36,5 @@ public interface IRangeEstimator {
 	 */
 	public void stopExecuting();
 	
-	/**
-	 * Devices list setter
-	 * 
-	 * @param devices
-	 */
-	public void setDevicesList(List<String> devices);
 	
 }
