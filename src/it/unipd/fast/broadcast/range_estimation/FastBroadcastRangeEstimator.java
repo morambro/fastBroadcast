@@ -13,6 +13,7 @@ import java.util.TimerTask;
 
 import android.app.Service;
 import android.content.Intent;
+import android.location.Location;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
@@ -83,19 +84,19 @@ public class FastBroadcastRangeEstimator extends Service implements IRangeEstima
 	/**
 	 * Current-turn Maximum Front Range
 	 */
-	private int cmfr = 300;
+	private double cmfr = 300;
 	/**
 	 * Current-turn Maximum Back Range
 	 */
-	private int cmbr = 300;
+	private double cmbr = 300;
 	/**
 	 * Last-turn Maximum Front Range
 	 */
-	private int lmfr = 300;
+	private double lmfr = 300;
 	/**
 	 * Last-turn Maximum Back Range
 	 */
-	private int lmbr = 300;
+	private double lmbr = 300;
 	
 	/**
 	 * Timer for Hello message scheduling
@@ -124,8 +125,8 @@ public class FastBroadcastRangeEstimator extends Service implements IRangeEstima
 		
 		// TODO: prendere la POSIZIONEEEE!!!!
 		
-		helloMessage.addContent(IMessage.HELLO_SENDER_LATITUDE_KEY,"lat_100");
-		helloMessage.addContent(IMessage.HELLO_SENDER_LONGITUDE_KEY,"lon_100");
+		helloMessage.addContent(IMessage.HELLO_SENDER_LATITUDE_KEY,"45.227009");
+		helloMessage.addContent(IMessage.HELLO_SENDER_LONGITUDE_KEY,"11.775048");
 		helloMessage.addContent(IMessage.HELLO_SENDER_RANGE_KEY,"400");
 		
 		// Adding max range 
@@ -145,11 +146,20 @@ public class FastBroadcastRangeEstimator extends Service implements IRangeEstima
 		new Thread(){
 			public void run() {
 				Map<String,String> content = message.getContent();
-				String latitude 	= content.get(IMessage.HELLO_SENDER_LATITUDE_KEY);
-				String longitude 	= content.get(IMessage.HELLO_SENDER_LONGITUDE_KEY);
-				String range  		= content.get(IMessage.HELLO_SENDER_RANGE_KEY);
+				double latitude 	= Double.parseDouble(content.get(IMessage.HELLO_SENDER_LATITUDE_KEY));
+				double longitude 	= Double.parseDouble(content.get(IMessage.HELLO_SENDER_LONGITUDE_KEY));
+				double max_range  	= Double.parseDouble(content.get(IMessage.HELLO_SENDER_RANGE_KEY));
 				
-				//TODO: range update
+				Location l = new Location(""); // TODO : Retrieve the location
+				
+				float[] results = new float[]{};
+				Location.distanceBetween(latitude, longitude, l.getLatitude(), l.getLongitude(), results);
+				
+				// Received from front
+				cmfr = Math.max(cmfr, Math.max(results[0],max_range));
+				// Received from back
+				cmbr = Math.max(cmbr, Math.max(results[0], max_range));
+
 			}
 		}.start();
 	}
