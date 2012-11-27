@@ -42,14 +42,15 @@ public interface IMessage {
 	/**
 	 * keys used in getContext of PING_MESSAGE_TYPE messages to address the sender position field  
 	 */
-	public static final String HELLO_SENDER_LATITUDE_KEY  = "latitude";
-	public static final String HELLO_SENDER_LONGITUDE_KEY = "longitude";
+	public static final String SENDER_LATITUDE_KEY  = "latitude";
+	public static final String SENDER_LONGITUDE_KEY = "longitude";
 		
 	/**
 	 * key used in getContext of PING_MESSAGE_TYPE messages to address the sender transmission range field
 	 */
-	public static final String HELLO_SENDER_RANGE_KEY = "range";
+	public static final String SENDER_RANGE_KEY = "range";
 	
+	public static final String HELLO_SENDER_DIRECTION_KEY = "direction";
 	
 	/****************************************************** METHODS *******************************************/
 	
