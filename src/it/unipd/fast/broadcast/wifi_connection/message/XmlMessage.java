@@ -98,6 +98,13 @@ public class XmlMessage implements IMessage{
 		Log.d(TAG, this.getClass().getSimpleName()+": "+message);
 	}
 	
+	/**
+	 * Splits string s into its subcomponents using CHAR_SEPARATOR regular expression
+	 */
+	public static String[] splitString(String s) {
+		return s.split(CHAR_SEPARATOR);
+	}
+	
 	@Override
 	public String toString(){
 		return message;

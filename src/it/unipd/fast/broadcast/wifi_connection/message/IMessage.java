@@ -14,6 +14,8 @@ public interface IMessage {
 	 */
 	public static final String BROADCAST_ADDRESS = "255.255.255.255";
 	
+	public static final String CHAR_SEPARATOR = "~!";
+	
 	/**
 	 * Ping message identification
 	 */

@@ -259,7 +259,8 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 		}else{
 			peerIdIpMap.putAll(map);
 		}
-		if(peerIdIpMap.containsKey(MAC_ADDRESS)) peerIdIpMap.remove(MAC_ADDRESS);
+		if(peerIdIpMap.containsKey(MAC_ADDRESS))
+			peerIdIpMap.remove(MAC_ADDRESS);
 		// If I'm the group owner and I haven't sent the map to all yet and the map is complete (all peers sent me their ID)
 		// Broadcast the map to all, after adding my <ID,IP> to it!
 		Map<String,String> mapToBroadcast = null;
