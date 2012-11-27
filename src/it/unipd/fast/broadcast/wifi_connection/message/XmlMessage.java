@@ -13,7 +13,7 @@ import org.w3c.dom.NodeList;
 
 import android.util.Log;
 
-public class XmlMessage implements IMessage{
+public class XmlMessage extends IMessage{
 	private static final String TAG = "it.unipd.fast.broadcast";
 	private static final String MSG_TAG = "message";
 	private static final String TYPE_ATTRIBUTE = "type";
@@ -42,7 +42,7 @@ public class XmlMessage implements IMessage{
 		if(messageContent == null) messageContent = new HashMap<String, String>();
 		messageContent.put(contentKey, content);
 	}
-
+	
 	@Override
 	public Map<String, String> getContent() {
 		return MessageParser.getContent(message);
@@ -96,13 +96,6 @@ public class XmlMessage implements IMessage{
 		}
 		message += "</"+MSG_TAG+">";
 		Log.d(TAG, this.getClass().getSimpleName()+": "+message);
-	}
-	
-	/**
-	 * Splits string s into its subcomponents using CHAR_SEPARATOR regular expression
-	 */
-	public static String[] splitString(String s) {
-		return s.split(CHAR_SEPARATOR);
 	}
 	
 	@Override

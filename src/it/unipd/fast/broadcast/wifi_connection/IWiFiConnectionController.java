@@ -10,4 +10,8 @@ public interface IWiFiConnectionController {
 	String getGroupOwnerAddress();
 	void setPeersIdIPmap(Map<String,String> peersMap);
 	void helloMessageArrived(IMessage message);
+	/**
+	 * @return unique device id (MAC Address in this case)
+	 */
+	String getDeviceId();
 }

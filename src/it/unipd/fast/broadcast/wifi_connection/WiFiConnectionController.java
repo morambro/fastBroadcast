@@ -1,6 +1,7 @@
 package it.unipd.fast.broadcast.wifi_connection;
 
 import it.unipd.fast.broadcast.GuiHandlerInterface;
+import it.unipd.fast.broadcast.location.MockLocationProvider;
 import it.unipd.fast.broadcast.protocol_implementation.FastBroadcastHandler;
 import it.unipd.fast.broadcast.protocol_implementation.ICommunicationHandler;
 import it.unipd.fast.broadcast.protocol_implementation.FastBroadcastHandler.FastBroadcastServiceBinder;
@@ -266,6 +267,7 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 		Map<String,String> mapToBroadcast = null;
 		if(isGroupOwner){
 			if(!mapSent && peerIdIpMap.keySet().size() == peers.size()){
+				MockLocationProvider.__set_static_couter(0, peerIdIpMap.size());
 				Log.d(TAG,this.getClass().getCanonicalName()+": Invio la mappa a tutti : \n");
 				mapToBroadcast = new HashMap<String, String>(peerIdIpMap);
 				mapToBroadcast.put(MAC_ADDRESS,groupOwnerAddress);
@@ -309,8 +311,10 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 	 */
 	private IMessage createMapMessage(Map<String,String> map, String recipient){
 		IMessage message = MessageBuilder.getInstance().getMessage(IMessage.CLIENT_MAP_MESSAGE_TYPE,recipient);
+		int i = 1;
 		for(String k : map.keySet()){
-			message.addContent(k, map.get(k));
+			message.addContent(k, IMessage.concatContent(map.get(k), ""+i));
+			i++;
 		}
 		message.prepare();
 		return message;
@@ -406,6 +410,11 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 	@Override
 	public void helloMessageArrived(IMessage message){
 		rangeEstimator.helloMessageReceived(message);
+	}
+
+	@Override
+	public String getDeviceId() {
+		return MAC_ADDRESS;
 	}
 	
 }

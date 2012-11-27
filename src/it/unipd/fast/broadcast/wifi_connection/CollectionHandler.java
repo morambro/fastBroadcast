@@ -1,5 +1,6 @@
 package it.unipd.fast.broadcast.wifi_connection;
 
+import it.unipd.fast.broadcast.location.MockLocationProvider;
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
 import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverService.IDataCollectionHandler;
 import it.unipd.fast.broadcast.wifi_connection.transmissionmanager.TransmissionManagerFactory;
@@ -34,7 +35,13 @@ public class CollectionHandler implements IDataCollectionHandler {
 			case IMessage.CLIENT_MAP_MESSAGE_TYPE :
 				Log.d(TAG, this.getClass().getSimpleName()+": Ricevuto MAP \n: "+message);
 				Map<String,String> allPeerData = new HashMap<String, String>();
-				allPeerData.putAll(message.getContent());
+				Map<String, String> content = message.getContent();
+				for (String key : content.keySet()) {
+					String msgContent = content.get(key);
+					if(key.equals(controller.getDeviceId()))
+						MockLocationProvider.__set_static_couter(Integer.parseInt(IMessage.splitContent(msgContent)[IMessage.FILE_COUNTER_INDEX]), content.size());
+					allPeerData.put(key, msgContent);
+				}
 				Log.d(TAG, this.getClass().getSimpleName()+": Ricevuta lista");
 				controller.setPeersIdIPmap(allPeerData);
 				break;

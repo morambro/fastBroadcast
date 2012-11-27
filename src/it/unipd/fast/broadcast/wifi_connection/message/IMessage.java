@@ -8,13 +8,14 @@ import java.util.Map;
  * @author Fabio De Gaspari
  *
  */
-public interface IMessage {
+abstract public class IMessage {
 	/**
 	 * Address used to identify broadcast messages
 	 */
 	public static final String BROADCAST_ADDRESS = "255.255.255.255";
 	
 	public static final String CHAR_SEPARATOR = "~!";
+	public static final int FILE_COUNTER_INDEX = 1;
 	
 	/**
 	 * Ping message identification
@@ -56,15 +57,27 @@ public interface IMessage {
 	
 	/****************************************************** METHODS *******************************************/
 	
-	public void addContent(String contentKey, String content);
-	public Map<String, String> getContent();
-	public byte[] getMessage();
-	public int getType();
-	public String getSenderId();
-	public String getRecipientAddress();
-	public void setRecipientAddress(String recipientAddress);
 	/**
 	 * Generates the message, MUST be called after all content is added in order to properly configure the payload
 	 */
-	public void prepare();
+	public abstract void prepare();
+	public abstract void addContent(String contentKey, String content);
+	public abstract Map<String, String> getContent();
+	public abstract byte[] getMessage();
+	public abstract int getType();
+	public abstract String getSenderId();
+	public abstract String getRecipientAddress();
+	public abstract void setRecipientAddress(String recipientAddress);
+	
+	public static String concatContent(String ...contents) {
+		String result = contents[0];
+		for (int i = 1; i < contents.length; i++) {
+			result = result.concat(CHAR_SEPARATOR+contents[i]);
+		}
+		return result;
+	}
+	
+	public static String[] splitContent(String s)  {
+		return s.split(CHAR_SEPARATOR);
+	};
 }

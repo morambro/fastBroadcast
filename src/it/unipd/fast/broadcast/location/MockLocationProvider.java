@@ -10,7 +10,12 @@ import android.location.LocationManager;
 import android.util.Log;
 
 public class MockLocationProvider {
-	protected final String TAG = "it.unipd.fast.broadcast";
+	protected static final String TAG = "it.unipd.fast.broadcast";
+	
+	
+	private static int __counter;
+	private static int __peers_number;
+	
 	
 	private LocationManager manager;
 	private Context context;
@@ -49,7 +54,13 @@ public class MockLocationProvider {
 	public void updateLocation() {
 		try {
 			BufferedReader file = new BufferedReader(new InputStreamReader(context.getAssets().open("mock_positions.txt")));
+			//skip header line
 			String line = file.readLine();
+			//skip lines according to __counter
+			while(line!=null && __counter!=0) {
+				Log.d(TAG, this.getClass().getSimpleName()+": discarding line "+file.readLine());
+				__counter--;
+			}
 			while(line != null && (!line.startsWith(Integer.toString(positionNumber))))
 				line = file.readLine();
 			if(line == null) {//TODO: end of file reached, shutdown the simulation
@@ -65,5 +76,11 @@ public class MockLocationProvider {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public static void __set_static_couter(int __counter, int __peers_number) {
+		Log.d(TAG, MockLocationProvider.class.getSimpleName()+": file counter: "+__counter+"; peers number: "+__peers_number);
+		MockLocationProvider.__counter = __counter;
+		MockLocationProvider.__peers_number = __peers_number;
 	}
 }
