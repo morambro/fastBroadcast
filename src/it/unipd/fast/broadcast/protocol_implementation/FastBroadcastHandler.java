@@ -30,29 +30,6 @@ public class FastBroadcastHandler extends Service implements ICommunicationHandl
 	
 	/******************************************* DECLARATIONS ******************************************/
 	
-	private static class CoordinatesHelper {
-
-		private static double PIx = 3.141592653589793;
-		private static double RADIO = 6378.16;
-
-		private static double radians(double x){
-			return x * PIx / 180;
-		}
-
-		public static double distanceBetweenPlaces(double lon1,double lat1 ,double lon2 ,double lat2) {
-
-			double dlon =  radians(lon2 - lon1);
-			double dlat =  radians(lat2 - lat1);
-
-			double a =  (Math.sin(dlat / 2) * Math.sin(dlat / 2)) + 
-					Math.cos(radians(lat1)) * Math.cos(radians(lat2)) * (Math.sin(dlon / 2) * Math.sin(dlon / 2));
-			double angle = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-			return (angle * RADIO) * 1000 ; // in meters
-		}
-	}
-	
-	
 	/**
 	 * Task scheduled at a fixed TURN_DURATION time, which sends out an hello message 
 	 * to perform Range estimation
@@ -110,7 +87,9 @@ public class FastBroadcastHandler extends Service implements ICommunicationHandl
 			double longitude 	= Double.parseDouble(content.get(IMessage.SENDER_LONGITUDE_KEY));
 			int maxRange 		= Integer.valueOf(content.get(IMessage.SENDER_RANGE_KEY));
 			int distance = 0; //TODO : calculate distance...
-			//CoordinatesHelper.distanceBetweenPlaces(latitude, longitude, lon2, lat2)
+			
+			// float[] results = new float[3];
+			// Location.distanceBetweenPlaces(latitude, longitude, lon2, lat2)
 			
 			// calculate contention window
 			int contentionWindow = (int)Math.floor((((maxRange-distance)/maxRange) * (CwMax-CwMin))+CwMin); 
@@ -215,7 +194,7 @@ public class FastBroadcastHandler extends Service implements ICommunicationHandl
 				
 				Location l = new Location(""); // TODO : Retrieve the location
 				
-				float[] results = new float[]{};
+				float[] results = new float[3];
 				Location.distanceBetween(latitude, longitude, l.getLatitude(), l.getLongitude(), results);
 				
 				// Received from front

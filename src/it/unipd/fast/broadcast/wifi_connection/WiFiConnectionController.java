@@ -103,14 +103,32 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 	 * 
 	 */
 	private PeerListListener peerListener = new PeerListListener() {
+		
 		public void onPeersAvailable(WifiP2pDeviceList peers_list) {
-			Log.d(TAG, this.getClass().getSimpleName()+": Peers Added to the List");
-			peers.clear();
-			peers.addAll(peers_list.getDeviceList());
+			
+			// Adds only new devices
+			for(WifiP2pDevice device : peers_list.getDeviceList()){
+				if(!peers.contains(device)){
+					Log.d(TAG,this.getClass().getSimpleName() + "Aggiunto device");
+					peers.add(device);
+				}else{
+					Log.d(TAG,this.getClass().getSimpleName() + "Device already in the list");
+				}
+			}
+			// remove disappeared devices
+			for(WifiP2pDevice device : peers){
+				if(!peers_list.getDeviceList().contains(device)){
+					Log.d(TAG,this.getClass().getSimpleName() + "Device not in the list, removed");
+					peers.remove(device);
+				}
+			}
+			
 			Message msg = new Message();
 			msg.obj = peers;
 			msg.what = GuiHandlerInterface.UPDATE_PEERS;
 			guiHandler.sendMessage(msg);
+			
+			Log.d(TAG, this.getClass().getSimpleName()+": Peers Added to the List");
 		}
 
 	};
