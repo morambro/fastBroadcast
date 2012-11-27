@@ -127,10 +127,8 @@ public class FastBroadcastRangeEstimator extends Service implements IRangeEstima
 		
 		helloMessage.addContent(IMessage.HELLO_SENDER_LATITUDE_KEY,"45.227009");
 		helloMessage.addContent(IMessage.HELLO_SENDER_LONGITUDE_KEY,"11.775048");
-		helloMessage.addContent(IMessage.HELLO_SENDER_RANGE_KEY,"400");
+		helloMessage.addContent(IMessage.HELLO_SENDER_RANGE_KEY,Math.max(lmfr, cmfr)+"");
 		
-		// Adding max range 
-		helloMessage.addContent("max_range",Math.max(lmfr, cmfr)+"");
 		helloMessage.prepare();
 		transmissionManager.send(devices, helloMessage);
 	}
