@@ -176,7 +176,7 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 
 		@Override
 		public void onLocationChanged(Location location) {
-			Log.d(TAG,MainActivity.class.getSimpleName() + " : " + location);
+			Log.d(TAG,WiFiConnectionController.class.getSimpleName() + " : " + location.getLatitude()+"; "+location.getLongitude());
 			if(rangeEstimator != null) rangeEstimator.setCurrentLocation(location);
 		}
 	};
