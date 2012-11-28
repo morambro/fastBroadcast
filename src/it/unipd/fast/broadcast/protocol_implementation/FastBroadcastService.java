@@ -179,11 +179,11 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 	/**
 	 * Current-turn Maximum Front Range
 	 */
-	private double cmfr = 300;
+	private double cmfr = 100;
 	/**
 	 * Current-turn Maximum Back Range
 	 */
-	private double cmbr = 300;
+	private double cmbr = 100;
 	/**
 	 * Last-turn Maximum Front Range
 	 */
@@ -256,7 +256,7 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 				double longitude 	= Double.parseDouble(content.get(IMessage.SENDER_LONGITUDE_KEY));
 				double max_range  	= Double.parseDouble(content.get(IMessage.SENDER_RANGE_KEY));
 				// Retrieve the sender bearing
-				int direction 		= Integer.parseInt(content.get(IMessage.SENDER_DIRECTION_KEY));
+				float direction 		= Float.valueOf(content.get(IMessage.SENDER_DIRECTION_KEY));
 				
 				float[] results = new float[3];
 				
@@ -270,6 +270,7 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 					if(receivedFromBack(direction,latitude,longitude)){
 						// Received from back
 						cmbr = Math.max(cmbr, Math.max(results[0], max_range));
+						Log.d(TAG,"Distance = "+results[0]+"   cmbr = "+cmbr);
 						Log.d(TAG,this.getClass().getSimpleName()+" : Sono davanti, aggiorno cmbr a = "+cmbr);
 					}else{
 						// Received from front

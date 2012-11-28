@@ -31,6 +31,11 @@ public class MockLocationProvider {
 	public int powerRequirement = 0;
 	public int accuracy = 2;
 	
+	/**
+	 * Positions file
+	 */
+	private BufferedReader file;
+	
 	public MockLocationProvider(LocationManager manager, Context context) {
 		Log.d(TAG, this.getClass().getSimpleName()+": registering provider: "+name);
 		this.manager = manager;
@@ -44,6 +49,11 @@ public class MockLocationProvider {
 		manager.addTestProvider(name, requiresNetwork, requiresSatellite, requiresCell, hasMonetaryCost, 
 				supportsAltitude, supportsSpeed, supportsBearing, powerRequirement, accuracy);
 		manager.setTestProviderEnabled(name, true);
+		try {
+			file = new BufferedReader(new InputStreamReader(context.getAssets().open("mock_positions.txt")));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public void remove() {
@@ -53,7 +63,6 @@ public class MockLocationProvider {
 	public void updateLocation() {
 		try {
 			float bearing;
-			BufferedReader file = new BufferedReader(new InputStreamReader(context.getAssets().open("mock_positions.txt")));
 			//skip header line
 			String line = file.readLine();
 			line = file.readLine();

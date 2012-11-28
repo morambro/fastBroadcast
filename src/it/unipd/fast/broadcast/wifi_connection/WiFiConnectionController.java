@@ -60,10 +60,10 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 
 	private Handler guiHandler;
 	private ServiceConnection dataReceiverServiceConnection = new DataServiceConnection();
-	private ServiceConnection fastBroadcastServiceConnection = new RangeEstiomatorConnection();
+	private ServiceConnection fastBroadcastServiceConnection = new FastBroadcastServiceConnection();
 	private ServiceConnection serviceConn = new LocServiceConnection();
 	private boolean isServiceBinded = false;
-//	private LocServiceBroadcastInterface locationService;
+	private Location currentLocation;
 	private IDataCollectionHandler collectionHandler = new CollectionHandler();
 	private DataReceiverServiceInterface dataInterface = null;
 	private WifiP2pManager manager;
@@ -78,7 +78,7 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 	private String groupOwnerAddress;
 	private boolean isGroupOwner = false;
 
-	private ICommunicationHandler rangeEstimator;
+	private ICommunicationHandler fastBroadcastService;
 
 	//ServiceConnection for LocationServiceListener
 	class LocServiceConnection implements ServiceConnection {
@@ -115,11 +115,14 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 
 	}
 
-	private class RangeEstiomatorConnection implements ServiceConnection{
+	private class FastBroadcastServiceConnection implements ServiceConnection{
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder binder) {
-			rangeEstimator = ((FastBroadcastServiceBinder)binder).getService();
-			Log.d(TAG, this.getClass().getSimpleName()+": Servizio ricezione dati binded");
+			fastBroadcastService = ((FastBroadcastServiceBinder)binder).getService();
+			// After creating the service, update the location
+			fastBroadcastService.setCurrentLocation(currentLocation);
+			Log.d(TAG, this.getClass().getSimpleName()+": Servizio ricezione dati binded " +
+					"\nlocation = "+currentLocation.getLatitude()+","+currentLocation.getLongitude());
 		}
 
 		@Override
@@ -181,7 +184,8 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 		@Override
 		public void onLocationChanged(Location location) {
 			Log.d(TAG,WiFiConnectionController.class.getSimpleName() + " : " + location.getLatitude()+"; "+location.getLongitude());
-			if(rangeEstimator != null) rangeEstimator.setCurrentLocation(location);
+			currentLocation = location;
+			if(fastBroadcastService != null) fastBroadcastService.setCurrentLocation(location);
 		}
 	};
 
@@ -412,7 +416,7 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 			Log.d(TAG, this.getClass().getSimpleName()+": location service unbound");
 		}
 		dataInterface.unregisterHandler(collectionHandler);
-		if(rangeEstimator != null) context.unbindService(fastBroadcastServiceConnection);
+		if(fastBroadcastService != null) context.unbindService(fastBroadcastServiceConnection);
 
 	}
 
@@ -461,7 +465,7 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 
 	@Override
 	public void helloMessageArrived(IMessage message){
-		rangeEstimator.helloMessageReceived(message);
+		fastBroadcastService.helloMessageReceived(message);
 	}
 
 	@Override

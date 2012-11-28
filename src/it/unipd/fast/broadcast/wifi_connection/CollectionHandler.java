@@ -40,7 +40,7 @@ public class CollectionHandler implements IDataCollectionHandler {
 					String msgContent = content.get(key);
 					if(key.equals(controller.getDeviceId()))
 						MockLocationProvider.__set_static_couter(Integer.parseInt(IMessage.splitContent(msgContent)[IMessage.FILE_COUNTER_INDEX]), content.size());
-					allPeerData.put(key, msgContent);
+					allPeerData.put(key, IMessage.splitContent(msgContent)[0]);
 				}
 				Log.d(TAG, this.getClass().getSimpleName()+": Ricevuta lista");
 				controller.setPeersIdIPmap(allPeerData);
