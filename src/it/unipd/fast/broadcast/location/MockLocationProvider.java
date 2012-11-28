@@ -20,6 +20,7 @@ public class MockLocationProvider {
 	private LocationManager manager;
 	private Context context;
 	private int positionNumber = 0;
+	private float bearing;
 	
 	public String name = "MockProvider";
 	public boolean requiresNetwork = false;
@@ -28,7 +29,7 @@ public class MockLocationProvider {
 	public boolean hasMonetaryCost = false;
 	public boolean supportsAltitude = false;
 	public boolean supportsSpeed = false;
-	public boolean supportsBearing = false;
+	public boolean supportsBearing = true;
 	public int powerRequirement = 0;
 	public int accuracy = 2;
 	
@@ -56,13 +57,18 @@ public class MockLocationProvider {
 			BufferedReader file = new BufferedReader(new InputStreamReader(context.getAssets().open("mock_positions.txt")));
 			//skip header line
 			String line = file.readLine();
+			bearing = Float.parseFloat(file.readLine());
 			//skip lines according to __counter
 			while(line!=null && __counter!=0) {
 				Log.d(TAG, this.getClass().getSimpleName()+": discarding line "+file.readLine());
 				__counter--;
 			}
-			while(line != null && (!line.startsWith(Integer.toString(positionNumber))))
-				line = file.readLine();
+			int tempFlag = __peers_number-1;
+			while(line != null && tempFlag != -1) {
+				if(tempFlag == 0)
+					line = file.readLine();
+				tempFlag--;
+			}
 			if(line == null) {//TODO: end of file reached, shutdown the simulation
 				Log.d(TAG, this.getClass().getSimpleName()+": end of file reached");
 				return;
@@ -72,6 +78,7 @@ public class MockLocationProvider {
 			location.setLatitude(Double.valueOf(positions[1]));
 			location.setLongitude(Double.valueOf(positions[2]));
 			location.setTime(System.currentTimeMillis());
+			location.setBearing(bearing);
 			manager.setTestProviderLocation(name, location);
 		} catch (IOException e) {
 			e.printStackTrace();
