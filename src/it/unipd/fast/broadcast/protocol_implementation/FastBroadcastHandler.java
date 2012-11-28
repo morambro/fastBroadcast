@@ -7,9 +7,11 @@ import it.unipd.fast.broadcast.wifi_connection.transmissionmanager.TransmissionM
 
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import android.app.Service;
 import android.content.Intent;
@@ -72,6 +74,8 @@ public class FastBroadcastHandler extends Service implements ICommunicationHandl
 	 */
 	private class MessageForwarder extends Thread {
 		
+		private ArrayBlockingQueue<IMessage> messageQueue = new ArrayBlockingQueue<IMessage>(30);
+		
 		private Random randomGenerator = new Random();
 		private IMessage message;
 		
@@ -82,24 +86,43 @@ public class FastBroadcastHandler extends Service implements ICommunicationHandl
 		@Override
 		public void run() {
 			
-			Map<String,String> content = message.getContent();
-			double latitude 	= Double.parseDouble(content.get(IMessage.SENDER_LATITUDE_KEY));
-			double longitude 	= Double.parseDouble(content.get(IMessage.SENDER_LONGITUDE_KEY));
-			int maxRange 		= Integer.valueOf(content.get(IMessage.SENDER_RANGE_KEY));
-			int distance = 0; //TODO : calculate distance...
-			
-			// float[] results = new float[3];
-			// Location.distanceBetweenPlaces(latitude, longitude, lon2, lat2)
-			
-			// calculate contention window
-			int contentionWindow = (int)Math.floor((((maxRange-distance)/maxRange) * (CwMax-CwMin))+CwMin); 
-			
-			// waits for a random time... 
-			synchronized (this) {
+			while(true){
+				IMessage message = null;
 				try {
-					Thread.sleep(randomGenerator.nextInt(contentionWindow));
+					message = messageQueue.take();
 				} catch (InterruptedException e) {
 					e.printStackTrace();
+				}
+
+				if(message == null) return;
+				// now I am sure message != null
+
+				Map<String,String> content = message.getContent();
+				double latitude 	= Double.parseDouble(content.get(IMessage.SENDER_LATITUDE_KEY));
+				double longitude 	= Double.parseDouble(content.get(IMessage.SENDER_LONGITUDE_KEY));
+				int maxRange 		= Integer.valueOf(content.get(IMessage.SENDER_RANGE_KEY));
+				int distance 		= 0; //TODO : calculate distance...
+
+				// float[] results = new float[3];
+				// Location.distanceBetweenPlaces(latitude, longitude, lon2, lat2)
+
+				// calculate contention window
+				int contentionWindow = (int)Math.floor((((maxRange-distance)/maxRange) * (CwMax-CwMin))+CwMin); 
+
+				// wait for a random time... 
+				synchronized (this) {
+					try {
+						Thread.sleep(randomGenerator.nextInt(contentionWindow));
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+
+				if(messageQueue.isEmpty()){
+					// No message arrived while I was asleep
+					// TODO : send Message!
+				}else{
+					// 				
 				}
 			}
 			
@@ -145,6 +168,10 @@ public class FastBroadcastHandler extends Service implements ICommunicationHandl
 	 */
 	private Timer scheduler;
 	
+	/**
+	 * Error used to determine if two devices are moving on the same direction
+	 * 
+	 */
 	private final float ERROR = 1f;
 	
 	/**
@@ -156,6 +183,11 @@ public class FastBroadcastHandler extends Service implements ICommunicationHandl
 	 * Tells whether another hello message arrived
 	 */
 	private Boolean helloMessageArrived = false;
+	
+	/**
+	 * 
+	 */
+	private Boolean alertMessageReceived = false;
 	
 	/********************************************** METHODS ********************************************/
 	
@@ -171,8 +203,10 @@ public class FastBroadcastHandler extends Service implements ICommunicationHandl
 		
 		helloMessage.addContent(IMessage.SENDER_LATITUDE_KEY,"45.227009");
 		helloMessage.addContent(IMessage.SENDER_LONGITUDE_KEY,"11.775048");
+		// Add sender range estimation
 		helloMessage.addContent(IMessage.SENDER_RANGE_KEY,Math.max(lmfr, cmfr)+"");
-		helloMessage.addContent(IMessage.HELLO_SENDER_DIRECTION_KEY,"30");
+		// Add the bearing
+		helloMessage.addContent(IMessage.HELLO_SENDER_DIRECTION_KEY,"45");
 		
 		helloMessage.prepare();
 		transmissionManager.send(devices, helloMessage);
@@ -202,31 +236,18 @@ public class FastBroadcastHandler extends Service implements ICommunicationHandl
 				
 				float myBearing = 45;//TODO : retrieve bearing from LocationProvider
 				
-				boolean receivedFromBack = false;
 				// If I'm in the same direction, check whether I'm in front of him or not
 				if(areEquals(myBearing,direction,ERROR)){
-					if(direction > 0){
-						if(!(latitude > l.getLatitude())){
-							// Sono davanti
-							receivedFromBack = true;
-						}
+					if(receivedFromBack(direction,l.getLatitude(),latitude)){
+						// Received from back
+						cmbr = Math.max(cmbr, Math.max(results[0], max_range));
 					}else{
-						if(latitude > l.getLatitude()){
-							// Sono davanti
-							receivedFromBack = true;
-						}						
+						// Received from front
+						cmfr = Math.max(cmfr, Math.max(results[0],max_range));
 					}
 				}else{
-					//DIREZIONI OPPOSTE
-				}
-
-				if(receivedFromBack){
-					// Received from back
-					cmbr = Math.max(cmbr, Math.max(results[0], max_range));
-				}else{
-					// Received from front
-					cmfr = Math.max(cmfr, Math.max(results[0],max_range));
-
+					// Different directions, ignore the message
+					Log.d(TAG,this.getClass().getSimpleName()+" : Messaggio proveniente da direzione diversa, lo ignoro");
 				}
 			}
 		}.start();
@@ -241,6 +262,22 @@ public class FastBroadcastHandler extends Service implements ICommunicationHandl
 	 */
 	private boolean areEquals(float myBearing,float direction,float error){
 		return Math.abs(myBearing-direction) < error;
+	}
+	
+	
+	private boolean receivedFromBack(float direction,double latitude,double senderLatitude){
+		if(direction > 0){
+			if(!(senderLatitude > latitude)){
+				// Sono davanti
+				return true;
+			}
+		}else{
+			if(senderLatitude > latitude){
+				// Sono davanti
+				return true;
+			}						
+		}
+		return false;
 	}
 	
 	@Override
