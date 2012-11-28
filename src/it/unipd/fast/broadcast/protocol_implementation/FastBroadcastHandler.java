@@ -74,15 +74,22 @@ public class FastBroadcastHandler extends Service implements ICommunicationHandl
 	 */
 	private class MessageForwarder extends Thread {
 		
+		/*********************************** DECLARATIONS *************************************/
 		private ArrayBlockingQueue<IMessage> messageQueue = new ArrayBlockingQueue<IMessage>(30);
-		
 		private Random randomGenerator = new Random();
 		private IMessage message;
 		
-		public MessageForwarder(IMessage message) {
-			this.message = message;
+		/************************************* METHODS ****************************************/
+		/**
+		 * Method used to send a message to the message forwarder
+		 * 
+		 * @param message
+		 * @throws InterruptedException
+		 */
+		public void put(IMessage message) throws InterruptedException{
+			messageQueue.put(message);
 		}
-
+		
 		@Override
 		public void run() {
 			
@@ -92,6 +99,8 @@ public class FastBroadcastHandler extends Service implements ICommunicationHandl
 					message = messageQueue.take();
 				} catch (InterruptedException e) {
 					e.printStackTrace();
+					Log.d(TAG,this.getClass().getSimpleName() + " : Shutting down MessageForwarder thread");
+					Thread.currentThread().interrupt();
 				}
 
 				if(message == null) return;
@@ -115,6 +124,7 @@ public class FastBroadcastHandler extends Service implements ICommunicationHandl
 						Thread.sleep(randomGenerator.nextInt(contentionWindow));
 					} catch (InterruptedException e) {
 						e.printStackTrace();
+						Thread.currentThread().interrupt();
 					}
 				}
 
@@ -185,9 +195,10 @@ public class FastBroadcastHandler extends Service implements ICommunicationHandl
 	private Boolean helloMessageArrived = false;
 	
 	/**
+	 * Message forwarder thread used to send Alert messages back
 	 * 
 	 */
-	private Boolean alertMessageReceived = false;
+	private MessageForwarder messageForwarder = new MessageForwarder();
 	
 	/********************************************** METHODS ********************************************/
 	
@@ -286,6 +297,9 @@ public class FastBroadcastHandler extends Service implements ICommunicationHandl
 			scheduler.cancel();
 			scheduler.purge();
 		}
+		if(messageForwarder != null){
+			messageForwarder.interrupt();
+		}
 	}
 	
 	
@@ -310,15 +324,27 @@ public class FastBroadcastHandler extends Service implements ICommunicationHandl
 		// On service creation, starts hello message sender Scheduler
 		// creating a timer to schedule hello message sending
 		scheduler = new Timer();
+		// Start message forwarder
+		if(messageForwarder == null) messageForwarder = new MessageForwarder();
+		messageForwarder.start();
 	}
 	
 	private static int CwMax = 2000;
 	private static int CwMin  = 1000;
 	
 	@Override
-	public void handleAlertMessage(IMessage message){
-		new MessageForwarder(message).start();
-		
+	public void handleAlertMessage(final IMessage message){
+		// Using a new thread to prevent main thread interruption
+		new Thread(){
+			@Override
+			public void run() {
+				try {
+					messageForwarder.put(message);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}.start();
 	}
 	
 }
