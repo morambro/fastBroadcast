@@ -34,7 +34,7 @@
 	<service android:name=".location.LocationService"/>
     <service android:name=".location.MockLocationService"/>
     <service android:name=".wifi_connection.receiver.DataReceiverService" />
-    <service android:name=".protocol_implementation.FastBroadcastHandler" />
+    <service android:name=".protocol_implementation.FastBroadcastService" />
     </application>
 
 </manifest>
