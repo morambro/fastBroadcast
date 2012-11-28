@@ -145,6 +145,8 @@ public class FastBroadcastHandler extends Service implements ICommunicationHandl
 	 */
 	private Timer scheduler;
 	
+	private final float ERROR = 1f;
+	
 	/**
 	 * Trasmission manager used to send out messages
 	 */
@@ -190,24 +192,56 @@ public class FastBroadcastHandler extends Service implements ICommunicationHandl
 				double latitude 	= Double.parseDouble(content.get(IMessage.SENDER_LATITUDE_KEY));
 				double longitude 	= Double.parseDouble(content.get(IMessage.SENDER_LONGITUDE_KEY));
 				double max_range  	= Double.parseDouble(content.get(IMessage.SENDER_RANGE_KEY));
+				// Retrieve the sender bearing
 				int direction 		= Integer.parseInt(content.get(IMessage.HELLO_SENDER_DIRECTION_KEY));
 				
-				Location l = new Location(""); // TODO : Retrieve the location
+				Location l = new Location(""); // TODO : Retrieve my location
 				
 				float[] results = new float[3];
 				Location.distanceBetween(latitude, longitude, l.getLatitude(), l.getLongitude(), results);
 				
-				// Received from front
-				// if(sameDirection(myDirection,direction))
-				cmfr = Math.max(cmfr, Math.max(results[0],max_range));
-				// Received from back
-				// else
-				cmbr = Math.max(cmbr, Math.max(results[0], max_range));
+				float myBearing = 45;//TODO : retrieve bearing from LocationProvider
+				
+				boolean receivedFromBack = false;
+				// If I'm in the same direction, check whether I'm in front of him or not
+				if(areEquals(myBearing,direction,ERROR)){
+					if(direction > 0){
+						if(!(latitude > l.getLatitude())){
+							// Sono davanti
+							receivedFromBack = true;
+						}
+					}else{
+						if(latitude > l.getLatitude()){
+							// Sono davanti
+							receivedFromBack = true;
+						}						
+					}
+				}else{
+					//DIREZIONI OPPOSTE
+				}
 
+				if(receivedFromBack){
+					// Received from back
+					cmbr = Math.max(cmbr, Math.max(results[0], max_range));
+				}else{
+					// Received from front
+					cmfr = Math.max(cmfr, Math.max(results[0],max_range));
+
+				}
 			}
 		}.start();
 	}
-
+	
+	/**
+	 * Tells if the direction are the same, within a certain error
+	 * 
+	 * @param myBearing
+	 * @param direction
+	 * @return
+	 */
+	private boolean areEquals(float myBearing,float direction,float error){
+		return Math.abs(myBearing-direction) < error;
+	}
 	
 	@Override
 	public void stopExecuting(){
