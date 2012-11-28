@@ -17,10 +17,10 @@ import android.util.Log;
 
 public class LocationService extends Service implements LocServiceBroadcastInterface {
 	protected final String TAG = "it.unipd.fast.broadcast";
-	
+
 	private static final long TIME_THRESHOLD = 60000;//ms => 1 min
 	private static final int ACCURACY_THRESHOLD = 50;//mt
-			private List<LocationServiceListener> listeners = new ArrayList<LocationServiceListener>();
+	private List<LocationServiceListener> listeners = new ArrayList<LocationServiceListener>();
 	private Location lastLoc = null;
 	private LocationManager locationManager;
 	private LocationListener listener;
@@ -82,7 +82,7 @@ public class LocationService extends Service implements LocServiceBroadcastInter
 		};
 		registerLocationProviders(locationManager, listener);
 	}
-	
+
 	@Override
 	public void onDestroy() {
 		Log.d(TAG, this.getClass().getSimpleName()+": Unregistering location listener..");
@@ -95,9 +95,9 @@ public class LocationService extends Service implements LocServiceBroadcastInter
 		locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, listener);
 		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, listener);
 	}
-	
+
 	protected void cleanup() {
-		
+
 	}
 
 	protected boolean useNewLocation(Location newLoc, Location oldLoc) {
@@ -119,10 +119,10 @@ public class LocationService extends Service implements LocServiceBroadcastInter
 			return true;
 		return false;
 	}
-	
+
 	@Override
 	public Location getLastLocation() {
 		return locationManager.getLastKnownLocation(LOCATION_SERVICE);
 	}
-	
+
 }

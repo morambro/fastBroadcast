@@ -19,7 +19,6 @@ public class MockLocationProvider {
 	
 	private LocationManager manager;
 	private Context context;
-	private int positionNumber = 0;
 	private float bearing;
 	
 	public String name = "MockProvider";
@@ -45,6 +44,7 @@ public class MockLocationProvider {
 		manager.addTestProvider(name, requiresNetwork, requiresSatellite, requiresCell, hasMonetaryCost, 
 				supportsAltitude, supportsSpeed, supportsBearing, powerRequirement, accuracy);
 		manager.setTestProviderEnabled(name, true);
+		updateLocation();
 	}
 	
 	public void remove() {
