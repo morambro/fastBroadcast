@@ -14,6 +14,11 @@ public class MockLocationService extends LocationService {
 	}
 	
 	@Override
+	public MockLocationProvider __get_mock_provider() {
+		return mockProvider;
+	}
+	
+	@Override
 	protected void cleanup() {
 		mockProvider.remove();
 	}

@@ -18,12 +18,12 @@ import android.util.Log;
 public class LocationService extends Service implements LocServiceBroadcastInterface {
 	protected final String TAG = "it.unipd.fast.broadcast";
 
-	private static final long TIME_THRESHOLD = 60000;//ms => 1 min
-	private static final int ACCURACY_THRESHOLD = 50;//mt
-	private List<LocationServiceListener> listeners = new ArrayList<LocationServiceListener>();
-	private Location lastLoc = null;
-	private LocationManager locationManager;
-	private LocationListener listener;
+	protected static final long TIME_THRESHOLD = 60000;//ms => 1 min
+	protected static final int ACCURACY_THRESHOLD = 50;//mt
+	protected List<LocationServiceListener> listeners = new ArrayList<LocationServiceListener>();
+	protected Location lastLoc = null;
+	protected LocationManager locationManager;
+	protected LocationListener listener;
 
 	//Service binder definition
 	public class LocServiceBinder extends Binder {
@@ -44,6 +44,11 @@ public class LocationService extends Service implements LocServiceBroadcastInter
 
 	public void removeLocationListener(LocationServiceListener listener) {
 		listeners.remove(listener);
+	}
+	
+	@Override
+	public MockLocationProvider __get_mock_provider() {
+		return null;
 	}
 
 	//Service methods
@@ -124,5 +129,4 @@ public class LocationService extends Service implements LocServiceBroadcastInter
 	public Location getLastLocation() {
 		return locationManager.getLastKnownLocation(LOCATION_SERVICE);
 	}
-
 }

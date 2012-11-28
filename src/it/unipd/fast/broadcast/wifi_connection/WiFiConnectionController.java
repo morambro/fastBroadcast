@@ -1,7 +1,6 @@
 package it.unipd.fast.broadcast.wifi_connection;
 
 import it.unipd.fast.broadcast.GuiHandlerInterface;
-import it.unipd.fast.broadcast.MainActivity;
 import it.unipd.fast.broadcast.location.LocationService;
 import it.unipd.fast.broadcast.location.LocationServiceListener;
 import it.unipd.fast.broadcast.location.MockLocationProvider;
@@ -53,8 +52,11 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 	/********************************************** DECLARATIONS *************************************************/
 
 	protected final String TAG = "it.unipd.fast.broadcast";
-
 	public static String MAC_ADDRESS = null;
+	
+	
+	private MockLocationProvider __mock_provider;
+	
 
 	private Handler guiHandler;
 	private ServiceConnection dataReceiverServiceConnection = new DataServiceConnection();
@@ -85,6 +87,8 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 			isServiceBinded = true;
 //			locationService = ((LocationService.LocServiceBinder) binder).getService();
 			((LocationService.LocServiceBinder) binder).getService().addLocationListener(locServiceListener);
+			__mock_provider = ((LocationService.LocServiceBinder) binder).getService().__get_mock_provider();
+			Log.d(TAG, this.getClass().getSimpleName()+": Got MockProvider: "+__mock_provider.name);
 			Log.d(TAG, this.getClass().getSimpleName()+": Location Service Bound");
 		}
 
@@ -309,6 +313,7 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 		if(isGroupOwner){
 			if(!mapSent && peerIdIpMap.keySet().size() == peers.size()){
 				MockLocationProvider.__set_static_couter(0, peerIdIpMap.size());
+				__mock_provider.updateLocation();
 				Log.d(TAG,this.getClass().getCanonicalName()+": Invio la mappa a tutti : \n");
 				mapToBroadcast = new HashMap<String, String>(peerIdIpMap);
 				mapToBroadcast.put(MAC_ADDRESS,groupOwnerAddress);
@@ -320,6 +325,7 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 			}
 		} else {
 			// If I'm not the group owner and I'm here, I received the map. So I can start estimation phase
+			__mock_provider.updateLocation();
 			startEstimator();
 		}
 

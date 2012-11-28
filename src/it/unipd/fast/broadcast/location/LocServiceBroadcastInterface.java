@@ -27,4 +27,5 @@ public interface LocServiceBroadcastInterface {
 	 * @return
 	 */
 	Location getLastLocation();
+	MockLocationProvider __get_mock_provider();
 }

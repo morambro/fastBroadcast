@@ -2,7 +2,6 @@ package it.unipd.fast.broadcast.location;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 
 import android.content.Context;
@@ -20,7 +19,6 @@ public class MockLocationProvider {
 	
 	private LocationManager manager;
 	private Context context;
-	private float bearing;
 	
 	public String name = "MockProvider";
 	public boolean requiresNetwork = false;
@@ -46,7 +44,6 @@ public class MockLocationProvider {
 		manager.addTestProvider(name, requiresNetwork, requiresSatellite, requiresCell, hasMonetaryCost, 
 				supportsAltitude, supportsSpeed, supportsBearing, powerRequirement, accuracy);
 		manager.setTestProviderEnabled(name, true);
-		updateLocation();
 	}
 	
 	public void remove() {
@@ -55,10 +52,12 @@ public class MockLocationProvider {
 	
 	public void updateLocation() {
 		try {
+			float bearing;
 			BufferedReader file = new BufferedReader(new InputStreamReader(context.getAssets().open("mock_positions.txt")));
 			//skip header line
 			String line = file.readLine();
-			bearing = Float.parseFloat(file.readLine());
+			line = file.readLine();
+			bearing = Float.parseFloat(line);
 			//skip lines according to __counter
 			while(line!=null && __counter!=0) {
 				Log.d(TAG, this.getClass().getSimpleName()+": discarding line "+file.readLine());
@@ -76,10 +75,11 @@ public class MockLocationProvider {
 			}
 			String[] positions = line.split(",");
 			Location location = new Location(name);
-			location.setLatitude(Double.valueOf(positions[1]));
-			location.setLongitude(Double.valueOf(positions[2]));
+			location.setLatitude(Double.valueOf(positions[0]));
+			location.setLongitude(Double.valueOf(positions[1]));
 			location.setTime(System.currentTimeMillis());
 			location.setBearing(bearing);
+			Log.d(TAG, this.getClass().getSimpleName()+": NEW LOCATION: "+location.getBearing()+"; "+location.getLatitude()+"; "+location.getLongitude());
 			manager.setTestProviderLocation(name, location);
 		} catch (IOException e) {
 			e.printStackTrace();
