@@ -51,7 +51,6 @@ public class MockLocationProvider {
 		manager.removeTestProvider(name);
 	}
 	
-	
 	public void updateLocation() {
 		try {
 			BufferedReader file = new BufferedReader(new InputStreamReader(context.getAssets().open("mock_positions.txt")));

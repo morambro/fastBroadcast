@@ -58,7 +58,7 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 
 	private Handler guiHandler;
 	private ServiceConnection dataReceiverServiceConnection = new DataServiceConnection();
-	private ServiceConnection estimatorServiceConnection = new RangeEstiomatorConnection();
+	private ServiceConnection fastBroadcastServiceConnection = new RangeEstiomatorConnection();
 	private ServiceConnection serviceConn = new LocServiceConnection();
 	private boolean isServiceBinded = false;
 //	private LocServiceBroadcastInterface locationService;
@@ -177,6 +177,7 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 		@Override
 		public void onLocationChanged(Location location) {
 			Log.d(TAG,MainActivity.class.getSimpleName() + " : " + location);
+			if(rangeEstimator != null) rangeEstimator.setCurrentLocation(location);
 		}
 	};
 
@@ -215,7 +216,7 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 		Intent locService = new Intent(context, MockLocationService.class);
 		serviceConn = new LocServiceConnection();
 		boolean temp = context.bindService(locService, serviceConn, Context.BIND_AUTO_CREATE);
-		Log.d(TAG, this.getClass().getSimpleName()+": binding status: "+temp);
+		Log.d(TAG, this.getClass().getSimpleName()+": Location Service binding status : "+temp);
 
 		// Setting static field which contains device MAC address
 		MAC_ADDRESS = getDeviceMacAddress();
@@ -339,7 +340,7 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 		Intent estimationService = new Intent(context, FastBroadcastService.class);
 		estimationService.putStringArrayListExtra("devices",new ArrayList<String>(peerIdIpMap.values()));
 		context.startService(estimationService);
-		context.bindService(estimationService, estimatorServiceConnection, Context.BIND_AUTO_CREATE);
+		context.bindService(estimationService, fastBroadcastServiceConnection, Context.BIND_AUTO_CREATE);
 	}
 
 	/**
@@ -405,7 +406,7 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 			Log.d(TAG, this.getClass().getSimpleName()+": location service unbound");
 		}
 		dataInterface.unregisterHandler(collectionHandler);
-		if(rangeEstimator != null) context.unbindService(estimatorServiceConnection);
+		if(rangeEstimator != null) context.unbindService(fastBroadcastServiceConnection);
 
 	}
 

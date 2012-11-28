@@ -67,14 +67,7 @@ public class MainActivity extends FragmentActivity implements GuiHandlerInterfac
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
-		float[] results = new float[3];
-		Location.distanceBetween(44.444494,11.560949,44.442697,11.558433, results);
-		
-		Log.d(TAG,this.getClass().getSimpleName()+"  distance = "+results[0]+"" +
-				"\ninitial bearing = "+results[1]+"" +
-						"\nfinal bearing = "+results[2]);
-		
+
 		setContentView(R.layout.activity_main);
 //		doBindService();
 		setContentView(R.layout.activity_main);
