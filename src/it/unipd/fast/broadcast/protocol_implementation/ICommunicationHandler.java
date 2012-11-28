@@ -1,8 +1,7 @@
 package it.unipd.fast.broadcast.protocol_implementation;
 
-import java.util.List;
-
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
+import android.location.Location;
 
 /**
  * Range Estimator interface. 
@@ -15,7 +14,7 @@ public interface ICommunicationHandler {
 	/**
 	 * Turn duration in milliseconds
 	 */
-	public static final int TURN_DURATION = 1000;
+	public static final int TURN_DURATION = 5000;
 	
 	/**
 	 * Method used to tell whether a hello message already arrived
@@ -42,4 +41,11 @@ public interface ICommunicationHandler {
 	 * @param message
 	 */
 	public void handleAlertMessage(IMessage message);
+
+	/**
+	 * Setter method used by controller to pass location to the comminication handler
+	 * 
+	 * @param location
+	 */
+	public void setCurrentLocation(Location location);
 }

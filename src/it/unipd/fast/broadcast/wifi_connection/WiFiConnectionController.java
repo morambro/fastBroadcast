@@ -2,13 +2,12 @@ package it.unipd.fast.broadcast.wifi_connection;
 
 import it.unipd.fast.broadcast.GuiHandlerInterface;
 import it.unipd.fast.broadcast.MainActivity;
-import it.unipd.fast.broadcast.location.LocServiceBroadcastInterface;
 import it.unipd.fast.broadcast.location.LocationService;
 import it.unipd.fast.broadcast.location.LocationServiceListener;
 import it.unipd.fast.broadcast.location.MockLocationProvider;
 import it.unipd.fast.broadcast.location.MockLocationService;
-import it.unipd.fast.broadcast.protocol_implementation.FastBroadcastHandler;
-import it.unipd.fast.broadcast.protocol_implementation.FastBroadcastHandler.FastBroadcastServiceBinder;
+import it.unipd.fast.broadcast.protocol_implementation.FastBroadcastService;
+import it.unipd.fast.broadcast.protocol_implementation.FastBroadcastService.FastBroadcastServiceBinder;
 import it.unipd.fast.broadcast.protocol_implementation.ICommunicationHandler;
 import it.unipd.fast.broadcast.wifi_connection.connectionmanager.ConnectionInfoManager.OnConnectionInfoCollected;
 import it.unipd.fast.broadcast.wifi_connection.connectionmanager.ConnectionManagerFactory;
@@ -62,7 +61,6 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 	private ServiceConnection estimatorServiceConnection = new RangeEstiomatorConnection();
 	private ServiceConnection serviceConn = new LocServiceConnection();
 	private boolean isServiceBinded = false;
-	private Location curLocation = null;
 //	private LocServiceBroadcastInterface locationService;
 	private IDataCollectionHandler collectionHandler = new CollectionHandler();
 	private DataReceiverServiceInterface dataInterface = null;
@@ -178,7 +176,6 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 
 		@Override
 		public void onLocationChanged(Location location) {
-			curLocation = location;
 			Log.d(TAG,MainActivity.class.getSimpleName() + " : " + location);
 		}
 	};
@@ -339,7 +336,7 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 	 */
 	private void startEstimator() {
 		Log.d(TAG, this.getClass().getSimpleName()+": Bindo il servizio di Range Estimation");
-		Intent estimationService = new Intent(context, FastBroadcastHandler.class);
+		Intent estimationService = new Intent(context, FastBroadcastService.class);
 		estimationService.putStringArrayListExtra("devices",new ArrayList<String>(peerIdIpMap.values()));
 		context.startService(estimationService);
 		context.bindService(estimationService, estimatorServiceConnection, Context.BIND_AUTO_CREATE);
