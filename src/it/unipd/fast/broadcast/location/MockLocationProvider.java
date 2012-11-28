@@ -2,6 +2,7 @@ package it.unipd.fast.broadcast.location;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 
 import android.content.Context;
@@ -35,6 +36,7 @@ public class MockLocationProvider {
 	public MockLocationProvider(LocationManager manager, Context context) {
 		Log.d(TAG, this.getClass().getSimpleName()+": registering provider: "+name);
 		this.manager = manager;
+		this.context = context;
 		// Horrible Workaround: When shutting app from application manager (long press home+swipe) MainActivity.onDestroy and, 
 		// consequently, doUnbindService get called, but LocationService.onDestroy doesn't for some reason, leaving 
 		// mockup-provider registered within the system and causing crash on next startup (Runtime Exception).
@@ -72,7 +74,7 @@ public class MockLocationProvider {
 				Log.d(TAG, this.getClass().getSimpleName()+": end of file reached");
 				return;
 			}
-			String[] positions = line.split(";");
+			String[] positions = line.split(",");
 			Location location = new Location(name);
 			location.setLatitude(Double.valueOf(positions[1]));
 			location.setLongitude(Double.valueOf(positions[2]));
