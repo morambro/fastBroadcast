@@ -145,11 +145,15 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 					newMessage.prepare();
 					transmissionManager.send(devices, newMessage);
 					
+					// TODO: update location?
+					if(handler != null) handler.doOnForwarded();
 				}else{
 					// At least another message arrived
 					if(receivedFromBack(direction, latitude, longitude)){
 						// ignore??
 						// Someone else forwarded it already
+						// TODO : update location?
+						if(handler != null) handler.doOnForwarded();
 					}else{
 						// restart_procedure...continue with the next message equals to this ok??
 					}
@@ -409,5 +413,13 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 	public void setCurrentLocation(Location location) {
 		currentLocation = location;
 	}
+	
+	OnForwardedHandler handler;
+	
+	@Override
+	public void setOnforwardedHadler(OnForwardedHandler handler) {
+		this.handler = handler;
+	}
+	
 	
 }

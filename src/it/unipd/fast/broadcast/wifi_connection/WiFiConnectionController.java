@@ -8,6 +8,7 @@ import it.unipd.fast.broadcast.location.MockLocationService;
 import it.unipd.fast.broadcast.protocol_implementation.FastBroadcastService;
 import it.unipd.fast.broadcast.protocol_implementation.FastBroadcastService.FastBroadcastServiceBinder;
 import it.unipd.fast.broadcast.protocol_implementation.ICommunicationHandler;
+import it.unipd.fast.broadcast.protocol_implementation.ICommunicationHandler.OnForwardedHandler;
 import it.unipd.fast.broadcast.wifi_connection.connectionmanager.ConnectionInfoManager.OnConnectionInfoCollected;
 import it.unipd.fast.broadcast.wifi_connection.connectionmanager.ConnectionManagerFactory;
 import it.unipd.fast.broadcast.wifi_connection.connectionmanager.IConnectionInfoManager;
@@ -80,6 +81,8 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 
 	private ICommunicationHandler fastBroadcastService;
 
+	/************************************************* INTERFACES/CLASSES ********************************************/
+	
 	//ServiceConnection for LocationServiceListener
 	class LocServiceConnection implements ServiceConnection {
 
@@ -121,6 +124,13 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 			fastBroadcastService = ((FastBroadcastServiceBinder)binder).getService();
 			// After creating the service, update the location
 			fastBroadcastService.setCurrentLocation(currentLocation);
+			fastBroadcastService.setOnforwardedHadler(new OnForwardedHandler() {
+				
+				@Override
+				public void doOnForwarded() {
+					__mock_provider.updateLocation();
+				}
+			});
 			Log.d(TAG, this.getClass().getSimpleName()+": Servizio ricezione dati binded " +
 					"\nlocation = "+currentLocation.getLatitude()+","+currentLocation.getLongitude());
 		}

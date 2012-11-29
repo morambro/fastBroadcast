@@ -5,7 +5,6 @@ import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
 
 import java.util.List;
 
-import android.location.Location;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.os.Bundle;
 import android.os.Handler;

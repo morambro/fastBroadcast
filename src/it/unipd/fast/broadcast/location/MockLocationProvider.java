@@ -18,7 +18,6 @@ public class MockLocationProvider {
 	
 	
 	private LocationManager manager;
-	private Context context;
 	
 	public String name = "MockProvider";
 	public boolean requiresNetwork = false;
@@ -39,7 +38,6 @@ public class MockLocationProvider {
 	public MockLocationProvider(LocationManager manager, Context context) {
 		Log.d(TAG, this.getClass().getSimpleName()+": registering provider: "+name);
 		this.manager = manager;
-		this.context = context;
 		// Horrible Workaround: When shutting app from application manager (long press home+swipe) MainActivity.onDestroy and, 
 		// consequently, doUnbindService get called, but LocationService.onDestroy doesn't for some reason, leaving 
 		// mockup-provider registered within the system and causing crash on next startup (Runtime Exception).

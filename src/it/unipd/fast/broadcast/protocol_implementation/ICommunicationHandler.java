@@ -11,6 +11,10 @@ import android.location.Location;
  */
 public interface ICommunicationHandler {
 
+	public interface OnForwardedHandler {
+		void doOnForwarded();
+	}
+	
 	/**
 	 * Turn duration in milliseconds
 	 */
@@ -48,4 +52,6 @@ public interface ICommunicationHandler {
 	 * @param location
 	 */
 	public void setCurrentLocation(Location location);
+	
+	public void setOnforwardedHadler(OnForwardedHandler handler);
 }
