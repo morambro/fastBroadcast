@@ -393,7 +393,7 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 	private static int CwMin  = 1000;
 	
 	@Override
-	public void handleAlertMessage(final IMessage message){
+	public void handleMessage(final IMessage message){
 		// Using a new thread to prevent main thread interruption
 		new Thread(){
 			@Override

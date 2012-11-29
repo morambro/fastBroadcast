@@ -48,6 +48,7 @@ public class CollectionHandler implements IDataCollectionHandler {
 	
 			case IMessage.ALERT_MESSAGE_TYPE :
 				Log.d(TAG, this.getClass().getSimpleName()+": Ricevuto ALERT : \n"+message);
+				controller.handleMessage(message);
 				break;
 				
 			// case of fast broadcast hello message

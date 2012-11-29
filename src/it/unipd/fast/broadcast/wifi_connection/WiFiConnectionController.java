@@ -334,13 +334,13 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 				IMessage message = createMapMessage(mapToBroadcast, IMessage.BROADCAST_ADDRESS);
 				sendBroadcast(message);
 				mapSent = true;
-				// Now start estimation phase
-				startEstimator();
+				// Now start fast broadcast
+				startFastBroadcastService();
 			}
 		} else {
 			// If I'm not the group owner and I'm here, I received the map. So I can start estimation phase
 			__mock_provider.updateLocation();
-			startEstimator();
+			startFastBroadcastService();
 		}
 
 		if(mapToBroadcast == null) mapToBroadcast = peerIdIpMap;
@@ -355,7 +355,7 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 	 * Starts range estimator service
 	 * 
 	 */
-	private void startEstimator() {
+	private void startFastBroadcastService() {
 		Log.d(TAG, this.getClass().getSimpleName()+": Bindo il servizio di Range Estimation");
 		Intent estimationService = new Intent(context, FastBroadcastService.class);
 		estimationService.putStringArrayListExtra("devices",new ArrayList<String>(peerIdIpMap.values()));
@@ -478,6 +478,11 @@ public class WiFiConnectionController implements IWiFiConnectionController{
 		fastBroadcastService.helloMessageReceived(message);
 	}
 
+	@Override
+	public void handleMessage(IMessage message){
+		fastBroadcastService.handleMessage(message);
+	}
+	
 	@Override
 	public String getDeviceId() {
 		return MAC_ADDRESS;

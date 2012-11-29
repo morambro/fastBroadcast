@@ -40,11 +40,11 @@ public interface ICommunicationHandler {
 	public void stopExecuting();
 	
 	/**
-	 * Handles an incoming alert message
+	 * Handles an incoming generic message
 	 * 
 	 * @param message
 	 */
-	public void handleAlertMessage(IMessage message);
+	public void handleMessage(IMessage message);
 
 	/**
 	 * Setter method used by controller to pass location to the comminication handler
