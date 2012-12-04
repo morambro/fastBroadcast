@@ -523,6 +523,7 @@ Veicolar Nets, Fast Broadcast, \direct, Android.
 	\end{itemize} 
 	
 This brief description describes roughly the algorithm idea. We will focus on our implementation in the next sections.
+Our siulator involves the use of a finite number of device (suppose 4) each running the same application. We use fake locations to simulate with them a large number of devices located on a straight line, changing each device position when needed. See Section \ref{sec:position_change} for a complete explanation of how this is obtained.
 
 \section{Technologies}
 
@@ -530,12 +531,10 @@ Our project uses Android devices instead of vehicles, using their Wi-fi connecti
 Basically a network created with Android \direct APIs is called \emph{group}. A \emph{group} has an owner (the access point), and one or more other devices. In the network the only available IP address is group owner's. 
 Using \direct on Android devices is not possible to connect devices without user's permission.
 
-\section{Implementation}
+\section{Devices connection}
 
-Due to \direct features, the developed application performs two subsequest operations:	
-\subsection{Devices connection}
-
-Devices connection setup consists in the following operations:
+Due to the last two \direct features described in the previous section, devices cannot create and destroy connection opportunistically, so for our simulation we had to introduce a connection establishing phase which creates a \direct group and provides to all the devices a complete address map to let them communicate.
+Devices connection setup consists of the following operations:
 	\begin{itemize}
 		\item One of the devices ask other devices for connection
 		\item When a device accepts, it starts a DHCP negotiation with the connection starter. If no \direct group exists, a group is created and the starter device becomes the group owner; if requesting device is already an owner of a pre-existing group, the device is added to this group. At the end of this phase, each device has an IP address. Only group owner's IP is available via APIs. 
@@ -544,10 +543,26 @@ Devices connection setup consists in the following operations:
 		\item After collecting all the couples \begin{center}\texttt{<MAC address,IP address>}\end{center} from all the clients on a map, it sends it back to all the devices, to let them communicate directly.
 	\end{itemize}
 	
-When all of this operations are done, all the devices are connected and can communicate each other directly via TCP Sockets.
+When all of this operations are done, all the devices are connected and can communicate each other directly via TCP Sockets. The created (overlay) network is visible in figure \ref{fig:device_network}
 
+\begin{figure}[!t]
+\centering
+\includegraphics[width=3in]{imgs/network.png}
+\caption{Devieces overlay network}
+\label{fig:device_network}
+\end{figure}
 
+\section{Position changing}
+\label{sec:position_change}
 
+To simulate the presence of multiple devices, we generated a list of coordinates on a straight line, and dinamically assigned the right position to each device\footnote{The implementation is explained in the next section}. In figure \ref{fig:positions} is shown an example of how positions are dinamically reassigned. Suppose we have four devices, let's called them A, B, C and D, and suppose also we have eight different positions. At the beginning, we have A, B, C and D assigned rispectively on positions 1, 2, 3 and 4. At a certain point device A sends an \emph{Alert message} to all other three devices. As soon as it sends the messages, device A moves to position 5. The other devices compute contantion window and wait for a random time. Let's assume now that device C's timeout occours, so it forwards the message: as required by the algorithm, devices B and C stops themselfs from forwarding data too, and device B moves also from position 2 to position 6, reconsidering the message again after moving. The process continues until last position available is reached. 
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=3in]{imgs/Positions_1.png}
+\caption{Devieces position changes}
+\label{fig:positions}
+\end{figure}
 
 % You must have at least 2 lines in the paragraph with the drop letter
 % (should never be an issue)
@@ -739,23 +754,6 @@ https://www.wi-fi.org/knowledge-center/published-specifications
 % simpler here.)
 %\begin{biography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{mshell}}]{Michael Shell}
 % or if you just want to reserve a space for a photo:
-
-\begin{IEEEbiography}{Michael Shell}
-Biography text here.
-\end{IEEEbiography}
-
-% if you will not have a photo at all:
-\begin{IEEEbiographynophoto}{John Doe}
-Biography text here.
-\end{IEEEbiographynophoto}
-
-% insert where needed to balance the two columns on the last page with
-% biographies
-%\newpage
-
-\begin{IEEEbiographynophoto}{Jane Doe}
-Biography text here.
-\end{IEEEbiographynophoto}
 
 % You can push biographies down or up by placing
 % a \vfill before or after them. The appropriate
