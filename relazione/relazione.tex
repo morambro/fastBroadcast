@@ -360,10 +360,6 @@
 % later in the document, say, to conditionally put the References on a 
 % page by themselves.
 
-
-
-
-
 % *** PDF, URL AND HYPERLINK PACKAGES ***
 %
 \usepackage{url}
@@ -448,21 +444,8 @@ GA, 30332 USA e-mail: (see http://www.michaelshell.org/contact.html).}% <-this %
 % you desire.
 
 
-
-
-% If you want to put a publisher's ID mark on the page you can do it like
-% this:
-%\IEEEpubid{0000--0000/00\$00.00~\copyright~2007 IEEE}
-% Remember, if you use this you must call \IEEEpubidadjcol in the second
-% column for its text to clear the IEEEpubid mark.
-
-
-
 % use for special paper notices
 %\IEEEspecialpapernotice{(Invited Paper)}
-
-
-
 
 % make the title area
 \maketitle
@@ -545,9 +528,9 @@ Devices connection setup consists of the following operations:
 	
 When all of this operations are done, all the devices are connected and can communicate each other directly via TCP Sockets. The created (overlay) network is visible in figure \ref{fig:device_network}
 
-\begin{figure}[!t]
+\begin{figure}[!htbp]
 \centering
-\includegraphics[width=3in]{imgs/network.png}
+\includegraphics[width=3.6in]{imgs/Devices_network.pdf}
 \caption{Devieces overlay network}
 \label{fig:device_network}
 \end{figure}
@@ -557,12 +540,18 @@ When all of this operations are done, all the devices are connected and can comm
 
 To simulate the presence of multiple devices, we generated a list of coordinates on a straight line, and dinamically assigned the right position to each device\footnote{The implementation is explained in the next section}. In figure \ref{fig:positions} is shown an example of how positions are dinamically reassigned. Suppose we have four devices, let's called them A, B, C and D, and suppose also we have eight different positions. At the beginning, we have A, B, C and D assigned rispectively on positions 1, 2, 3 and 4. At a certain point device A sends an \emph{Alert message} to all other three devices. As soon as it sends the messages, device A moves to position 5. The other devices compute contantion window and wait for a random time. Let's assume now that device C's timeout occours, so it forwards the message: as required by the algorithm, devices B and C stops themselfs from forwarding data too, and device B moves also from position 2 to position 6, reconsidering the message again after moving. The process continues until last position available is reached. 
 
-\begin{figure}[!t]
+\begin{figure}[htbp]
 \centering
-\includegraphics[width=3in]{imgs/Positions_1.png}
+\includegraphics[width=3.5in]{imgs/Positions_1.png}
 \caption{Devieces position changes}
 \label{fig:positions}
 \end{figure}
+
+
+\section{Implementation}
+\label{sec:implementation}
+
+Our application is structured in different units, each performing a specific function. There is a single Activity class\cite{activities}, called \texttt{MainActivity}
 
 % You must have at least 2 lines in the paragraph with the drop letter
 % (should never be an issue)
@@ -701,8 +690,6 @@ Appendix two text goes here.
 \section*{Acknowledgment}
 
 
-The authors would like to thank...
-
 
 % Can use something like this to put references on a page
 % by themselves when using endfloat and the captionsoff option.
@@ -741,6 +728,8 @@ H.~Kopka and P.~W. Daly, \emph{A Guide to \LaTeX}, 3rd~ed.\hskip 1em plus
   0.5em minus 0.4em\relax Harlow, England: Addison-Wesley, 1999.
 \bibitem{wifi_direct}
 https://www.wi-fi.org/knowledge-center/published-specifications
+\bibitem{activities}
+http://developer.android.com/guide/components/activities.html
 
 \end{thebibliography}
 

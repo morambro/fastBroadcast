@@ -22,7 +22,7 @@
         android:theme="@style/AppTheme" >
         <activity
 	    android:theme="@android:style/Theme.Holo.Light"
-            android:name=".MainActivity"
+            android:name=".FastBroadcastActivity"
             android:label="@string/title_activity_main"
 	    android:screenOrientation="portrait" android:configChanges="orientation|keyboardHidden" > <!-- Force portrait orientation (avoid runtime fragment crash on rotation) --> >
             <intent-filter>
