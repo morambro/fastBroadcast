@@ -3,11 +3,16 @@
 
 Our application is structured in different units, each performing a specific function. There is a single Activity class\footnote{Entry point of our Android application. For other information on Activity class visit \url{http://developer.android.com/guide/components/activities.html}}, called \ttt{FastBroadcastActivity}, which at application startup performs graphical initializations, creates the application controller, represented by class \ttt{AppController}, which implements \ttt{IAppController} interface, and initializes broadcast receiver\footnote{For information abour what a broadcast receiver is, visit \url{http://developer.android.com/reference/android/content/BroadcastReceiver.html}}, represented by \ttt{FastBroadcastReceiver} class.
 
+%**************************************************************** HELPER ************************************************
 \subsection{Helper}
 Packege \ttt{it.unipd.fast.broadcast.helper} contains an helper class \ttt{XMLParser}. This class provides static methods to manage XML strings and extracting information from them.
 
+%************************************************************** LOCATION ************************************************
 \subsection{Location}
 
+//TODO
+
+%*********************************************************** WI-FI CONNECTION ********************************************
 \subsection{Wi-fi Connection}
 The component which manages Wi-fi connection is contained in the package \begin{center}\ttt{it.unipd.fast.broadcast.wifi\_connection}\end{center} composed by four subpackages:
 	\\
@@ -33,16 +38,33 @@ All the requests from \direct framework are asynchronous, like Intent broadcasti
 	
 	The second task is achieved by \ttt{DataReceiverService} which implements \ttt{IDataReceiverService} and \ttt{Runnable} interfaces, and extends \ttt{android.app.Service}. This class represents an Android service which listens on port 8888 for incoming TCP connection. When a TCP connection is opened, it handles it on a separate thread, to enable multiple requests handling. When a message arrives as a string, is converted to an \ttt{XMLMessage} instance using \ttt{MessageBuilder}, and passed to all registered handlers (instances of \ttt{IDataCollectionHandler} interface); hadlers registration is made with \ttt{registerHandler} method.
 	\ttt{CollectionHandler} class is a specific \ttt{IDataCollectionHandler} implementation. His method \ttt{onDataCollected(IMessage message, String hostIp)} depending on received message's type calls different \ttt{IAppController} operations. Parameter \ttt{hostIp} contains the string representation of sender IP address: this information is used when a \textbf{Ping} message arrives to update peers addresses map.
-	
 	\\
 	\subsubsection{\ttt{connectionmanager}}
 	This package's classes are used to handle connection information, requested to \direct framework. These information are given in the form of a \ttt{android.net.wifi.p2p.WifiP2pInfo} instance; this class provides methods to obtain group owner's IP address, and to know if the current device is the group owner: this information is very important because depending whether the device is group owner or not, different operation has to be done. Class \ttt{ConnectionInfoManager} implementing \ttt{IConnectionInfoManager} manage this situation: it is passed as an handler to \direct framework, which calls \ttt{onConnectionInfoAvailable(WifiP2pInfo info)} asynchronously. 
-	If the current device is not a group owner, it have to send a \tetbf{Ping} message to the owner, including his MAC address in it.
+	If the current device is not a group owner, it have to send a \textbf{Ping} message to the owner, including his MAC address in it.
 	These operation are done on a separate thread, to prevent application stops on blocking operations.
-	
 	\\
 	\subsubsection{\ttt{transmissionmanager}}
 	This package contains classes used to send out messages to other devices. \ttt{ITransmissionManager} interface provides methods to send a message to a single device (based on a generic String id) or to a devices list. His implementation class \ttt{TcpTransmissionManager} use TCP Sockets to send out messages, performing it on a separate thread. To obtain a \ttt{TcpTransmissionManager} instance, is provided the sigleton class \ttt{TransmissionManagerFactory}.
-	
+
+%**********************************************************PROTOCOL ************************************************
 \subsection{Protocol implementation}
 
+Package \begin{center}\ttt{it.unipd.fast.broadcast.protocol\_implementation}\end{center} represents Fast Broadcast protocol implementation. It provides an interface \ttt{ICommunicationHandler} used by controller to communicate with this component. Class \ttt{FastBroadcastService} realize the protocol. It implements \ttt{ICommunicationHandler} interface and extends \ttt{android.app.Service}. \ttt{FastBroadcastService} has two inner private classes:
+\begin{itemize}
+	\item \ttt{HelloMessageSender}, a \ttt{java.util.TimerTask} subclass which realize \textbf{Hello} message sending. This task is scheduled at a fixed time $T$: it waits for a random time between $0$ and $T$ and if no other \textbf{Hello} message was sent (it checks whether \ttt{helloMessageArrived} is \ttt{true} or not), it broadcasts it.
+	\item \ttt{MessageForwarder}, a thread class used to perform message forwarding (\textit{Broadcast phase}). It has a synchronized message queue on which this thread waits until \ttt{IMessage} instances are added. When a message arrives it calculates \textit{contention window} and waits a random time after which forwarding it (if no one else did it first). After forwarding the message, it calls \ttt{doOnForwarded} method, to update devices positions.
+\end{itemize} 
+
+The method \ttt{helloMessageReceived(IMessage message)} is called by the controller when an \textbf{Hello} arrives. It sets \ttt{helloMessageArrived} field to \ttt{true} and performs range hestimation on a separate thread.
+
+%******************************************************** CONTROLLER ************************************************
+\subsection{Controller}
+
+Class \ttt{AppController} implements \ttt{IAppController} interface and is responsable of coordinating all application components. It defines methods callable from the application activity and from other classes to react to asynchronous events. This class defines several inner classes:
+	\subsubsection{android.content.ServiceConnection implementations} This classes are used to handle asynchronous Android services creation:
+		\begin{itemize}
+			\item \ttt{LocServiceConnection} is used for localization service creation. When the service is created, a \ttt{LocationListener} implementation is setted, to receive location changes updates.  
+			\item \ttt{DataServiceConnection} is used to create \ttt{DataReceiverService}. On service creation, a \ttt{CollectionHandler} instance is setted.
+			\item \ttt{FastBroadcastServiceConnection} is used to create \ttt{FastBroadcastService}. When the service is created, current location and an handler implementation are setted.   
+		\end{itemize}  
