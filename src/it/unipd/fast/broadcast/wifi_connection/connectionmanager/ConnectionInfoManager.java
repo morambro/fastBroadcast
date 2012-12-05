@@ -16,15 +16,11 @@ public class ConnectionInfoManager implements IConnectionInfoManager{
 	protected final String TAG = "it.unipd.fast.broadcast";
 	private OnConnectionInfoCollected callback;
 
-
-	public interface OnConnectionInfoCollected{
-		public void onInfoCollected(WifiP2pInfo info);
-	}
-
 	public ConnectionInfoManager(OnConnectionInfoCollected callback) {
 		this.callback = callback;
 	}	
 
+	@Override
 	public void onConnectionInfoAvailable(final WifiP2pInfo info) {
 		// Create a Thread to execute potentially blocking operations.
 		new Thread(){
