@@ -1,7 +1,7 @@
 \section{Implementation}
 \label{sec:implementation}
 
-Our application is structured in different units, each performing a specific function. There is a single Activity class\footnote{Entry point of our Android application. For other information, visit \url{http://developer.android.com/guide/components/activities.html}}, called \ttt{FastBroadcastActivity}, which at application startup performs graphical initializations, and creates the application controller. 
+Our application is structured in different units, each performing a specific function. There is a single Activity class\footnote{Entry point of our Android application. For other information on Activity class visit \url{http://developer.android.com/guide/components/activities.html}}, called \ttt{FastBroadcastActivity}, which at application startup performs graphical initializations, creates the application controller, represented by class \ttt{AppController}, which implements \ttt{IAppController} interface, and initializes broadcast receiver\footnote{For information abour what a broadcast receiver is, visit \url{http://developer.android.com/reference/android/content/BroadcastReceiver.html}}.
 
 \subsection{Helper}
 The packege \ttt{it.unipd.fast.broadcast.helper} contains an helper class: \ttt{XMLParser}. This class provides static methods to manage XML strings and extracting information from them.
