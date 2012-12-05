@@ -1,6 +1,6 @@
 package it.unipd.fast.broadcast.wifi_connection.receiver;
 
-import it.unipd.fast.broadcast.wifi_connection.WiFiConnectionController;
+import it.unipd.fast.broadcast.AppController;
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
 import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
 
@@ -37,7 +37,7 @@ public class DataReceiverService extends Service implements Runnable, DataReceiv
 	 *
 	 */
 	public static interface IDataCollectionHandler {
-		public void setWiFiController(WiFiConnectionController controller);
+		public void setWiFiController(AppController controller);
 		public void onDataCollected(IMessage message,String sender);
 		public void onError(String error);
 	}

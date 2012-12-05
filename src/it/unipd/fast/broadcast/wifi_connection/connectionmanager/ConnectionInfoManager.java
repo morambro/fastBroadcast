@@ -1,6 +1,6 @@
 package it.unipd.fast.broadcast.wifi_connection.connectionmanager;
 
-import it.unipd.fast.broadcast.wifi_connection.WiFiConnectionController;
+import it.unipd.fast.broadcast.AppController;
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
 import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
 import it.unipd.fast.broadcast.wifi_connection.transmissionmanager.TransmissionManagerFactory;
@@ -60,7 +60,7 @@ public class ConnectionInfoManager implements IConnectionInfoManager{
 											IMessage.PING_MESSAGE_TYPE, 
 											groupOwnerAddress,
 											IMessage.PING_MESSAGE_ID_KEY, 
-											WiFiConnectionController.MAC_ADDRESS);
+											AppController.MAC_ADDRESS);
 									Log.d(TAG, ConnectionInfoManager.class.getSimpleName()+": Sending my address to Group owner");
 									TransmissionManagerFactory.getInstance().getTransmissionManager().send(
 											groupOwnerAddress,	// GroupOwner IP

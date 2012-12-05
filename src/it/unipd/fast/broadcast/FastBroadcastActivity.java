@@ -1,6 +1,5 @@
 package it.unipd.fast.broadcast;
 
-import it.unipd.fast.broadcast.wifi_connection.WiFiConnectionController;
 import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
 
 import java.util.List;
@@ -27,10 +26,10 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 //	private boolean isServiceBinded = false;
 
 	// Wi-fi Direct fields
-	private Button send_to_all_button;
-	private Button connect_to_all_button;
-	private WiFiConnectionController connection_controller;
-	private TextView found_devices;
+	private Button sendToAllButton;
+	private Button connectToAllButton;
+	private IAppController connectionController;
+	private TextView foundDevices;
 
 //	private LocServiceBroadcastInterface locationService;
 //	
@@ -86,7 +85,7 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 				}
 			}
 		};
-		connection_controller = new WiFiConnectionController(this, this);
+		connectionController = new AppController(this, this);
 		setupGui();
 	}
 
@@ -109,20 +108,20 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 					"Status : "+dev.status+"\n" +
 					"-----------------------\n";
 		}
-		found_devices.setText(new_list);
+		foundDevices.setText(new_list);
 
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
-		connection_controller.setFastBroadCastReceiverRegistered(true);
+		connectionController.setFastBroadCastReceiverRegistered(true);
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
-		connection_controller.setFastBroadCastReceiverRegistered(false);
+		connectionController.setFastBroadCastReceiverRegistered(false);
 	}
 
 	@Override
@@ -130,7 +129,7 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 		super.onDestroy();
 //		doUnbindService();
 		Log.d(TAG, this.getClass().getSimpleName()+": onDestroy called");
-		connection_controller.disconnect();
+		connectionController.disconnect();
 	}
 
 //	private void doBindService() {
@@ -155,14 +154,14 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 	 * 
 	 */
 	private void setupGui() {
-		connect_to_all_button = (Button)this.findViewById(R.id.connect_to_all_button);
-		send_to_all_button = (Button)this.findViewById(R.id.send_button);
-		found_devices = (TextView)this.findViewById(R.id.peers_list);
+		connectToAllButton = (Button)this.findViewById(R.id.connect_to_all_button);
+		sendToAllButton = (Button)this.findViewById(R.id.send_button);
+		foundDevices = (TextView)this.findViewById(R.id.peers_list);
 		
-		send_to_all_button.setOnClickListener(new OnClickListener() {
+		sendToAllButton.setOnClickListener(new OnClickListener() {
 
 			public void onClick(View v) {
-				connection_controller.sendBroadcast(
+				connectionController.sendBroadcast(
 					MessageBuilder.getInstance().getMessage("" +
 							"<message type='2' recipient_id='255.255.255.255'>" +
 								"<content> ALERT!!! </content>" +
@@ -171,11 +170,11 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 			}
 		});
 
-		connect_to_all_button.setOnClickListener(new OnClickListener() {
+		connectToAllButton.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
-				connection_controller.connectToAll();
+				connectionController.connectToAll();
 			}
 		});
 	}

@@ -1,5 +1,7 @@
 package it.unipd.fast.broadcast.wifi_connection;
 
+import it.unipd.fast.broadcast.IAppController;
+import it.unipd.fast.broadcast.AppController;
 import it.unipd.fast.broadcast.location.MockLocationProvider;
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
 import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverService.IDataCollectionHandler;
@@ -12,7 +14,7 @@ import android.util.Log;
 
 public class CollectionHandler implements IDataCollectionHandler {
 	private static final String TAG = "it.unipd.fast.broadcast";
-	private IWiFiConnectionController controller = null;
+	private IAppController controller = null;
 
 	public void onDataCollected(IMessage message, String host_ip) {
 		String recipient = message.getRecipientAddress();
@@ -86,7 +88,7 @@ public class CollectionHandler implements IDataCollectionHandler {
 	}
 
 	@Override
-	public void setWiFiController(WiFiConnectionController controller) {
+	public void setWiFiController(AppController controller) {
 		this.controller = controller;
 	}
 }
