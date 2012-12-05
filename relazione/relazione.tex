@@ -481,115 +481,12 @@ Veicolar Nets, Fast Broadcast, \direct, Android.
 % creates the second title. It will be ignored for other modes.
 \IEEEpeerreviewmaketitle
 
-
-
-\section{Introduction}
-% The very first letter is a 2 line initial drop letter followed
-% by the rest of the first word in caps.
-% 
-% form to use if the first word consists of a single letter:
-% \IEEEPARstart{A}{demo} file is ....
-% 
-% form to use if you need the single drop letter followed by
-% normal text (unknown if ever used by IEEE):
-% \IEEEPARstart{A}{}demo file is ....
-% 
-% Some journals put the first two words in caps:
-% \IEEEPARstart{T}{his demo} file is ....
-% 
-% Here we have the typical use of a "T" for an initial drop letter
-% and "HIS" in caps to complete the first word.
-\IEEEPARstart{F}{ast} broadcast algorithm provides an easy-to-implement method to estimate vehicles wireless range and to send vehicle-to-vehicle covering large sistances, without any pre-existent network infrastructure. The algorithm is essentially divided in two phases:
-	\begin{itemize}
-		\item \emph{Estimation phase}: In this phase time is divided into turns and at each turn T a car (one car per turn) sends an \emph{Hello message} containing information about his estimated wireless range and his position. This message is heard by all cars in his actual range, and used by them to update their range estimation.
-		\item \emph{Broadcast phase}: When an \emph{Alert message} is sent by a car, this must be forwarded by one of the cars hearing it. Any Preceiding car receiving the message, has information about the distance from the source (which included position in the message) and use this to compute a contention window: it waits a random time choosen in that window, and then forwards back the message.
-		If someone else already forwarded the message, the waiting car aborts the forwarding operation.
-	\end{itemize} 
-	
-This brief description describes roughly the algorithm idea. We will focus on our implementation in the next sections.
-Our siulator involves the use of a finite number of device (suppose 4) each running the same application. We use fake locations to simulate with them a large number of devices located on a straight line, changing each device position when needed. See Section \ref{sec:position_change} for a complete explanation of how this is obtained.
-
-\section{Technologies}
-
-Our project uses Android devices instead of vehicles, using their Wi-fi connectivity to communicate each other, especially adopting \direct standard. Android SDK's APIs from 14 enables the use of these technology to create small wireless devices networks, where one of the devices is used as an \emph{Access Point}. \direct specification is available only for purchase from Wi-fi Alliance\textsuperscript{\texttrademark} website\cite{wifi_direct}.
-Basically a network created with Android \direct APIs is called \emph{group}. A \emph{group} has an owner (the access point), and one or more other devices. In the network the only available IP address is group owner's. 
-Using \direct on Android devices is not possible to connect devices without user's permission.
-
-\section{Devices connection}
-
-Due to the last two \direct features described in the previous section, devices cannot create and destroy connection opportunistically, so for our simulation we had to introduce a connection establishing phase which creates a \direct group and provides to all the devices a complete address map to let them communicate.
-Devices connection setup consists of the following operations:
-	\begin{itemize}
-		\item One of the devices ask other devices for connection
-		\item When a device accepts, it starts a DHCP negotiation with the connection starter. If no \direct group exists, a group is created and the starter device becomes the group owner; if requesting device is already an owner of a pre-existing group, the device is added to this group. At the end of this phase, each device has an IP address. Only group owner's IP is available via APIs. 
-		\item Each device opens a TCP Server Socket on port 8888, listening for incoming connections.
-		\item When a device connects to a group, it connects via Socket to the group owner sending a \emph{Ping message}. This message is used by the group owner to collect devices MAC/IP addresses: The first is included into the \emph{Ping message} by each device, the second indeed is obtained by the owner from the incoming Socket information (using Java APIs).
-		\item After collecting all the couples \begin{center}\tt{<MAC address,IP address>}\end{center} from all the clients on a map, it sends it back to all the devices, to let them communicate directly.
-	\end{itemize}
-	
-When all of this operations are done, all the devices are connected and can communicate each other directly via TCP Sockets. The created (overlay) network is visible in figure \ref{fig:device_network}
-
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=3.6in]{imgs/Devices_network.pdf}
-\caption{Devieces overlay network}
-\label{fig:device_network}
-\end{figure}
-
-\section{Position changing}
-\label{sec:position_change}
-
-To simulate the presence of multiple devices, we generated a list of coordinates on a straight line, and dinamically assigned the right position to each device\footnote{The implementation is explained in the next section}. In figure \ref{fig:positions} is shown an example of how positions are dinamically reassigned. Suppose we have four devices, let's called them A, B, C and D, and suppose also we have eight different positions. At the beginning, we have A, B, C and D assigned rispectively on positions 1, 2, 3 and 4. At a certain point device A sends an \emph{Alert message} to all other three devices. As soon as it sends the messages, device A moves to position 5. The other devices compute contantion window and wait for a random time. Let's assume now that device C's timeout occours, so it forwards the message: as required by the algorithm, devices B and C stops themselfs from forwarding data too, and device B moves also from position 2 to position 6, reconsidering the message again after moving. The process continues until last position available is reached. 
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=3.5in]{imgs/Positions_1.png}
-\caption{Devieces position changes}
-\label{fig:positions}
-\end{figure}
-
-\section{Message exchange}
-
-Communication between devices is done by the use of XML strings. The format of each XML sent is:
-\begin{verbatim}
-<message type="..." recipient_id="...">
-    <content_block>
-        <key>...</key>
-        </content>...</content>
-    </content_block>
-    <content_block>
-        <key>...</key>
-        </content>...</content>
-    </content_block>
-    ...
-    <content_block>
-        <key>...</key>
-        </content>...</content>
-    </content_block>
-</message>
-\end{verbatim}
-We considered four different kinds of messages:
-	\begin{description}
-		\item[\textbf{Ping message (0)}] \hfill \\
-		Message used to send MAC address to group owner.
-		\item[\textbf{Map message (1)}] \hfill \\
-		Message used by the group owner to send the complete \ttt{<MAC,IP>} map to all the connected devices.
-		\item[\textbf{Alert message (2)}] \hfill \\
-		Message used to send an alert to be forwarded.
-		\item[\textbf{Hello message (3)}] \hfill \\
-		Message corrisponding with Fast Broadcast algorithm \textit{Hello message}.
-	\end{description}
-
-\section{Implementation}
-\label{sec:implementation}
-
-Our application is structured in different units, each performing a specific function. There is a single Activity class\footnote{Entry point of our Android application. For other information, visit \url{http://developer.android.com/guide/components/activities.html}}, called \ttt{FastBroadcastActivity}, which at application startup performs graphical initializations, and creates the application controller. 
-
-\subsection{Helper}
-The packege \ttt{it.unipd.fast.broadcast.helper} contains an helper class: \ttt{XMLParser}. This class provides static methods to manage XML strings and extracting information from them.
-\subsection{Location}
-\subsection{Wifi Connection}
-\subsection{Protocol implementation}
+\input{chapters/introduction.tex}
+\input{chapters/technologies.tex}
+\input{chapters/connection.tex}
+\input{chapters/positions.tex}
+\input{chapters/messages.tex}
+\input{chapters/implementation.tex}
 
 % You must have at least 2 lines in the paragraph with the drop letter
 % (should never be an issue)

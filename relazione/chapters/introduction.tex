@@ -1,0 +1,25 @@
+\section{Introduction}
+% The very first letter is a 2 line initial drop letter followed
+% by the rest of the first word in caps.
+% 
+% form to use if the first word consists of a single letter:
+% \IEEEPARstart{A}{demo} file is ....
+% 
+% form to use if you need the single drop letter followed by
+% normal text (unknown if ever used by IEEE):
+% \IEEEPARstart{A}{}demo file is ....
+% 
+% Some journals put the first two words in caps:
+% \IEEEPARstart{T}{his demo} file is ....
+% 
+% Here we have the typical use of a "T" for an initial drop letter
+% and "HIS" in caps to complete the first word.
+\IEEEPARstart{F}{ast} broadcast algorithm provides an easy-to-implement method to estimate vehicles wireless range and to send vehicle-to-vehicle covering large distances, without any pre-existent network infrastructure. The algorithm is essentially divided in two phases:
+	\begin{itemize}
+		\item \emph{Estimation phase}: In this phase time is divided into turns and at each turn T a car (one car per turn) sends an \emph{Hello message} containing information about his estimated wireless range and his position. This message is heard by all cars in his actual range, and used by them to update their range estimation.
+		\item \emph{Broadcast phase}: When an \emph{Alert message} is sent by a car, this must be forwarded by one of the cars hearing it. Any preceiding car receiving the message, has information about the distance from the source (whose position was included in the message) and use them to compute a \emph{contention window}; the window is used to generate a random time to wait before forwarding back the message.
+		If someone else already forwarded the message, every car waiting on the contention window aborts the forwarding operation.
+	\end{itemize} 
+	
+This brief description describes roughly the algorithm idea. We will focus on our implementation in the next sections.
+Our simulator involves the use of a finite number of device (suppose 4) each running the same application. We use fake locations to simulate with them a large number of devices located on a straight line, changing each device position when needed. See Section \ref{sec:position_change} for a complete explanation of how this is obtained.
