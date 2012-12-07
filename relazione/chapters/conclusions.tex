@@ -1,0 +1,4 @@
+\section{Conclusions}
+	Our application represents a possible implementation, but not the best possible. Due to \direct and Android operating system functionalities, we had to adapt our first architectural idea. With \direct framework the application creates a small network between devices, and make them communicate via TCP Socket. This results in a not scalable simulation (during simulation we cannot add a new device: it has to join the network before starting). 
+	
+	Our first aim was implementing a faster and more dynamic mehtod to make devices transmit data. The environment for which algorithm is used, doesn't need a complete network: the nature of exchanged messages is broadcast and stateless. We tried to write a Raw Socket connectionless light protocol, but we had to face with difficult device's kernel inter-operation. 
