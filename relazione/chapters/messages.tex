@@ -21,9 +21,9 @@ Communication between devices is done by the use of XML strings. The format of e
 We considered four different kinds of messages:
 	\begin{description}
 		\item[\textbf{Ping message (0)}] \hfill \\
-		Message used to send MAC address to group owner.
+		Message used to send MAC address to the \textit{group owner}.
 		\item[\textbf{Map message (1)}] \hfill \\
-		Message used by the group owner to send the complete \ttt{<MAC,IP>} map to all the connected devices.
+		Message used by the group owner to send the complete \ttt{<MAC address,IP address>} pairs map to all the connected devices.
 		\item[\textbf{Alert message (2)}] \hfill \\
 		Message used to send an alert to be forwarded.
 		\item[\textbf{Hello message (3)}] \hfill \\

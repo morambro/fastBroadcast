@@ -382,9 +382,9 @@
 
 
 % correct bad hyphenation here
-\hyphenation{op-tical net-works semi-conduc-tor}
+\hyphenation{}
 
-\newcommand{\direct}{Wi-fi Direct\textsuperscript{\texttrademark}}
+\newcommand{\direct}{WI-FI Direct\textsuperscript{\texttrademark}}
 \newcommand{\ttt}[1]{\texttt{#1}}
 
 \begin{document}
@@ -407,11 +407,10 @@
 %~\IEEEmembership{Computer Science Master Student, Padova University}
         ~Moreno~Ambrosin
         % <-this % stops a space
-\thanks{M. Shell is with the Department
-of Electrical and Computer Engineering, Georgia Institute of Technology, Atlanta,
-GA, 30332 USA e-mail: (see http://www.michaelshell.org/contact.html).}% <-this % stops a space
-\thanks{J. Doe and J. Doe are with Anonymous University.}% <-this % stops a space
-\thanks{Manuscript received April 19, 2005; revised January 11, 2007.}}
+%\thanks{M. Shell is with the Department of Electrical and Computer Engineering, Georgia Institute of Technology, Atlanta,GA, 30332 USA e-mail: (see http://www.michaelshell.org/contact.html).}% <-this % stops a space
+%\thanks{J. Doe and J. Doe are with Anonymous University.}% <-this % stops a space
+%\thanks{Manuscript received April 19, 2005; revised January 11, 2007.}
+}
 
 % note the % following the last \IEEEmembership and also \thanks - 
 % these prevent an unwanted space from occurring between the last author name
@@ -434,8 +433,8 @@ GA, 30332 USA e-mail: (see http://www.michaelshell.org/contact.html).}% <-this %
 
 
 % The paper headers
-\markboth{Journal of \LaTeX\ Class Files,~Vol.~6, No.~1, January~2007}%
-{Shell \MakeLowercase{\textit{et al.}}: Bare Demo of IEEEtran.cls for Journals}
+\markboth{Wirless Networks project report}
+{Wirless Networks project report}
 % The only time the second header will appear is for the odd numbered pages
 % after the title page when using the twoside option.
 % 
@@ -454,7 +453,7 @@ GA, 30332 USA e-mail: (see http://www.michaelshell.org/contact.html).}% <-this %
 
 \begin{abstract}
 %\boldmath
-Fast Broadcast\cite{fastBroadcast} is a Vehicle-to-Vehicle Multi-Hop Broadcast algorithm used to estimate car's transmission range and to propagate messages through vehicles reducing traversed hops. The aim of our work was implementing that algorithm on Android devices
+Fast Broadcast\cite{fastBroadcast} is a Vehicle-to-Vehicle Multi-Hop Broadcast algorithm used to estimate cars' transmission range and to propagate messages through vehicles reducing traversed hops. The aim of our work was to implement that algorithm on Android devices
 using \direct APIs for devices connection. 
 
 \end{abstract}
@@ -638,10 +637,14 @@ Veicolar Nets, Fast Broadcast, \direct, Android.
 \begin{thebibliography}{1}
 
 \bibitem{fastBroadcast}
-H.~Kopka and P.~W. Daly, \emph{A Guide to \LaTeX}, 3rd~ed.\hskip 1em plus
-  0.5em minus 0.4em\relax Harlow, England: Addison-Wesley, 1999.
+%H.~Kopka and P.~W. Daly, \emph{A Guide to \LaTeX}, 3rd~ed.\hskip 1em plus 0.5em minus 0.4em\relax Harlow, England: Addison-Wesley, 1999.
+  C.~E.~Palazzi,~S.~Ferretti,~M.~Roccetti,~G.~Pau,~M.~Gerla,~\emph{How Do You Quickly Choreograph Inter-Vehicular Communications? A Fast Vehicle-to-Vehicle Multi-Hop Broadcast Algorithm, Explained},in Proc. of IEEE CCNC 2007, Las Vegas, NV, USA, IEEE Communications Society, Jan 2007.
+
 \bibitem{wifi_direct}
 https://www.wi-fi.org/knowledge-center/published-specifications
+
+\bibitem{android_develop}
+http://developer.android.com/index.html
 
 \end{thebibliography}
 
