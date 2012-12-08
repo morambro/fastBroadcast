@@ -42,6 +42,10 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 		@Override
 		public void run(){
 			int randomTime = 0;
+			// Store previous current range into last current range
+			lmbr = cmbr;
+			lmfr = cmfr;
+			
 			synchronized (this) {
 				helloMessageArrived = false;
 				randomTime = randomGenerator.nextInt(TURN_DURATION);
