@@ -21,6 +21,12 @@ public interface IAppController {
 	 * @param registered
 	 */
 	void setFastBroadCastReceiverRegistered(boolean b);
+	
+	/**
+	 * broadcasts an alert message
+	 */
+	void sendAlert();
+	
 	/**
 	 * Send the given message to all
 	 * 

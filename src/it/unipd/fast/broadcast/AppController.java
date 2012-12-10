@@ -131,8 +131,8 @@ public class AppController implements IAppController{
 					__mock_provider.updateLocation();
 				}
 			});
-			Log.d(TAG, this.getClass().getSimpleName()+": Servizio ricezione dati binded " +
-					"\nlocation = "+currentLocation.getLatitude()+","+currentLocation.getLongitude());
+			/*Log.d(TAG, this.getClass().getSimpleName()+": Servizio ricezione dati binded " +
+					"\nlocation = "+currentLocation.getLatitude()+","+currentLocation.getLongitude());*/
 		}
 
 		@Override
@@ -439,6 +439,17 @@ public class AppController implements IAppController{
 		msg.obj = string;
 		msg.what = GuiHandlerInterface.SHOW_TOAST_MSG;
 		guiHandler.sendMessage(msg);
+	}
+	
+	@Override
+	public void sendAlert() {
+		IMessage message = MessageBuilder.getInstance().getMessage(IMessage.ALERT_MESSAGE_TYPE, IMessage.BROADCAST_ADDRESS);
+		message.addContent(IMessage.SENDER_LATITUDE_KEY, ""+currentLocation.getLatitude());
+		message.addContent(IMessage.SENDER_LONGITUDE_KEY, ""+currentLocation.getLongitude());
+		message.addContent(IMessage.SENDER_RANGE_KEY, ""+fastBroadcastService.getEstimatedRange());
+		message.addContent(IMessage.SENDER_DIRECTION_KEY, ""+currentLocation.getBearing());
+		message.prepare();
+		sendBroadcast(message);
 	}
 
 	@Override

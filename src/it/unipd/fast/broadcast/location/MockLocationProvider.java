@@ -11,14 +11,14 @@ import android.util.Log;
 
 public class MockLocationProvider {
 	protected static final String TAG = "it.unipd.fast.broadcast";
-	
-	
+
+
 	private static int __counter;
 	private static int __peers_number;
-	
-	
+
+
 	private LocationManager manager;
-	
+	private boolean firstExec = true;
 	public String name = "MockProvider";
 	public boolean requiresNetwork = false;
 	public boolean requiresSatellite = false;
@@ -29,12 +29,13 @@ public class MockLocationProvider {
 	public boolean supportsBearing = true;
 	public int powerRequirement = 0;
 	public int accuracy = 2;
-	
+	private float bearing;
+
 	/**
 	 * Positions file
 	 */
 	private BufferedReader file;
-	
+
 	public MockLocationProvider(LocationManager manager, Context context) {
 		Log.d(TAG, this.getClass().getSimpleName()+": registering provider: "+name);
 		this.manager = manager;
@@ -53,22 +54,25 @@ public class MockLocationProvider {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void remove() {
 		manager.removeTestProvider(name);
 	}
-	
+
 	public void updateLocation() {
 		try {
-			float bearing;
-			//skip header line
-			String line = file.readLine();
-			line = file.readLine();
-			bearing = Float.parseFloat(line);
-			//skip lines according to __counter
-			while(line!=null && __counter!=0) {
-				Log.d(TAG, this.getClass().getSimpleName()+": discarding line "+file.readLine());
-				__counter--;
+			String line = "not null";
+			if(firstExec) {
+				//skip header line
+				line = file.readLine();
+				line = file.readLine();
+				bearing = Float.parseFloat(line);
+				//skip lines according to __counter
+				while(line!=null && __counter!=0) {
+					Log.d(TAG, this.getClass().getSimpleName()+": discarding line "+file.readLine());
+					__counter--;
+				}
+				firstExec = false;
 			}
 			int tempFlag = __peers_number-1;
 			while(line != null && tempFlag != -1) {
@@ -92,7 +96,7 @@ public class MockLocationProvider {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public static void __set_static_couter(int __counter, int __peers_number) {
 		Log.d(TAG, MockLocationProvider.class.getSimpleName()+": file counter: "+__counter+"; peers number: "+__peers_number);
 		MockLocationProvider.__counter = __counter;
