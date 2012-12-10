@@ -72,15 +72,16 @@ Package \begin{center}\ttt{it.unipd.fast.broadcast.\\protocol\_implementation}\e
 	\item \ttt{MessageForwarder}, a thread class used to perform message forwarding (\textit{Broadcast phase}). It has a synchronized message queue on which this thread waits until \ttt{IMessage} instances are added. When a message arrives it calculates \textit{contention window} and waits a random time after which forwarding it (if no one else did it first). After forwarding the message, it calls \ttt{doOnForwarded} method, to update devices positions.
 \end{itemize} 
 
-The method \ttt{helloMessageReceived(IMessage message)} is called by the controller when an \textbf{Hello} arrives. It sets \ttt{helloMessageArrived} field to \ttt{true} and performs range hestimation on a separate thread.
+The method \ttt{helloMessageReceived(IMessage message)} is called by the application controller when an \textbf{Hello} message arrives. It sets \ttt{helloMessageArrived} field to \ttt{true} and performs range estimation on a separate thread.
 
 %******************************************************** CONTROLLER ************************************************
 \subsection{Controller}
 
-Class \ttt{AppController} implements \ttt{IAppController} interface and is responsable of coordinating all application components. It defines methods callable from the application activity and from other classes to react to asynchronous events. This class defines several inner classes:
-	\subsubsection{android.content.ServiceConnection implementations} This classes are used to handle asynchronous Android services creation:
-		\begin{itemize}
-			\item \ttt{LocServiceConnection} is used for localization service creation. When the service is created, a \ttt{LocationListener} implementation is setted, to receive location changes updates.  
-			\item \ttt{DataServiceConnection} is used to create \ttt{DataReceiverService}. On service creation, a \ttt{CollectionHandler} instance is setted.
-			\item \ttt{FastBroadcastServiceConnection} is used to create \ttt{FastBroadcastService}. When the service is created, current location and an handler implementation are setted.   
-		\end{itemize}  
+Class \ttt{AppController} implements \ttt{IAppController} interface and is responsable for application modules coordination. It defines methods callable from the application activity and from other classes to react to asynchronous events. This class defines several inner classes, each implementing \ttt{android.content.ServiceConnection}: they are used to handle the asynchronous creation of used Android services:
+	\begin{itemize}
+		\item \ttt{LocServiceConnection} is used for localization service creation. When the service is created, a \ttt{LocationListener} implementation is setted, to receive location changes updates.  
+		\item \ttt{DataServiceConnection} is used to create \ttt{DataReceiverService}. On service creation, a \ttt{CollectionHandler} instance is setted.
+		\item \ttt{FastBroadcastServiceConnection} is used to create \ttt{FastBroadcastService}. When the service is created, current location and an handler implementation are setted.   
+	\end{itemize}  
+	
+The application controller communicates with other modules using the interfaces they provide, or using listener objects when expecting asynchronous results.
