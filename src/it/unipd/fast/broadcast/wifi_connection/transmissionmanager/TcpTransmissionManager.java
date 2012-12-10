@@ -41,7 +41,7 @@ public class TcpTransmissionManager implements ITranmissionManager {
 					inputStream.close();
 					Log.d(TAG, this.getClass().getSimpleName()+": Data Sent to "+ID+" via TCP");
 				} catch (Exception e) {
-					Log.d(TAG, this.getClass().getSimpleName()+": "+e.getMessage());
+					Log.d(TAG, TcpTransmissionManager.class.getSimpleName()+": "+e.getMessage());
 				}
 
 

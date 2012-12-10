@@ -94,7 +94,6 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 		
 		@Override
 		public void run() {
-			
 			while(true){
 				IMessage message = null;
 				try {
@@ -136,7 +135,7 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 					}
 				}
 
-				if(messageQueue.isEmpty() || !messageQueue.contains(message)){
+				if(!messageQueue.contains(message)){
 					// No message arrived while I was asleep
 					IMessage newMessage = MessageBuilder.getInstance().getMessage(
 							message.getType(),
@@ -154,12 +153,9 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 				}else{
 					// At least another message arrived
 					if(receivedFromBack(direction, latitude, longitude)){
-						// ignore??
 						// Someone else forwarded it already
 						// TODO : update location?
 						if(handler != null) handler.doOnForwarded();
-					}else{
-						// restart_procedure...continue with the next message equals to this ok??
 					}
 				}
 			}
@@ -423,6 +419,11 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 	@Override
 	public void setOnforwardedHadler(OnForwardedHandler handler) {
 		this.handler = handler;
+	}
+
+	@Override
+	public double getEstimatedRange() {
+		return Math.max(cmbr,lmbr);
 	}
 	
 	

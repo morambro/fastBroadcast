@@ -18,7 +18,9 @@ public interface ICommunicationHandler {
 	/**
 	 * Turn duration in milliseconds
 	 */
-	public static final int TURN_DURATION = 5000;
+	public static final int TURN_DURATION = 20000;
+	
+	public double getEstimatedRange();
 	
 	/**
 	 * Method used to tell whether a hello message already arrived

@@ -19,6 +19,7 @@ public class CollectionHandler implements IDataCollectionHandler {
 
 	public void onDataCollected(IMessage message, String hostIp) {
 		String recipient = message.getRecipientAddress();
+		Log.d(TAG, this.getClass().getSimpleName()+": Message body: "+(new String(message.getMessage())));
 		
 		rerouteMessage(recipient, message);
 		
