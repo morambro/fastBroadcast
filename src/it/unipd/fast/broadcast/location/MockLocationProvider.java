@@ -12,7 +12,7 @@ import android.util.Log;
 public class MockLocationProvider {
 	protected static final String TAG = "it.unipd.fast.broadcast";
 	
-	private int __tmp_debug_counter = 0;
+	private int __tmp_debug_counter = 1;
 	private void __debug_print_log(String message)
 	{
 		Log.e(TAG, this.getClass().getSimpleName()+": "+message);
@@ -74,21 +74,21 @@ public class MockLocationProvider {
 				__debug_print_log("line "+__tmp_debug_counter+": "+line+" discarded");
 				__tmp_debug_counter++;
 				line = file.readLine();
-				__tmp_debug_counter++;
 				__debug_print_log("line "+__tmp_debug_counter+": "+line+" discarded");
+				__tmp_debug_counter++;
 				bearing = Float.parseFloat(line);
 				//skip lines according to __counter
 				while(line!=null && __counter!=0) {
 					line = file.readLine();
 					Log.d(TAG, this.getClass().getSimpleName()+": discarding line "+line);
-					__debug_print_log("line "+line+" discarded");
+					__debug_print_log("Current position found in line "+__tmp_debug_counter+": "+line);
 					__tmp_debug_counter++;
 					__counter--;
 				}
 				firstExec = false;
 			}
 			int tempFlag = __peers_number-1;
-			while(line != null && tempFlag != -1) {
+			while(( line != null || !line.equals(""))&& tempFlag != -1) {
 				if(tempFlag == 0)
 				{
 					line = file.readLine();
