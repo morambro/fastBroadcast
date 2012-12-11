@@ -133,9 +133,9 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 					arrived = arrived & (filter.filter(message));
 				}
 				if(!arrived){
-					Log.d(TAG,"MESSAGE SHOULDN'T HAVE BEEN ARRIVED SHIT!!");
+					Log.e(TAG,"MESSAGE SHOULDN'T HAVE BEEN ARRIVED SHIT!!");
 				}else{
-					Log.d(TAG,"ALERT MESSAGE ARRIVED!!");
+					Log.e(TAG,"ALERT MESSAGE ARRIVED!!");
 					// now I am sure message != null
 	
 					Map<String,String> content = message.getContent();
@@ -177,17 +177,17 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 						newMessage.prepare();
 						transmissionManager.send(devices, newMessage);
 						
-						Log.d(TAG,"MESSAGE FORWARDED!!");
+						Log.e(TAG,"MESSAGE FORWARDED!!");
 						
 						if(handler != null) handler.doOnForwarded();
 					}else{
 						// At least another message arrived
 						if(receivedFromBack(direction, latitude, longitude)){
 							// Someone else forwarded it already
-							Log.d(TAG,"MESSAGE RECEIVED FROM BACK!!");
+							Log.e(TAG,"MESSAGE RECEIVED FROM BACK!!");
 							if(handler != null) handler.doOnForwarded();
 						}
-						Log.d(TAG,"MESSAGE NOT FORWARDED!!");
+						Log.e(TAG,"MESSAGE NOT FORWARDED!!");
 					}
 				}
 			}
