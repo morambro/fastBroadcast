@@ -95,7 +95,6 @@ public class XmlMessage extends IMessage{
 						"</"+CONTENT_BLOCK_TAG+">\n";
 		}
 		message += "</"+MSG_TAG+">";
-		Log.d(TAG, this.getClass().getSimpleName()+": "+message);
 	}
 	
 	@Override
