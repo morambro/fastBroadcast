@@ -70,7 +70,9 @@ public class AppController implements IAppController{
 	private WifiP2pManager manager;
 	private Channel channel;
 	private BroadcastReceiver receiver;
-	private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
+	
+	private SynchronizedDevicesList peers = new SynchronizedDevicesList();
+	
 	private Map<String,String> peerIdIpMap;
 	private Context context;
 	private IntentFilter broadcastReceiverIntentFilter;
@@ -131,8 +133,6 @@ public class AppController implements IAppController{
 					__mock_provider.updateLocation();
 				}
 			});
-			/*Log.d(TAG, this.getClass().getSimpleName()+": Servizio ricezione dati binded " +
-					"\nlocation = "+currentLocation.getLatitude()+","+currentLocation.getLongitude());*/
 		}
 
 		@Override
@@ -151,15 +151,11 @@ public class AppController implements IAppController{
 
 			// Adds only new devices
 			for(WifiP2pDevice device : peers_list.getDeviceList()){
-				if(!peers.contains(device)){
-					Log.d(TAG,this.getClass().getSimpleName() + "Aggiunto device");
-					peers.add(device);
-				}else{
-					Log.d(TAG,this.getClass().getSimpleName() + "Device already in the list");
-				}
+				peers.add(device);
 			}
 			// remove disappeared devices
-			for(WifiP2pDevice device : peers){
+			for(int i = 0; i < peers.size(); i++){
+				WifiP2pDevice device = peers.get(i);
 				if(!peers_list.getDeviceList().contains(device)){
 					Log.d(TAG,this.getClass().getSimpleName() + "Device not in the list, removed");
 					peers.remove(device);
@@ -203,6 +199,32 @@ public class AppController implements IAppController{
 	private IConnectionInfoManager connectionInfoListener = ConnectionManagerFactory.getInstance().getConnectionManager(connectionInfoCallback);
 
 
+	public class SynchronizedDevicesList {
+		
+		private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
+		
+		synchronized boolean remove(WifiP2pDevice device){
+			return peers.remove(device);
+		}
+		
+		synchronized int size() {
+			return peers.size();
+		}
+
+		synchronized void add(WifiP2pDevice device){
+			if(!peers.contains(device)){
+				Log.d(TAG,this.getClass().getSimpleName() + "Aggiunto device");
+				peers.add(device);
+			}else{
+				Log.d(TAG,this.getClass().getSimpleName() + "Device already in the list");
+			}
+		}
+		
+		synchronized WifiP2pDevice get(int index){
+			return peers.get(index);
+		}
+	}
+	
 	/******************************************************* METHODS ************************************************/
 
 	/**
@@ -308,7 +330,7 @@ public class AppController implements IAppController{
 	 * 
 	 * @param map
 	 */
-	public void setPeersIdIPmap(Map<String,String> map){
+	public synchronized void setPeersIdIPmap(Map<String,String> map){
 
 		if(peerIdIpMap == null){
 			peerIdIpMap = map;
@@ -368,7 +390,7 @@ public class AppController implements IAppController{
 	 */
 	private IMessage createMapMessage(Map<String,String> map, String recipient){
 		IMessage message = MessageBuilder.getInstance().getMessage(IMessage.CLIENT_MAP_MESSAGE_TYPE,recipient);
-		int i = 1;
+		int i = 0;
 		for(String k : map.keySet()){
 			message.addContent(k, IMessage.concatContent(map.get(k), ""+i));
 			i++;
@@ -425,8 +447,8 @@ public class AppController implements IAppController{
 
 	@Override
 	public void connectToAll() {
-		for(WifiP2pDevice device : peers){
-			connect(device);
+		for(int i = 0; i < peers.size(); i++){
+			connect(peers.get(i));
 		}
 	}
 

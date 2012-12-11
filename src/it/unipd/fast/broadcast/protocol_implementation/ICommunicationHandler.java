@@ -11,6 +11,13 @@ import android.location.Location;
  */
 public interface ICommunicationHandler {
 
+	/**
+	 * Interface used to specify actions to do after the message
+	 * is forwarded
+	 * 
+	 * @author Moreno Ambrosin
+	 *
+	 */
 	public interface OnForwardedHandler {
 		void doOnForwarded();
 	}
@@ -55,5 +62,10 @@ public interface ICommunicationHandler {
 	 */
 	public void setCurrentLocation(Location location);
 	
+	/**
+	 * 
+	 * @param handler
+	 */
 	public void setOnforwardedHadler(OnForwardedHandler handler);
+	
 }

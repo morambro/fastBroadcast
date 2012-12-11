@@ -5,6 +5,7 @@ import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
 import it.unipd.fast.broadcast.wifi_connection.transmissionmanager.ITranmissionManager;
 import it.unipd.fast.broadcast.wifi_connection.transmissionmanager.TransmissionManagerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -29,7 +30,29 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 	
 	private String TAG = "it.unipd.fast.broadcast";
 	
+	/**
+	 * Static field which indicates the simulated actual range of each device
+	 * This value is used to filter messages received from a "distance" > ACTUAL_MAX_RANGE
+	 */
+	private static final int ACTUAL_MAX_RANGE = 600;
+	
 	/******************************************* DECLARATIONS ******************************************/
+	
+	/**
+	 * Interface used to define messages' filters 
+	 * 
+	 * @author Moreno Ambrosin
+	 *
+	 */
+	public interface Filter {
+		/**
+		 * Returns message if is not filtered
+		 * 
+		 * @param message
+		 * @return
+		 */
+		boolean filter(IMessage message);
+	}
 	
 	/**
 	 * Task scheduled at a fixed TURN_DURATION time, which sends out an hello message 
@@ -105,63 +128,66 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 				}
 
 				if(message == null) return;
-				// now I am sure message != null
-
-				Map<String,String> content = message.getContent();
-				double latitude 	= Double.parseDouble(content.get(IMessage.SENDER_LATITUDE_KEY));
-				double longitude 	= Double.parseDouble(content.get(IMessage.SENDER_LONGITUDE_KEY));
-				double maxRange 	= Double.valueOf(content.get(IMessage.SENDER_RANGE_KEY));
-				float direction 	= Float.valueOf(content.get(IMessage.SENDER_DIRECTION_KEY));
-
-				float[] results = new float[3];
-				Location.distanceBetween(
-						currentLocation.getLatitude(),
-						currentLocation.getLongitude(),
-						latitude, 
-						longitude,
-						results); 
-				
-				Log.d(TAG,"Distance = "+results[0]);
-				Log.d(TAG,"MaxRange = "+maxRange);
-				
-				float distance = results[0];
-				
-				// calculate contention window
-				int contentionWindow = (int)Math.floor((((maxRange-distance)/maxRange) * (CwMax-CwMin))+CwMin); 
-
-				Log.d(TAG,"Contention Window = "+contentionWindow);
-				
-				// wait for a random time... 
-				synchronized (this) {
-					try {
-						Thread.sleep(randomGenerator.nextInt(contentionWindow));
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-						Thread.currentThread().interrupt();
-					}
+				boolean arrived = true;
+				for(Filter filter : filters){
+					arrived = arrived & (filter.filter(message));
 				}
-
-				if(!messageQueue.contains(message)){
-					// No message arrived while I was asleep
-					IMessage newMessage = MessageBuilder.getInstance().getMessage(
-							message.getType(),
-							IMessage.BROADCAST_ADDRESS);
-					newMessage.addContent(IMessage.SENDER_LATITUDE_KEY,currentLocation.getLatitude()+"");
-					newMessage.addContent(IMessage.SENDER_LONGITUDE_KEY,currentLocation.getLongitude()+"");
-					newMessage.addContent(IMessage.SENDER_RANGE_KEY,Math.max(lmbr,cmbr)+"");
-					newMessage.addContent(IMessage.SENDER_DIRECTION_KEY,currentLocation.getBearing()+"");
-					
-					newMessage.prepare();
-					transmissionManager.send(devices, newMessage);
-					
-					// TODO: update location?
-					if(handler != null) handler.doOnForwarded();
+				if(!arrived){
+					Log.d(TAG,"MESSAGE SHOULDN'T HAVE BEEN ARRIVED SHIT!!");
 				}else{
-					// At least another message arrived
-					if(receivedFromBack(direction, latitude, longitude)){
-						// Someone else forwarded it already
-						// TODO : update location?
+					Log.d(TAG,"ALERT MESSAGE ARRIVED!!");
+					// now I am sure message != null
+	
+					Map<String,String> content = message.getContent();
+					double latitude 	= Double.parseDouble(content.get(IMessage.SENDER_LATITUDE_KEY));
+					double longitude 	= Double.parseDouble(content.get(IMessage.SENDER_LONGITUDE_KEY));
+					double maxRange 	= Double.valueOf(content.get(IMessage.SENDER_RANGE_KEY));
+					float direction 	= Float.valueOf(content.get(IMessage.SENDER_DIRECTION_KEY));
+	
+					float distance = getDistance(latitude, longitude);
+					
+					Log.d(TAG,"Distance = "+distance);
+					Log.d(TAG,"MaxRange = "+maxRange);
+					
+					// calculate contention window
+					int contentionWindow = (int)Math.floor(((Math.abs(maxRange-distance)/maxRange) * (CwMax-CwMin))+CwMin); 
+	
+					Log.d(TAG,"Contention Window = "+contentionWindow);
+					
+					// wait for a random time... 
+					synchronized (this) {
+						try {
+							Thread.sleep(randomGenerator.nextInt(contentionWindow));
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+							Thread.currentThread().interrupt();
+						}
+					}
+	
+					if(!messageQueue.contains(message)){
+						// No message arrived while I was asleep
+						IMessage newMessage = MessageBuilder.getInstance().getMessage(
+								message.getType(),
+								IMessage.BROADCAST_ADDRESS);
+						newMessage.addContent(IMessage.SENDER_LATITUDE_KEY,currentLocation.getLatitude()+"");
+						newMessage.addContent(IMessage.SENDER_LONGITUDE_KEY,currentLocation.getLongitude()+"");
+						newMessage.addContent(IMessage.SENDER_RANGE_KEY,Math.max(lmbr,cmbr)+"");
+						newMessage.addContent(IMessage.SENDER_DIRECTION_KEY,currentLocation.getBearing()+"");
+						
+						newMessage.prepare();
+						transmissionManager.send(devices, newMessage);
+						
+						Log.d(TAG,"MESSAGE FORWARDED!!");
+						
 						if(handler != null) handler.doOnForwarded();
+					}else{
+						// At least another message arrived
+						if(receivedFromBack(direction, latitude, longitude)){
+							// Someone else forwarded it already
+							Log.d(TAG,"MESSAGE RECEIVED FROM BACK!!");
+							if(handler != null) handler.doOnForwarded();
+						}
+						Log.d(TAG,"MESSAGE NOT FORWARDED!!");
 					}
 				}
 			}
@@ -229,6 +255,11 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 	 * 
 	 */
 	private MessageForwarder messageForwarder = new MessageForwarder();
+	
+	/**
+	 * 
+	 */
+	private List<Filter> filters = new ArrayList<Filter>();
 	
 	/********************************************** METHODS ********************************************/
 	
@@ -393,10 +424,23 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 		// Start message forwarder
 		if(messageForwarder == null) messageForwarder = new MessageForwarder();
 		messageForwarder.start();
+		filters.add(new Filter(){
+			@Override
+			public boolean filter(IMessage message) {
+				Map<String,String> content = message.getContent();
+				double latitude 	= Double.parseDouble(content.get(IMessage.SENDER_LATITUDE_KEY));
+				double longitude 	= Double.parseDouble(content.get(IMessage.SENDER_LONGITUDE_KEY));
+				float distance = getDistance(latitude, longitude);
+				// If distance is > actual maximum range, message shouldn't be heard...
+				if(distance > ACTUAL_MAX_RANGE) return false;
+				return true;
+			}
+		});
+		
 	}
 	
-	private static int CwMax = 1024;
-	private static int CwMin  = 32;
+	private static int CwMax = 4000;
+	private static int CwMin = 2000;
 	
 	@Override
 	public void handleMessage(final IMessage message){
@@ -432,5 +476,21 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 		return Math.max(cmbr,lmbr);
 	}
 	
-	
+	/**
+	 * Returns the distance between current position and given latitude/logitude
+	 * 
+	 * @param latitude
+	 * @param longitude
+	 * @return
+	 */
+	private float getDistance(double latitude, double longitude){
+		float[] results = new float[3];
+		Location.distanceBetween(
+				currentLocation.getLatitude(),
+				currentLocation.getLongitude(),
+				latitude, 
+				longitude,
+				results);
+		return results[0];
+	}
 }
