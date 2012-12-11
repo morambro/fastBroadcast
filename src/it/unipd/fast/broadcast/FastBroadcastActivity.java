@@ -1,6 +1,6 @@
 package it.unipd.fast.broadcast;
 
-import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
+import it.unipd.fast.broadcast.AppController.SynchronizedDevicesList;
 
 import java.util.List;
 
@@ -50,7 +50,7 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 					break;
 
 				case UPDATE_PEERS:
-					savePeers((List<WifiP2pDevice>)msg.obj);
+					savePeers((SynchronizedDevicesList)msg.obj);
 
 				default:
 					break;
@@ -72,9 +72,10 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 	 * 
 	 * @param peers
 	 */
-	public void savePeers(List<WifiP2pDevice> peers) {
+	public void savePeers(SynchronizedDevicesList peers) {
 		String new_list = "";
-		for(WifiP2pDevice dev : peers){
+		for(int i = 0; i < peers.size() ; i++){
+			WifiP2pDevice dev = peers.get(i);
 			new_list += ""+dev.deviceName+"\n" +
 					""+dev.deviceAddress+"\n" +
 					"Status : "+dev.status+"\n" +
