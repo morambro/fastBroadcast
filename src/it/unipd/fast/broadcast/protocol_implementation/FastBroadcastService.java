@@ -117,14 +117,20 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 				Location.distanceBetween(
 						currentLocation.getLatitude(),
 						currentLocation.getLongitude(),
-						latitude, longitude,
+						latitude, 
+						longitude,
 						results); 
+				
+				Log.d(TAG,"Distance = "+results[0]);
+				Log.d(TAG,"MaxRange = "+maxRange);
 				
 				float distance = results[0];
 				
 				// calculate contention window
 				int contentionWindow = (int)Math.floor((((maxRange-distance)/maxRange) * (CwMax-CwMin))+CwMin); 
 
+				Log.d(TAG,"Contention Window = "+contentionWindow);
+				
 				// wait for a random time... 
 				synchronized (this) {
 					try {
@@ -389,8 +395,8 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 		messageForwarder.start();
 	}
 	
-	private static int CwMax = 2000;
-	private static int CwMin  = 1000;
+	private static int CwMax = 1024;
+	private static int CwMin  = 32;
 	
 	@Override
 	public void handleMessage(final IMessage message){
