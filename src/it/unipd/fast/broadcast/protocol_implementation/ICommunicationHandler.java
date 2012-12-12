@@ -22,10 +22,6 @@ public interface ICommunicationHandler {
 		void doOnForwarded();
 	}
 	
-	/**
-	 * Turn duration in milliseconds
-	 */
-	public static final int TURN_DURATION = 20000;
 	
 	public double getEstimatedRange();
 	

@@ -55,6 +55,7 @@ abstract public class IMessage {
 	
 	public static final String SENDER_DIRECTION_KEY = "direction";
 	public static final String MESSAGE_HOP_KEY = "hop_count";
+	public static final String SENDER_IP_ADDR = "ip_addr";
 	
 	/****************************************************** METHODS *******************************************/
 	

@@ -37,6 +37,15 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 	 */
 	private static final int ACTUAL_MAX_RANGE = 600;
 	
+	/**
+	 * Slot size in milliseconds
+	 */
+	private static final int SLOT_SIZE = 100;
+	
+	/**
+	 * Turn duration in milliseconds
+	 */
+	public static final int TURN_DURATION = 20000;
 	/******************************************* DECLARATIONS ******************************************/
 	
 	/**
@@ -118,7 +127,9 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 			messageQueue.put(message);
 			// As soon as a new message arrived, notify the forwarder, to let him preceding without waiting 
 			// for the entire random amount 
-			synchPoint.notify();
+			synchronized (synchPoint) {
+				synchPoint.notify();
+			}
 		}
 		
 		@Override
@@ -163,9 +174,9 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 					Log.d(TAG,"Contention Window = "+contentionWindow);
 					
 					// wait for a random time... 
-					synchronized (this) {
+					synchronized (synchPoint) {
 						try {
-							long rnd = randomGenerator.nextInt(contentionWindow);
+							long rnd = randomGenerator.nextInt(contentionWindow*SLOT_SIZE);
 							Log.e(TAG,"BroadcastPhase: sleeping for "+rnd+" ms");
 							//Thread.sleep(rnd);
 							// Waiting until:
@@ -466,8 +477,8 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 		
 	}
 	
-	private static int CwMax = 10000;
-	private static int CwMin = 4000;
+	private static int CwMax = 1024;
+	private static int CwMin = 31;
 	
 	@Override
 	public void handleMessage(final IMessage message){
