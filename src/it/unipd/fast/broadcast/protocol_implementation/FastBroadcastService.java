@@ -1,5 +1,6 @@
 package it.unipd.fast.broadcast.protocol_implementation;
 
+import it.unipd.fast.broadcast.helper.LogPrinter;
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
 import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
 import it.unipd.fast.broadcast.wifi_connection.transmissionmanager.ITranmissionManager;
@@ -112,6 +113,7 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 		 * @throws InterruptedException
 		 */
 		public void put(IMessage message) throws InterruptedException{
+			LogPrinter.getInstance().writeTimedLine("alert message put into queue. Size "+(messageQueue.size()+1));
 			messageQueue.put(message);
 		}
 		
@@ -121,9 +123,11 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 				IMessage message = null;
 				try {
 					message = messageQueue.take();
+					Map<String,String> content = message.getContent();
+					int hopCount = Integer.valueOf(content.get(IMessage.MESSAGE_HOP_KEY));
+					LogPrinter.getInstance().writeTimedLine("alert message taken from queue. Hop number: "+hopCount+". Size "+messageQueue.size());
 				} catch (InterruptedException e) {
 					e.printStackTrace();
-					Log.d(TAG,this.getClass().getSimpleName() + " : Shutting down MessageForwarder thread");
 					Thread.currentThread().interrupt();
 				}
 
@@ -133,17 +137,17 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 					arrived = arrived & (filter.filter(message));
 				}
 				if(!arrived){
+					LogPrinter.getInstance().writeTimedLine("message discarded from queue, sender was too far away. Size "+messageQueue.size());
 					Log.e(TAG,"MESSAGE SHOULDN'T HAVE BEEN ARRIVED SHIT!!");
 				}else{
 					Log.e(TAG,"ALERT MESSAGE ARRIVED!!");
 					// now I am sure message != null
-	
 					Map<String,String> content = message.getContent();
 					double latitude 	= Double.parseDouble(content.get(IMessage.SENDER_LATITUDE_KEY));
 					double longitude 	= Double.parseDouble(content.get(IMessage.SENDER_LONGITUDE_KEY));
 					double maxRange 	= Double.valueOf(content.get(IMessage.SENDER_RANGE_KEY));
 					float direction 	= Float.valueOf(content.get(IMessage.SENDER_DIRECTION_KEY));
-	
+					int hopCount = Integer.valueOf(content.get(IMessage.MESSAGE_HOP_KEY))+1;
 					float distance = getDistance(latitude, longitude);
 					
 					Log.d(TAG,"Distance = "+distance);
@@ -157,13 +161,15 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 					// wait for a random time... 
 					synchronized (this) {
 						try {
-							Thread.sleep(randomGenerator.nextInt(contentionWindow));
+							long rnd = randomGenerator.nextInt(contentionWindow);
+							Log.e(TAG,"BroadcastPhase: sleeping for "+rnd+" ms");
+							Thread.sleep(rnd);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 							Thread.currentThread().interrupt();
 						}
 					}
-	
+					Log.e(TAG,"BroadcastPhase: waking up");
 					if(!messageQueue.contains(message)){
 						// No message arrived while I was asleep
 						IMessage newMessage = MessageBuilder.getInstance().getMessage(
@@ -173,19 +179,31 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 						newMessage.addContent(IMessage.SENDER_LONGITUDE_KEY,currentLocation.getLongitude()+"");
 						newMessage.addContent(IMessage.SENDER_RANGE_KEY,Math.max(lmbr,cmbr)+"");
 						newMessage.addContent(IMessage.SENDER_DIRECTION_KEY,currentLocation.getBearing()+"");
-						
+						newMessage.addContent(IMessage.MESSAGE_HOP_KEY, ""+hopCount);
 						newMessage.prepare();
+						LogPrinter.getInstance().writeTimedLine("no messages arrived while sleeping. Forwarding message \n\tHop numbers: "+hopCount+".\n\t Size "+messageQueue.size());
 						transmissionManager.send(devices, newMessage);
 						
 						Log.e(TAG,"MESSAGE FORWARDED!!");
 						
-						if(handler != null) handler.doOnForwarded();
+						if(handler != null)
+							handler.doOnForwarded();
 					}else{
+						LogPrinter.getInstance().writeTimedLine("alert already brodcasted by someone else, discarded. Size "+messageQueue.size());
+						Log.e(TAG,"Double Alert, message discarded");
+						/*IMessage temp = (IMessage) (messageQueue.toArray())[messageQueue.size()-1];
+						messageQueue.clear();
+						try {
+							messageQueue.put(temp);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}*/
 						// At least another message arrived
 						if(receivedFromBack(direction, latitude, longitude)){
 							// Someone else forwarded it already
 							Log.e(TAG,"MESSAGE RECEIVED FROM BACK!!");
-							if(handler != null) handler.doOnForwarded();
+							if(handler != null)
+								handler.doOnForwarded();
 						}
 						Log.e(TAG,"MESSAGE NOT FORWARDED!!");
 					}
@@ -347,7 +365,7 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 	 * @return true if the sender is back, false otherwise
 	 */
 	private boolean receivedFromBack(float direction,double senderLatitude,	double senderLongitude){
-		if(direction >= 0){
+		if(direction <= 180){
 			if(direction == 90){
 				if(senderLongitude < currentLocation.getLongitude()){
 					return true;
@@ -367,11 +385,11 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 			}
 			
 		} else {
-			if(direction == -90){
+			if(direction == 270){
 				if(senderLongitude > currentLocation.getLongitude()){
 					return true;
 				}
-			}else if(direction > -90){
+			}else if(direction > 270){
 				// 2° quadrante
 				if(senderLatitude > currentLocation.getLatitude()){
 					// Sono davanti
@@ -380,6 +398,7 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 			}else{
 				// 3° quadrante
 				if(senderLatitude > currentLocation.getLatitude()){
+					Log.e(TAG, "FastBroadcastService: terzo quadrante");
 					// Sono davanti
 					return true;
 				}
@@ -439,8 +458,8 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 		
 	}
 	
-	private static int CwMax = 4000;
-	private static int CwMin = 2000;
+	private static int CwMax = 10000;
+	private static int CwMin = 4000;
 	
 	@Override
 	public void handleMessage(final IMessage message){

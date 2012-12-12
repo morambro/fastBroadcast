@@ -12,7 +12,9 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,7 +28,7 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 	private Button sendToAllButton;
 	private Button connectToAllButton;
 	private IAppController connectionController;
-	private TextView foundDevices;
+	private ListView devicesListView;
 
 
 	//GuiHandler Implementation
@@ -39,7 +41,6 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		setContentView(R.layout.activity_main);
 		setContentView(R.layout.activity_main);
 		activityHandler = new Handler() {
 			@SuppressWarnings("unchecked")
@@ -73,15 +74,12 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 	 * @param peers
 	 */
 	public void savePeers(SynchronizedDevicesList peers) {
-		String new_list = "";
+		String[] new_list = new String[peers.size()];
 		for(int i = 0; i < peers.size() ; i++){
 			WifiP2pDevice dev = peers.get(i);
-			new_list += ""+dev.deviceName+"\n" +
-					""+dev.deviceAddress+"\n" +
-					"Status : "+dev.status+"\n" +
-					"-----------------------\n";
+			new_list[i] = dev.deviceName;
 		}
-		foundDevices.setText(new_list);
+		devicesListView.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, android.R.id.text1, new_list));
 
 	}
 
@@ -112,7 +110,7 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 	private void setupGui() {
 		connectToAllButton = (Button)this.findViewById(R.id.connect_to_all_button);
 		sendToAllButton = (Button)this.findViewById(R.id.send_button);
-		foundDevices = (TextView)this.findViewById(R.id.peers_list);
+		devicesListView = (ListView)this.findViewById(R.id.devices_list_view);
 		
 		sendToAllButton.setOnClickListener(new OnClickListener() {
 

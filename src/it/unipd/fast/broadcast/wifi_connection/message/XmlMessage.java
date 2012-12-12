@@ -136,4 +136,15 @@ public class XmlMessage extends IMessage{
 			return res;
 		}
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if(!(o instanceof IMessage))
+			return false;
+		IMessage o2 = (IMessage) o;
+		if(o2.getType() != this.getType())
+			return false;
+		return true;
+	}
+	
 }

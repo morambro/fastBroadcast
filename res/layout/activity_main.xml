@@ -1,38 +1,35 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:layout_alignParentLeft="false"
-    android:layout_centerHorizontal="true"
-    android:gravity="center_vertical"
-    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
     android:keepScreenOn="true">
 
-    <!-- <FrameLayout -->
-    <!-- xmlns:android="http://schemas.android.com/apk/res/android" -->
-    <!-- android:id="@+id/fragment_container" -->
-    <!-- android:layout_width="322dp" -->
-    <!-- android:layout_height="456dp" -->
-    <!-- android:layout_gravity="center_horizontal" > -->
+    <LinearLayout android:id="@+id/internal_lay1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:orientation="horizontal"
+        android:layout_alignParentTop="true">
 
+        <Button
+            android:id="@+id/connect_to_all_button"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:text="Connect To All" />
 
-    <!-- </FrameLayout> -->
+        <Button
+            android:id="@+id/send_button"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:text="Send ALERT" />
+        
+    </LinearLayout>
+    
+    <ListView android:id="@+id/devices_list_view"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
+        android:layout_below="@+id/internal_lay1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
 
-    <Button
-        android:id="@+id/connect_to_all_button"
-        style="@style/button_style"
-        android:text="Connect To All"
-        tools:ignore="HardcodedText" />
-
-    <Button
-        android:id="@+id/send_button"
-        style="@style/button_style"
-        android:text="Send ALERT"
-        tools:ignore="HardcodedText" />
-
-    <TextView
-        android:id="@+id/peers_list"
-        style="@style/text_view_font"
-        android:text="" />
-
-</LinearLayout>
+</RelativeLayout>
