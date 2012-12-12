@@ -2,6 +2,7 @@ package it.unipd.fast.broadcast.wifi_connection.receiver;
 
 import it.unipd.fast.broadcast.AppController;
 import it.unipd.fast.broadcast.IAppController;
+import it.unipd.fast.broadcast.helper.LogPrinter;
 import it.unipd.fast.broadcast.location.MockLocationProvider;
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
 import it.unipd.fast.broadcast.wifi_connection.receiver.IDataReceiverService.IDataCollectionHandler;
@@ -51,6 +52,7 @@ public class CollectionHandler implements IDataCollectionHandler {
 				break;
 	
 			case IMessage.ALERT_MESSAGE_TYPE :
+				LogPrinter.getInstance().writeTimedLine("alert message received from "+hostIp+". Hop number: "+message.getContent().get(IMessage.MESSAGE_HOP_KEY));
 				Log.d(TAG, this.getClass().getSimpleName()+": Ricevuto ALERT : \n"+message);
 				controller.handleMessage(message);
 				break;

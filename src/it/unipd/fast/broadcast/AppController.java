@@ -191,7 +191,9 @@ public class AppController implements IAppController{
 		public void onLocationChanged(Location location) {
 			Log.d(TAG,AppController.class.getSimpleName() + " : " + location.getLatitude()+"; "+location.getLongitude());
 			currentLocation = location;
-			if(fastBroadcastService != null) fastBroadcastService.setCurrentLocation(location);
+			Log.e(TAG, "AppController: Bearing = "+location.getBearing());
+			if(fastBroadcastService != null)
+				fastBroadcastService.setCurrentLocation(location);
 		}
 	};
 
@@ -344,7 +346,8 @@ public class AppController implements IAppController{
 		Map<String,String> mapToBroadcast = null;
 		if(isGroupOwner){
 			if(!mapSent && peerIdIpMap.keySet().size() == peers.size()){
-				MockLocationProvider.__set_static_couter(0, peerIdIpMap.size());
+				//size()+1 because group owner is not included in this map (so the returned size() equals (device_number-1)
+				MockLocationProvider.__set_static_couter(0, peerIdIpMap.size()+1);
 				__mock_provider.updateLocation();
 				Log.d(TAG,this.getClass().getCanonicalName()+": Invio la mappa a tutti : \n");
 				mapToBroadcast = new HashMap<String, String>(peerIdIpMap);
@@ -390,10 +393,15 @@ public class AppController implements IAppController{
 	 */
 	private IMessage createMapMessage(Map<String,String> map, String recipient){
 		IMessage message = MessageBuilder.getInstance().getMessage(IMessage.CLIENT_MAP_MESSAGE_TYPE,recipient);
-		int i = 0;
+		int i = 1;
 		for(String k : map.keySet()){
-			message.addContent(k, IMessage.concatContent(map.get(k), ""+i));
-			i++;
+			if(k.equals(MAC_ADDRESS))
+				message.addContent(k, IMessage.concatContent(map.get(k), ""+0));
+			else
+			{
+				message.addContent(k, IMessage.concatContent(map.get(k), ""+i));
+				i++;
+			}
 		}
 		message.prepare();
 		return message;
@@ -470,6 +478,7 @@ public class AppController implements IAppController{
 		message.addContent(IMessage.SENDER_LONGITUDE_KEY, ""+currentLocation.getLongitude());
 		message.addContent(IMessage.SENDER_RANGE_KEY, ""+fastBroadcastService.getEstimatedRange());
 		message.addContent(IMessage.SENDER_DIRECTION_KEY, ""+currentLocation.getBearing());
+		message.addContent(IMessage.MESSAGE_HOP_KEY, "1");
 		message.prepare();
 		sendBroadcast(message);
 	}
