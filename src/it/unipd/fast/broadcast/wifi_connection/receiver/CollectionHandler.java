@@ -1,11 +1,13 @@
 package it.unipd.fast.broadcast.wifi_connection.receiver;
 
 import it.unipd.fast.broadcast.AppController;
+import it.unipd.fast.broadcast.EventDispatcher;
 import it.unipd.fast.broadcast.IControllerComponent;
 import it.unipd.fast.broadcast.helper.LogPrinter;
 import it.unipd.fast.broadcast.location.MockLocationProvider;
+import it.unipd.fast.broadcast.location.SetupProviderEvent;
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
-import it.unipd.fast.broadcast.wifi_connection.receiver.IDataReceiverService.IDataCollectionHandler;
+import it.unipd.fast.broadcast.wifi_connection.receiver.IDataReceiverComponent.IDataCollectionHandler;
 import it.unipd.fast.broadcast.wifi_connection.transmissionmanager.TransmissionManagerFactory;
 
 import java.util.HashMap;
@@ -44,7 +46,9 @@ public class CollectionHandler implements IDataCollectionHandler {
 				for (String key : content.keySet()) {
 					String msgContent = content.get(key);
 					if(key.equals(controller.getDeviceId()))
-						MockLocationProvider.__set_static_couter(Integer.parseInt(IMessage.splitContent(msgContent)[IMessage.FILE_COUNTER_INDEX]), content.size());
+						EventDispatcher.getInstance().triggerEvent(new SetupProviderEvent(Integer.parseInt
+								(IMessage.splitContent(msgContent)[IMessage.FILE_COUNTER_INDEX]), content.size()));
+						//MockLocationProvider.__set_static_couter(Integer.parseInt(IMessage.splitContent(msgContent)[IMessage.FILE_COUNTER_INDEX]), content.size());
 					allPeerData.put(key, IMessage.splitContent(msgContent)[0]);
 				}
 				Log.d(TAG, this.getClass().getSimpleName()+": Ricevuta lista");

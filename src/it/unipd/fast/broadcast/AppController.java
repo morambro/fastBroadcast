@@ -1,9 +1,11 @@
 package it.unipd.fast.broadcast;
 
+import it.unipd.fast.broadcast.location.LocationChangedEvent;
 import it.unipd.fast.broadcast.location.LocationService;
 import it.unipd.fast.broadcast.location.LocationServiceListener;
-import it.unipd.fast.broadcast.location.MockLocationProvider;
 import it.unipd.fast.broadcast.location.MockLocationService;
+import it.unipd.fast.broadcast.location.SetupProviderEvent;
+import it.unipd.fast.broadcast.location.UpdateLocationEvent;
 import it.unipd.fast.broadcast.protocol_implementation.FastBroadcastService;
 import it.unipd.fast.broadcast.protocol_implementation.FastBroadcastService.FastBroadcastServiceBinder;
 import it.unipd.fast.broadcast.protocol_implementation.ICommunicationHandler;
@@ -17,8 +19,8 @@ import it.unipd.fast.broadcast.wifi_connection.receiver.CollectionHandler;
 import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverService;
 import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverService.DataReceiverBinder;
 import it.unipd.fast.broadcast.wifi_connection.receiver.FastBroadcastReceiver;
-import it.unipd.fast.broadcast.wifi_connection.receiver.IDataReceiverService;
-import it.unipd.fast.broadcast.wifi_connection.receiver.IDataReceiverService.IDataCollectionHandler;
+import it.unipd.fast.broadcast.wifi_connection.receiver.IDataReceiverComponent;
+import it.unipd.fast.broadcast.wifi_connection.receiver.IDataReceiverComponent.IDataCollectionHandler;
 import it.unipd.fast.broadcast.wifi_connection.transmissionmanager.TransmissionManagerFactory;
 
 import java.util.ArrayList;
@@ -54,19 +56,15 @@ public class AppController implements IControllerComponent {
 
 	protected final String TAG = "it.unipd.fast.broadcast";
 	public static String MAC_ADDRESS = null;
-	
-	
-	private MockLocationProvider __mock_provider;
-	
 
 	private Handler guiHandler;
 	private ServiceConnection dataReceiverServiceConnection = new DataServiceConnection();
 	private ServiceConnection fastBroadcastServiceConnection = new FastBroadcastServiceConnection();
-	private ServiceConnection locationServiceConn = new LocServiceConnection();
-	private boolean isServiceBinded = false;
+//	private ServiceConnection locationServiceConn = new LocServiceConnection();
+//	private boolean isServiceBinded = false;
 	private Location currentLocation;
 	private IDataCollectionHandler collectionHandler = new CollectionHandler();
-	private IDataReceiverService dataInterface = null;
+	private IDataReceiverComponent dataInterface = null;
 	private WifiP2pManager manager;
 	private Channel channel;
 	private BroadcastReceiver receiver;
@@ -85,24 +83,22 @@ public class AppController implements IControllerComponent {
 
 	/************************************************* INTERFACES/CLASSES ********************************************/
 	
-	//ServiceConnection for LocationServiceListener
-	class LocServiceConnection implements ServiceConnection {
-
-		public void onServiceConnected(ComponentName name, IBinder binder) {
-			isServiceBinded = true;
-//			locationService = ((LocationService.LocServiceBinder) binder).getService();
-			((LocationService.LocServiceBinder) binder).getService().addLocationListener(locServiceListener);
-			__mock_provider = ((LocationService.LocServiceBinder) binder).getService().__get_mock_provider();
-			Log.d(TAG, this.getClass().getSimpleName()+": Got MockProvider: "+__mock_provider.name);
-			Log.d(TAG, this.getClass().getSimpleName()+": Location Service Bound");
-		}
-
-		public void onServiceDisconnected(ComponentName name) {
-			//Service runs on the same process, should never be called.
-			isServiceBinded = false;
-		}
-
-	}
+//	//ServiceConnection for LocationServiceListener
+//	class LocServiceConnection implements ServiceConnection {
+//
+//		public void onServiceConnected(ComponentName name, IBinder binder) {
+//			isServiceBinded = true;
+////			locationService = ((LocationService.LocServiceBinder) binder).getService();
+//			((LocationService.LocServiceBinder) binder).getService().addLocationListener(locServiceListener);
+//			Log.d(TAG, this.getClass().getSimpleName()+": Location Service Bound");
+//		}
+//
+//		public void onServiceDisconnected(ComponentName name) {
+//			//Service runs on the same process, should never be called.
+//			isServiceBinded = false;
+//		}
+//
+//	}
 
 	private class DataServiceConnection implements ServiceConnection {
 
@@ -130,7 +126,7 @@ public class AppController implements IControllerComponent {
 				
 				@Override
 				public void doOnForwarded() {
-					__mock_provider.updateLocation();
+					EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
 				}
 			});
 		}
@@ -185,17 +181,17 @@ public class AppController implements IControllerComponent {
 		}
 	};
 
-	private LocationServiceListener locServiceListener = new LocationServiceListener() {
-
-		@Override
-		public void onLocationChanged(Location location) {
-			Log.d(TAG,AppController.class.getSimpleName() + " : " + location.getLatitude()+"; "+location.getLongitude());
-			currentLocation = location;
-			Log.e(TAG, "AppController: Bearing = "+location.getBearing());
-			if(fastBroadcastService != null)
-				fastBroadcastService.setCurrentLocation(location);
-		}
-	};
+//	private LocationServiceListener locServiceListener = new LocationServiceListener() {
+//
+//		@Override
+//		public void onLocationChanged(Location location) {
+//			Log.d(TAG,AppController.class.getSimpleName() + " : " + location.getLatitude()+"; "+location.getLongitude());
+//			currentLocation = location;
+//			Log.e(TAG, "AppController: Bearing = "+location.getBearing());
+//			if(fastBroadcastService != null)
+//				fastBroadcastService.setCurrentLocation(location);
+//		}
+//	};
 
 	// Listener used to be notified, when connection info are available
 	private IConnectionInfoManager connectionInfoListener = ConnectionManagerFactory.getInstance().getConnectionManager(connectionInfoCallback);
@@ -255,11 +251,16 @@ public class AppController implements IControllerComponent {
 		context.bindService(dataService, dataReceiverServiceConnection, Context.BIND_AUTO_CREATE);
 		
 		//Start LocationService
-		Intent locService = new Intent(context, MockLocationService.class);
-		locationServiceConn = new LocServiceConnection();
-		boolean temp = context.bindService(locService, locationServiceConn, Context.BIND_AUTO_CREATE);
-		Log.d(TAG, this.getClass().getSimpleName()+": Location Service binding status : "+temp);
+//		Intent locService = new Intent(context, MockLocationService.class);
+//		locationServiceConn = new LocServiceConnection();
+//		boolean temp = context.bindService(locService, locationServiceConn, Context.BIND_AUTO_CREATE);
+//		Log.d(TAG, this.getClass().getSimpleName()+": Location Service binding status : "+temp);
 
+		
+		List<Class<? extends IEvent>> events = new ArrayList<Class<? extends IEvent>>();
+		events.add(LocationChangedEvent.class);
+		EventDispatcher.getInstance().registerComponent(this, events);
+		
 		// Setting static field which contains device MAC address
 		MAC_ADDRESS = getDeviceMacAddress();
 		Log.d(TAG, this.getClass().getSimpleName()+": il MAC address del dispositivo è = "+MAC_ADDRESS);
@@ -347,8 +348,9 @@ public class AppController implements IControllerComponent {
 		if(isGroupOwner){
 			if(!mapSent && peerIdIpMap.keySet().size() == peers.size()){
 				//size()+1 because group owner is not included in this map (so the returned size() equals (device_number-1)
-				MockLocationProvider.__set_static_couter(0, peerIdIpMap.size()+1);
-				__mock_provider.updateLocation();
+				EventDispatcher.getInstance().triggerEvent(new SetupProviderEvent(0, peerIdIpMap.size()+1));
+				//MockLocationProvider.__set_static_couter(0, peerIdIpMap.size()+1);
+				EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
 				Log.d(TAG,this.getClass().getCanonicalName()+": Invio la mappa a tutti : \n");
 				mapToBroadcast = new HashMap<String, String>(peerIdIpMap);
 				mapToBroadcast.put(MAC_ADDRESS,groupOwnerAddress);
@@ -360,7 +362,8 @@ public class AppController implements IControllerComponent {
 			}
 		} else {
 			// If I'm not the group owner and I'm here, I received the map. So I can start estimation phase
-			__mock_provider.updateLocation();
+			EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
+			//__mock_provider.updateLocation();
 			startFastBroadcastService();
 		}
 
@@ -443,11 +446,11 @@ public class AppController implements IControllerComponent {
 			}
 		});
 		context.unbindService(dataReceiverServiceConnection);
-		if(isServiceBinded) {
-			context.unbindService(locationServiceConn);
-			isServiceBinded = false;
-			Log.d(TAG, this.getClass().getSimpleName()+": location service unbound");
-		}
+//		if(isServiceBinded) {
+//			context.unbindService(locationServiceConn);
+//			isServiceBinded = false;
+//			Log.d(TAG, this.getClass().getSimpleName()+": location service unbound");
+//		}
 		dataInterface.unregisterHandler(collectionHandler);
 		if(fastBroadcastService != null) context.unbindService(fastBroadcastServiceConnection);
 
@@ -514,6 +517,17 @@ public class AppController implements IControllerComponent {
 	@Override
 	public String getDeviceId() {
 		return MAC_ADDRESS;
+	}
+	
+	@Override
+	public void register() {
+		EventDispatcher.getInstance().registerComponent(this, null);
+	}
+
+	@Override
+	public void handle(IEvent event) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

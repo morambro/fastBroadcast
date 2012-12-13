@@ -1,12 +1,19 @@
 package it.unipd.fast.broadcast;
 
 import it.unipd.fast.broadcast.AppController.SynchronizedDevicesList;
+import it.unipd.fast.broadcast.location.LocationService;
+import it.unipd.fast.broadcast.location.MockLocationService;
 
 import java.util.List;
 
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -21,9 +28,11 @@ import android.widget.Toast;
 public class FastBroadcastActivity extends FragmentActivity implements GuiHandlerInterface {
 	protected final String TAG = "it.unipd.fast.broadcast";
 
+	private ServiceConnection locationServiceConn = new LocServiceConnection();
+	private boolean isServiceBinded = false;
 	//Handler to UI update from non-UI thread
 	private Handler activityHandler;
-	
+
 	// Wi-fi Direct fields
 	private Button sendToAllButton;
 	private Button connectToAllButton;
@@ -37,10 +46,28 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 		return activityHandler;
 	}
 
+
+	//ServiceConnection for LocationServiceListener
+	class LocServiceConnection implements ServiceConnection {
+
+		public void onServiceConnected(ComponentName name, IBinder binder) {
+			isServiceBinded = true;
+			//					locationService = ((LocationService.LocServiceBinder) binder).getService();
+			((LocationService.LocServiceBinder) binder).getService().addLocationListener(locServiceListener);
+			Log.d(TAG, this.getClass().getSimpleName()+": Location Service Bound");
+		}
+
+		public void onServiceDisconnected(ComponentName name) {
+			//Service runs on the same process, should never be called.
+			isServiceBinded = false;
+		}
+
+	}
+
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
 		setContentView(R.layout.activity_main);
 		activityHandler = new Handler() {
 			@SuppressWarnings("unchecked")
@@ -58,6 +85,10 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 				}
 			}
 		};
+		Intent locService = new Intent(this, MockLocationService.class);
+		locationServiceConn = new LocServiceConnection();
+		boolean temp = this.bindService(locService, locationServiceConn, Context.BIND_AUTO_CREATE);
+		Log.d(TAG, this.getClass().getSimpleName()+": Location Service binding status : "+temp);
 		connectionController = new AppController(this, this);
 		setupGui();
 	}
@@ -98,11 +129,15 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-//		doUnbindService();
+		if(isServiceBinded) {
+			this.unbindService(locationServiceConn);
+			isServiceBinded = false;
+			Log.d(TAG, this.getClass().getSimpleName()+": location service unbound");
+		}
 		Log.d(TAG, this.getClass().getSimpleName()+": onDestroy called");
 		connectionController.disconnect();
 	}
-	
+
 	/**
 	 * Does all the initial setup
 	 * 
@@ -111,7 +146,7 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 		connectToAllButton = (Button)this.findViewById(R.id.connect_to_all_button);
 		sendToAllButton = (Button)this.findViewById(R.id.send_button);
 		devicesListView = (ListView)this.findViewById(R.id.devices_list_view);
-		
+
 		sendToAllButton.setOnClickListener(new OnClickListener() {
 
 			public void onClick(View v) {
@@ -127,8 +162,8 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 			}
 		});
 	}
-	
+
 	private void startServices() {
-		
+
 	}
 }

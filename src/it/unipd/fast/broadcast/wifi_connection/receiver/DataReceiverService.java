@@ -1,12 +1,8 @@
 package it.unipd.fast.broadcast.wifi_connection.receiver;
 
 
-import it.unipd.fast.broadcast.wifi_connection.receiver.protocols.TCPPacketReceiver;
+import it.unipd.fast.broadcast.IEvent;
 import it.unipd.fast.broadcast.wifi_connection.receiver.protocols.UDPPacketReceiver;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
@@ -21,15 +17,14 @@ import android.util.Log;
  * @author Moreno Ambrosin
  *
  */
-public class DataReceiverService extends Service implements IDataReceiverService{
+public class DataReceiverService extends Service implements IDataReceiverComponent{
 	protected final String TAG = "it.unipd.fast.broadcast";
 
-	private List<IDataCollectionHandler> handlers = new ArrayList<IDataCollectionHandler>();
 	private AbstractPacketReceiver packetReceiver;// = new UDPPacketReceiver();
 
 
 	public class DataReceiverBinder extends Binder {
-		public IDataReceiverService getService() {
+		public IDataReceiverComponent getService() {
 			return DataReceiverService.this;
 		}
 	}
@@ -41,15 +36,12 @@ public class DataReceiverService extends Service implements IDataReceiverService
 	
 	@Override
 	public void registerHandler(IDataCollectionHandler handler) {
-		handlers.add(handler);
 		packetReceiver.add(handler);
 	}
 
 	@Override
 	public void unregisterHandler(IDataCollectionHandler handler) {
-		handlers.remove(handler);
-		packetReceiver.remove(handler);
-		if(handlers.size()==0) {
+		if(packetReceiver.remove(handler)) {
 			packetReceiver.terminate();
 			Log.d(TAG, this.getClass().getSimpleName()+": Service terminated");
 			stopSelf();
@@ -61,11 +53,14 @@ public class DataReceiverService extends Service implements IDataReceiverService
 		super.onCreate();
 		Log.d(TAG, this.getClass().getSimpleName()+": Servizio creato");
 		packetReceiver = new UDPPacketReceiver();
-		packetReceiver.start(handlers);
+		packetReceiver.start();
 	}
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		return START_STICKY;
-	}	
+	}
+
+	@Override
+	public void handle(IEvent event) {}	
 }

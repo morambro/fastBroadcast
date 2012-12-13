@@ -1,5 +1,6 @@
 package it.unipd.fast.broadcast.location;
 
+import it.unipd.fast.broadcast.EventDispatcher;
 import it.unipd.fast.broadcast.helper.LogPrinter;
 
 import java.io.BufferedReader;
@@ -20,11 +21,9 @@ public class MockLocationProvider {
 		Log.e(TAG, MockLocationProvider.class.getSimpleName()+": "+message);
 	}
 
-
-	private static int __counter;
-	private static int __peers_number;
-
-
+	private boolean isSetup = false;
+	private int counter;
+	private int peersNumber;
 	private LocationManager manager;
 	private boolean firstExec = true;
 	public String name = "MockProvider";
@@ -79,18 +78,18 @@ public class MockLocationProvider {
 				bearing = Float.parseFloat(line);
 				__debug_print_log("bearing: "+bearing);
 				//skip lines according to __counter
-				while(line!=null && !line.equals("") && __counter!=-1) {
+				while(line!=null && !line.equals("") && counter!=-1) {
 					line = file.readLine();
-					if(__counter==0)
+					if(counter==0)
 						__debug_print_log("Current position found in line "+__tmp_debug_counter+": "+line);
 					__tmp_debug_counter++;
-					__counter--;
+					counter--;
 				}
 				firstExec = false;
 			}
 			else
 			{
-				int tempFlag = __peers_number-1;
+				int tempFlag = peersNumber-1;
 				while((tempFlag != -1) && (line = file.readLine())!=null) {
 					if(tempFlag == 0)
 					{
@@ -117,15 +116,21 @@ public class MockLocationProvider {
 			Log.d(TAG, this.getClass().getSimpleName()+": NEW LOCATION: "+location.getBearing()+"; "+location.getLatitude()+"; "+location.getLongitude());
 			LogPrinter.getInstance().writeTimedLine("current position in car queue is "+(__tmp_debug_counter-2));
 			manager.setTestProviderLocation(name, location);
+			EventDispatcher.getInstance().triggerEvent(new LocationChangedEvent(location));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public static void __set_static_couter(int __counter, int __peers_number) {
-		Log.d(TAG, MockLocationProvider.class.getSimpleName()+": file counter: "+__counter+"; peers number: "+__peers_number);
-		__debug_print_log("file counter: "+__counter+"; peers number: "+__peers_number);
-		MockLocationProvider.__counter = __counter;
-		MockLocationProvider.__peers_number = __peers_number;
+	public void setup(int counter, int peersNumber) {
+		isSetup = true;
+		Log.d(TAG, MockLocationProvider.class.getSimpleName()+": file counter: "+counter+"; peers number: "+peersNumber);
+		__debug_print_log("file counter: "+counter+"; peers number: "+peersNumber);
+		this.counter = counter;
+		this.peersNumber = peersNumber;
+	}
+	
+	public boolean isSetup() {
+		return isSetup;
 	}
 }

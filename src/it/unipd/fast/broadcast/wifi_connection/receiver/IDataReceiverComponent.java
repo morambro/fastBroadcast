@@ -1,9 +1,10 @@
 package it.unipd.fast.broadcast.wifi_connection.receiver;
 
 import it.unipd.fast.broadcast.AppController;
+import it.unipd.fast.broadcast.IComponent;
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
 
-public interface IDataReceiverService {
+public interface IDataReceiverComponent extends IComponent {
 	/**
 	 * Interface used to specify operation to do on data collected or when an error occurs
 	 * 

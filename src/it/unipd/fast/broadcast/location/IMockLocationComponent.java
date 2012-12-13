@@ -1,5 +1,6 @@
 package it.unipd.fast.broadcast.location;
 
 public interface IMockLocationComponent extends ILocationComponent {
-	public MockLocationProvider __get_mock_provider();
+	public void updateLocation();
+	public void setup(int counter, int peersNumber);
 }

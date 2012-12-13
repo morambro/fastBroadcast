@@ -2,7 +2,7 @@ package it.unipd.fast.broadcast.wifi_connection.receiver.protocols;
 
 import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
 import it.unipd.fast.broadcast.wifi_connection.receiver.AbstractPacketReceiver;
-import it.unipd.fast.broadcast.wifi_connection.receiver.IDataReceiverService.IDataCollectionHandler;
+import it.unipd.fast.broadcast.wifi_connection.receiver.IDataReceiverComponent.IDataCollectionHandler;
 
 import java.io.BufferedReader;
 import java.io.IOException;

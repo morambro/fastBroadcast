@@ -1,5 +1,8 @@
 package it.unipd.fast.broadcast.location;
 
+import it.unipd.fast.broadcast.EventDispatcher;
+import it.unipd.fast.broadcast.IEvent;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,10 +49,10 @@ public class LocationService extends Service implements ILocationComponent {
 		listeners.remove(listener);
 	}
 	
-	@Override
-	public MockLocationProvider __get_mock_provider() {
-		return null;
-	}
+//	@Override
+//	public MockLocationProvider __get_mock_provider() {
+//		return null;
+//	}
 
 	//Service methods
 	@Override
@@ -78,11 +81,13 @@ public class LocationService extends Service implements ILocationComponent {
 			}
 
 			public void onLocationChanged(Location location) {
-				if(useNewLocation(location, lastLoc))
-					for (LocationServiceListener locListener : listeners) {
-						locListener.onLocationChanged(location);
-						lastLoc = location;
-					}
+				if(useNewLocation(location, lastLoc)) {
+//					for (LocationServiceListener locListener : listeners) {
+//						locListener.onLocationChanged(location);
+//						lastLoc = location;
+//					}
+					EventDispatcher.getInstance().triggerEvent(new LocationChangedEvent(location));
+				}
 			}
 		};
 		registerLocationProviders(locationManager, listener);
@@ -123,5 +128,17 @@ public class LocationService extends Service implements ILocationComponent {
 		if(lessAcc && isNewer)
 			return true;
 		return false;
+	}
+
+	@Override
+	public void handle(IEvent event) {
+	}
+	
+	@Override
+	public void register() {
+		List<Class<? extends IEvent>> events = new ArrayList<Class<? extends IEvent>>();
+		events.add(UpdateLocationEvent.class);
+		events.add(SetupProviderEvent.class);
+		EventDispatcher.getInstance().registerComponent(this, events);
 	}
 }
