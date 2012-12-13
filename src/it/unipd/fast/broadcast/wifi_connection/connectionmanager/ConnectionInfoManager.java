@@ -1,6 +1,7 @@
 package it.unipd.fast.broadcast.wifi_connection.connectionmanager;
 
 import it.unipd.fast.broadcast.AppController;
+import it.unipd.fast.broadcast.EventDispatcher;
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
 import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
 import it.unipd.fast.broadcast.wifi_connection.transmissionmanager.TransmissionManagerFactory;
@@ -14,11 +15,6 @@ import android.util.Log;
 public class ConnectionInfoManager implements IConnectionInfoManager{
 
 	protected final String TAG = "it.unipd.fast.broadcast";
-	private OnConnectionInfoCollected callback;
-
-	public ConnectionInfoManager(OnConnectionInfoCollected callback) {
-		this.callback = callback;
-	}	
 
 	@Override
 	public void onConnectionInfoAvailable(final WifiP2pInfo info) {
@@ -35,8 +31,10 @@ public class ConnectionInfoManager implements IConnectionInfoManager{
 
 				// Check if the group is formed
 				if (info.groupFormed){
-
-					callback.onInfoCollected(info);
+					
+					// Fire an Event to pass info to Controller
+					EventDispatcher.getInstance().triggerEvent(new WiFiInfoCollectedEvent(info));
+					
 					// Depending on being the group owner or not, there are different tasks
 					// to do at this point
 					if(info.isGroupOwner){

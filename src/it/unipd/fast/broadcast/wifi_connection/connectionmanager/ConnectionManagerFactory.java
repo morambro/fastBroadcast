@@ -1,6 +1,5 @@
 package it.unipd.fast.broadcast.wifi_connection.connectionmanager;
 
-import it.unipd.fast.broadcast.wifi_connection.connectionmanager.IConnectionInfoManager.OnConnectionInfoCollected;
 
 public class ConnectionManagerFactory {
 private static final ConnectionManagerFactory singleton = new ConnectionManagerFactory();
@@ -11,7 +10,7 @@ private static final ConnectionManagerFactory singleton = new ConnectionManagerF
 		return singleton;
 	}
 	
-	public ConnectionInfoManager getConnectionManager(OnConnectionInfoCollected callback) {
-		return new ConnectionInfoManager(callback);
+	public ConnectionInfoManager getConnectionManager() {
+		return new ConnectionInfoManager();
 	}
 }

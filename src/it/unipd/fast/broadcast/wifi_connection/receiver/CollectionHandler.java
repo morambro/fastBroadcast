@@ -4,7 +4,6 @@ import it.unipd.fast.broadcast.AppController;
 import it.unipd.fast.broadcast.EventDispatcher;
 import it.unipd.fast.broadcast.IControllerComponent;
 import it.unipd.fast.broadcast.helper.LogPrinter;
-import it.unipd.fast.broadcast.location.MockLocationProvider;
 import it.unipd.fast.broadcast.location.SetupProviderEvent;
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
 import it.unipd.fast.broadcast.wifi_connection.receiver.IDataReceiverComponent.IDataCollectionHandler;

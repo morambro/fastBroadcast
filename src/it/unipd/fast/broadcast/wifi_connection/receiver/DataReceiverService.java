@@ -62,5 +62,8 @@ public class DataReceiverService extends Service implements IDataReceiverCompone
 	}
 
 	@Override
-	public void handle(IEvent event) {}	
+	public void handle(IEvent event) {}
+
+	@Override
+	public void register() {}	
 }

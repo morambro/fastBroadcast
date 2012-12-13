@@ -35,6 +35,7 @@ public class MockLocationService extends LocationService implements IMockLocatio
 	
 	@Override
 	public void handle(IEvent event) {
+		Log.d(TAG,this.getClass().getSimpleName()+" : Handle called +"+event.getClass().getSimpleName());
 		if(event instanceof UpdateLocationEvent) {
 			updateLocation();
 			return;

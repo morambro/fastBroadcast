@@ -1,26 +1,22 @@
 package it.unipd.fast.broadcast;
 
 import it.unipd.fast.broadcast.location.LocationChangedEvent;
-import it.unipd.fast.broadcast.location.LocationService;
-import it.unipd.fast.broadcast.location.LocationServiceListener;
-import it.unipd.fast.broadcast.location.MockLocationService;
 import it.unipd.fast.broadcast.location.SetupProviderEvent;
 import it.unipd.fast.broadcast.location.UpdateLocationEvent;
+import it.unipd.fast.broadcast.protocol_implementation.EstimationPhaseStartEvent;
 import it.unipd.fast.broadcast.protocol_implementation.FastBroadcastService;
-import it.unipd.fast.broadcast.protocol_implementation.FastBroadcastService.FastBroadcastServiceBinder;
-import it.unipd.fast.broadcast.protocol_implementation.ICommunicationHandler;
-import it.unipd.fast.broadcast.protocol_implementation.ICommunicationHandler.OnForwardedHandler;
+import it.unipd.fast.broadcast.protocol_implementation.IFastBroadcastComponent;
+import it.unipd.fast.broadcast.protocol_implementation.SendBroadcastMessageEvent;
 import it.unipd.fast.broadcast.wifi_connection.connectionmanager.ConnectionManagerFactory;
 import it.unipd.fast.broadcast.wifi_connection.connectionmanager.IConnectionInfoManager;
-import it.unipd.fast.broadcast.wifi_connection.connectionmanager.IConnectionInfoManager.OnConnectionInfoCollected;
+import it.unipd.fast.broadcast.wifi_connection.connectionmanager.WiFiInfoCollectedEvent;
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
 import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
 import it.unipd.fast.broadcast.wifi_connection.receiver.CollectionHandler;
-import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverService;
-import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverService.DataReceiverBinder;
 import it.unipd.fast.broadcast.wifi_connection.receiver.FastBroadcastReceiver;
 import it.unipd.fast.broadcast.wifi_connection.receiver.IDataReceiverComponent;
 import it.unipd.fast.broadcast.wifi_connection.receiver.IDataReceiverComponent.IDataCollectionHandler;
+import it.unipd.fast.broadcast.wifi_connection.receiver.protocols.MessageReceivedEvent;
 import it.unipd.fast.broadcast.wifi_connection.transmissionmanager.TransmissionManagerFactory;
 
 import java.util.ArrayList;
@@ -29,24 +25,19 @@ import java.util.List;
 import java.util.Map;
 
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.location.Location;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
-import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.ActionListener;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
 
@@ -58,8 +49,8 @@ public class AppController implements IControllerComponent {
 	public static String MAC_ADDRESS = null;
 
 	private Handler guiHandler;
-	private ServiceConnection dataReceiverServiceConnection = new DataServiceConnection();
-	private ServiceConnection fastBroadcastServiceConnection = new FastBroadcastServiceConnection();
+//	private ServiceConnection dataReceiverServiceConnection = new DataServiceConnection();
+//	private ServiceConnection fastBroadcastServiceConnection = new FastBroadcastServiceConnection();
 //	private ServiceConnection locationServiceConn = new LocServiceConnection();
 //	private boolean isServiceBinded = false;
 	private Location currentLocation;
@@ -79,7 +70,7 @@ public class AppController implements IControllerComponent {
 	private String groupOwnerAddress;
 	private boolean isGroupOwner = false;
 
-	private ICommunicationHandler fastBroadcastService;
+	private IFastBroadcastComponent fastBroadcastService;
 
 	/************************************************* INTERFACES/CLASSES ********************************************/
 	
@@ -100,42 +91,42 @@ public class AppController implements IControllerComponent {
 //
 //	}
 
-	private class DataServiceConnection implements ServiceConnection {
+//	private class DataServiceConnection implements ServiceConnection {
+//
+//		@Override
+//		public void onServiceConnected(ComponentName arg0, IBinder binder) {
+//			dataInterface = ((DataReceiverBinder)binder).getService();
+//			dataInterface.registerHandler(collectionHandler);
+//			Log.d(TAG, this.getClass().getSimpleName()+": Servizio ricezione dati binded");
+//		}
+//
+//		@Override
+//		public void onServiceDisconnected(ComponentName arg0) {
+//			Log.d(TAG, this.getClass().getSimpleName()+": Service lost");
+//		}
+//
+//	}
 
-		@Override
-		public void onServiceConnected(ComponentName arg0, IBinder binder) {
-			dataInterface = ((DataReceiverBinder)binder).getService();
-			dataInterface.registerHandler(collectionHandler);
-			Log.d(TAG, this.getClass().getSimpleName()+": Servizio ricezione dati binded");
-		}
-
-		@Override
-		public void onServiceDisconnected(ComponentName arg0) {
-			Log.d(TAG, this.getClass().getSimpleName()+": Service lost");
-		}
-
-	}
-
-	private class FastBroadcastServiceConnection implements ServiceConnection{
-		@Override
-		public void onServiceConnected(ComponentName name, IBinder binder) {
-			fastBroadcastService = ((FastBroadcastServiceBinder)binder).getService();
-			// After creating the service, update the location
-			fastBroadcastService.setCurrentLocation(currentLocation);
-			fastBroadcastService.setOnforwardedHadler(new OnForwardedHandler() {
-				
-				@Override
-				public void doOnForwarded() {
-					EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
-				}
-			});
-		}
-
-		@Override
-		public void onServiceDisconnected(ComponentName name) {
-			Log.d(TAG, this.getClass().getSimpleName()+": Estimation Service lost");
-		}
-	}
+//	private class FastBroadcastServiceConnection implements ServiceConnection{
+//		@Override
+//		public void onServiceConnected(ComponentName name, IBinder binder) {
+//			fastBroadcastService = ((FastBroadcastServiceBinder)binder).getService();
+//			// After creating the service, update the location
+//			fastBroadcastService.setCurrentLocation(currentLocation);
+//			fastBroadcastService.setOnforwardedHadler(new OnForwardedHandler() {
+//				
+//				@Override
+//				public void doOnForwarded() {
+//					EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
+//				}
+//			});
+//		}
+//
+//		@Override
+//		public void onServiceDisconnected(ComponentName name) {
+//			Log.d(TAG, this.getClass().getSimpleName()+": Estimation Service lost");
+//		}
+//	}
 
 	/**
 	 * PeerListListener implementation
@@ -168,18 +159,18 @@ public class AppController implements IControllerComponent {
 
 	};
 
-	/**
-	 * Called when connection info are available
-	 * 
-	 */
-	private OnConnectionInfoCollected connectionInfoCallback = new OnConnectionInfoCollected() {
-
-		@Override
-		public void onInfoCollected(WifiP2pInfo info) {
-			groupOwnerAddress = info.groupOwnerAddress.getCanonicalHostName();
-			isGroupOwner = info.isGroupOwner;
-		}
-	};
+//	/**
+//	 * Called when connection info are available
+//	 * 
+//	 */
+//	private OnConnectionInfoCollected connectionInfoCallback = new OnConnectionInfoCollected() {
+//
+//		@Override
+//		public void onInfoCollected(WifiP2pInfo info) {
+//			groupOwnerAddress = info.groupOwnerAddress.getCanonicalHostName();
+//			isGroupOwner = info.isGroupOwner;
+//		}
+//	};
 
 //	private LocationServiceListener locServiceListener = new LocationServiceListener() {
 //
@@ -194,7 +185,7 @@ public class AppController implements IControllerComponent {
 //	};
 
 	// Listener used to be notified, when connection info are available
-	private IConnectionInfoManager connectionInfoListener = ConnectionManagerFactory.getInstance().getConnectionManager(connectionInfoCallback);
+	private IConnectionInfoManager connectionInfoListener = ConnectionManagerFactory.getInstance().getConnectionManager();
 
 
 	public class SynchronizedDevicesList {
@@ -244,11 +235,11 @@ public class AppController implements IControllerComponent {
 		broadcastReceiverIntentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
 		broadcastReceiverIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
-		//Start DataReceiverService
-		Log.d(TAG, this.getClass().getSimpleName()+": Bindo il servizio di ricezione dati");
-		Intent dataService = new Intent(context, DataReceiverService.class);
-		context.startService(dataService);
-		context.bindService(dataService, dataReceiverServiceConnection, Context.BIND_AUTO_CREATE);
+//		//Start DataReceiverService
+//		Log.d(TAG, this.getClass().getSimpleName()+": Bindo il servizio di ricezione dati");
+//		Intent dataService = new Intent(context, DataReceiverService.class);
+//		context.startService(dataService);
+//		context.bindService(dataService, dataReceiverServiceConnection, Context.BIND_AUTO_CREATE);
 		
 		//Start LocationService
 //		Intent locService = new Intent(context, MockLocationService.class);
@@ -259,6 +250,9 @@ public class AppController implements IControllerComponent {
 		
 		List<Class<? extends IEvent>> events = new ArrayList<Class<? extends IEvent>>();
 		events.add(LocationChangedEvent.class);
+		events.add(MessageReceivedEvent.class);
+		events.add(WiFiInfoCollectedEvent.class);
+		events.add(SendBroadcastMessageEvent.class);
 		EventDispatcher.getInstance().registerComponent(this, events);
 		
 		// Setting static field which contains device MAC address
@@ -346,8 +340,9 @@ public class AppController implements IControllerComponent {
 		// Broadcast the map to all, after adding my <ID,IP> to it!
 		Map<String,String> mapToBroadcast = null;
 		if(isGroupOwner){
-			if(!mapSent && peerIdIpMap.keySet().size() == peers.size()){
+			if(!mapSent && peerIdIpMap.keySet().size() >= peers.size()){
 				//size()+1 because group owner is not included in this map (so the returned size() equals (device_number-1)
+				fastBroadcastService = (IFastBroadcastComponent)EventDispatcher.getInstance().requestComponent(FastBroadcastService.class);
 				EventDispatcher.getInstance().triggerEvent(new SetupProviderEvent(0, peerIdIpMap.size()+1));
 				//MockLocationProvider.__set_static_couter(0, peerIdIpMap.size()+1);
 				EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
@@ -355,16 +350,20 @@ public class AppController implements IControllerComponent {
 				mapToBroadcast = new HashMap<String, String>(peerIdIpMap);
 				mapToBroadcast.put(MAC_ADDRESS,groupOwnerAddress);
 				IMessage message = createMapMessage(mapToBroadcast, IMessage.BROADCAST_ADDRESS);
+				
 				sendBroadcast(message);
+				
 				mapSent = true;
 				// Now start fast broadcast
-				startFastBroadcastService();
+//				startFastBroadcastService();
+				EventDispatcher.getInstance().triggerEvent(new EstimationPhaseStartEvent());
 			}
 		} else {
 			// If I'm not the group owner and I'm here, I received the map. So I can start estimation phase
+			fastBroadcastService = (IFastBroadcastComponent)EventDispatcher.getInstance().requestComponent(FastBroadcastService.class);
 			EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
 			//__mock_provider.updateLocation();
-			startFastBroadcastService();
+			EventDispatcher.getInstance().triggerEvent(new EstimationPhaseStartEvent());
 		}
 
 		if(mapToBroadcast == null) mapToBroadcast = peerIdIpMap;
@@ -375,17 +374,17 @@ public class AppController implements IControllerComponent {
 		Log.d(TAG, this.getClass().getSimpleName()+": Message received\n"+s);
 	}
 
-	/**
-	 * Starts range estimator service
-	 * 
-	 */
-	private void startFastBroadcastService() {
-		Log.d(TAG, this.getClass().getSimpleName()+": Bindo il servizio di Range Estimation");
-		Intent estimationService = new Intent(context, FastBroadcastService.class);
-		estimationService.putStringArrayListExtra("devices",new ArrayList<String>(peerIdIpMap.values()));
-		context.startService(estimationService);
-		context.bindService(estimationService, fastBroadcastServiceConnection, Context.BIND_AUTO_CREATE);
-	}
+//	/**
+//	 * Starts range estimator service
+//	 * 
+//	 */
+//	private void startFastBroadcastService() {
+//		Log.d(TAG, this.getClass().getSimpleName()+": Bindo il servizio di Range Estimation");
+//		Intent estimationService = new Intent(context, FastBroadcastService.class);
+//		estimationService.putStringArrayListExtra("devices",new ArrayList<String>(peerIdIpMap.values()));
+//		context.startService(estimationService);
+//		context.bindService(estimationService, fastBroadcastServiceConnection, Context.BIND_AUTO_CREATE);
+//	}
 
 	/**
 	 * Creates Map message for all the peers
@@ -445,14 +444,14 @@ public class AppController implements IControllerComponent {
 				Log.d(TAG, this.getClass().getSimpleName()+": Failed to remove group, reason = "+reason);
 			}
 		});
-		context.unbindService(dataReceiverServiceConnection);
+//		context.unbindService(dataReceiverServiceConnection);
 //		if(isServiceBinded) {
 //			context.unbindService(locationServiceConn);
 //			isServiceBinded = false;
 //			Log.d(TAG, this.getClass().getSimpleName()+": location service unbound");
 //		}
-		dataInterface.unregisterHandler(collectionHandler);
-		if(fastBroadcastService != null) context.unbindService(fastBroadcastServiceConnection);
+//		dataInterface.unregisterHandler(collectionHandler);
+//		if(fastBroadcastService != null) context.unbindService(fastBroadcastServiceConnection);
 
 	}
 
@@ -526,8 +525,29 @@ public class AppController implements IControllerComponent {
 
 	@Override
 	public void handle(IEvent event) {
-		// TODO Auto-generated method stub
-		
+		if(event instanceof LocationChangedEvent){
+			LocationChangedEvent ev = (LocationChangedEvent) event;
+			this.currentLocation = ev.location;
+			Log.d(TAG,this.getClass().getSimpleName()+" : fastBroadcast "+fastBroadcastService);
+			fastBroadcastService.setCurrentLocation(ev.location);
+			return;
+		}
+		if(event instanceof MessageReceivedEvent){
+			MessageReceivedEvent ev = (MessageReceivedEvent) event;
+			collectionHandler.onDataCollected(ev.message, ev.senderID);
+			return;
+		}
+		if(event instanceof SendBroadcastMessageEvent){
+			SendBroadcastMessageEvent ev = (SendBroadcastMessageEvent) event;
+			sendBroadcast(ev.message);
+			return;
+		}
+		if(event instanceof WiFiInfoCollectedEvent){
+			WiFiInfoCollectedEvent ev = (WiFiInfoCollectedEvent) event;
+			groupOwnerAddress 	= ev.wifiConnectionInfo.groupOwnerAddress.getCanonicalHostName();
+			isGroupOwner 		= ev.wifiConnectionInfo.isGroupOwner;
+			return;
+		}
 	}
 
 }

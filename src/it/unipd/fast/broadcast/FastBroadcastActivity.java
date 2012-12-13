@@ -1,11 +1,9 @@
 package it.unipd.fast.broadcast;
 
 import it.unipd.fast.broadcast.AppController.SynchronizedDevicesList;
-import it.unipd.fast.broadcast.location.LocationService;
 import it.unipd.fast.broadcast.location.MockLocationService;
-
-import java.util.List;
-
+import it.unipd.fast.broadcast.protocol_implementation.FastBroadcastService;
+import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverService;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -22,14 +20,17 @@ import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 public class FastBroadcastActivity extends FragmentActivity implements GuiHandlerInterface {
 	protected final String TAG = "it.unipd.fast.broadcast";
 
 	private ServiceConnection locationServiceConn = new LocServiceConnection();
-	private boolean isServiceBinded = false;
+	private ServiceConnection fastBroadcastServiceConnection = new FastBroadcastServiceConnection();
+	private ServiceConnection dataReceiverServiceConnection = new DataServiceConnection();
+	
+	private boolean isLocationServiceBinded = false;
+	
 	//Handler to UI update from non-UI thread
 	private Handler activityHandler;
 
@@ -51,19 +52,67 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 	class LocServiceConnection implements ServiceConnection {
 
 		public void onServiceConnected(ComponentName name, IBinder binder) {
-			isServiceBinded = true;
-			//					locationService = ((LocationService.LocServiceBinder) binder).getService();
-			((LocationService.LocServiceBinder) binder).getService().addLocationListener(locServiceListener);
+			isLocationServiceBinded = true;
 			Log.d(TAG, this.getClass().getSimpleName()+": Location Service Bound");
 		}
 
 		public void onServiceDisconnected(ComponentName name) {
-			//Service runs on the same process, should never be called.
-			isServiceBinded = false;
+			isLocationServiceBinded = false;
 		}
 
 	}
 
+	
+	private class FastBroadcastServiceConnection implements ServiceConnection{
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder binder) {
+			Log.d(TAG, FastBroadcastServiceConnection.class.getSimpleName()+": Fast Broadcast Service connected");
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			Log.d(TAG, FastBroadcastServiceConnection.class.getSimpleName()+": Fast Broadcast Service lost");
+		}
+	}
+	
+	private class DataServiceConnection implements ServiceConnection {
+
+		@Override
+		public void onServiceConnected(ComponentName arg0, IBinder binder) {
+//			dataInterface = ((DataReceiverBinder)binder).getService();
+//			dataInterface.registerHandler(collectionHandler);
+			Log.d(TAG, this.getClass().getSimpleName()+": DataReceiverService binded");
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName arg0) {
+			Log.d(TAG, this.getClass().getSimpleName()+": Service lost");
+		}
+
+	}
+	
+	private void startFastBroadcastService() {
+		Log.d(TAG, this.getClass().getSimpleName()+": Bindo il servizio di Range Estimation");
+		Intent estimationService = new Intent(this, FastBroadcastService.class);
+		this.startService(estimationService);
+		this.bindService(estimationService, fastBroadcastServiceConnection, Context.BIND_AUTO_CREATE);
+	}
+	
+	private void startLocationService(){
+		Intent locService = new Intent(this, MockLocationService.class);
+		locationServiceConn = new LocServiceConnection();
+		boolean temp = this.bindService(locService, locationServiceConn, Context.BIND_AUTO_CREATE);
+		Log.d(TAG, this.getClass().getSimpleName()+": Location Service binding status : "+temp);
+	}
+	
+	private void startDataReceiverService(){
+		//Start DataReceiverService
+		Log.d(TAG, this.getClass().getSimpleName()+": Bindo il servizio di ricezione dati");
+		Intent dataService = new Intent(this, DataReceiverService.class);
+		this.startService(dataService);
+		this.bindService(dataService, dataReceiverServiceConnection, Context.BIND_AUTO_CREATE);
+	}
+	
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -85,10 +134,11 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 				}
 			}
 		};
-		Intent locService = new Intent(this, MockLocationService.class);
-		locationServiceConn = new LocServiceConnection();
-		boolean temp = this.bindService(locService, locationServiceConn, Context.BIND_AUTO_CREATE);
-		Log.d(TAG, this.getClass().getSimpleName()+": Location Service binding status : "+temp);
+		
+		startLocationService();
+		startFastBroadcastService();
+		startDataReceiverService();
+		
 		connectionController = new AppController(this, this);
 		setupGui();
 	}
@@ -129,13 +179,17 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		if(isServiceBinded) {
+		if(isLocationServiceBinded) {
 			this.unbindService(locationServiceConn);
-			isServiceBinded = false;
+			isLocationServiceBinded = false;
 			Log.d(TAG, this.getClass().getSimpleName()+": location service unbound");
 		}
+		
+		unbindService(fastBroadcastServiceConnection);
+		unbindService(dataReceiverServiceConnection);
 		Log.d(TAG, this.getClass().getSimpleName()+": onDestroy called");
 		connectionController.disconnect();
+		
 	}
 
 	/**
@@ -161,9 +215,5 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 				connectionController.connectToAll();
 			}
 		});
-	}
-
-	private void startServices() {
-
 	}
 }

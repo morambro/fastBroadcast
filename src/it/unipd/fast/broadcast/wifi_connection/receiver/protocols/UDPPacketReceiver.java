@@ -1,9 +1,9 @@
 package it.unipd.fast.broadcast.wifi_connection.receiver.protocols;
 
+import it.unipd.fast.broadcast.EventDispatcher;
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
 import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
 import it.unipd.fast.broadcast.wifi_connection.receiver.AbstractPacketReceiver;
-import it.unipd.fast.broadcast.wifi_connection.receiver.IDataReceiverComponent.IDataCollectionHandler;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -13,7 +13,7 @@ import android.util.Log;
 public class UDPPacketReceiver extends AbstractPacketReceiver {
 	protected final String TAG = "it.unipd.fast.broadcast";
 	
-	protected final int PACKET_SIZE = 1024;
+	protected final int PACKET_SIZE = 600;
 	protected int server_port = 8888;
 	
 	protected DatagramSocket socket;
@@ -22,26 +22,29 @@ public class UDPPacketReceiver extends AbstractPacketReceiver {
 	public void run() {
 		try{
 			socket = new DatagramSocket(server_port);
-			final byte[] message = new byte[PACKET_SIZE];
-			final DatagramPacket p = new DatagramPacket(message, message.length);
 			while(!terminated){
-				
+				final byte[] message = new byte[PACKET_SIZE];
+				final DatagramPacket p = new DatagramPacket(message, message.length);
 				socket.receive(p);
 				new Thread(){
 					public void run(){
+						
 						String xmlMsg = new String(message, 0, p.getLength());
 						IMessage xmlMessage = MessageBuilder.getInstance().getMessage(xmlMsg);
 						
 						Log.d(TAG,UDPPacketReceiver.class.getSimpleName() +"message : " + xmlMsg);
-						Log.d(TAG,UDPPacketReceiver.class.getSimpleName() +"handlers : " + handlers);
 						
-						for (IDataCollectionHandler handler : handlers) {
-							Log.d(TAG,"Calling handler ");
-							handler.onDataCollected(
+//						for (IDataCollectionHandler handler : handlers) {
+//							Log.d(TAG,"Calling handler ");
+//							handler.onDataCollected(
+//								xmlMessage ,
+//								xmlMessage.getSenderID()
+//							);
+//						}
+						EventDispatcher.getInstance().triggerEvent(new MessageReceivedEvent(
 								xmlMessage ,
 								xmlMessage.getSenderID()
-							);
-						}
+						));
 					}
 				}.start();
 			}

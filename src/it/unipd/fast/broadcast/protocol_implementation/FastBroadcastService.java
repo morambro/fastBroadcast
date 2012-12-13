@@ -1,10 +1,11 @@
 package it.unipd.fast.broadcast.protocol_implementation;
 
+import it.unipd.fast.broadcast.EventDispatcher;
+import it.unipd.fast.broadcast.IEvent;
 import it.unipd.fast.broadcast.helper.LogPrinter;
+import it.unipd.fast.broadcast.location.UpdateLocationEvent;
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
 import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
-import it.unipd.fast.broadcast.wifi_connection.transmissionmanager.ITranmissionManager;
-import it.unipd.fast.broadcast.wifi_connection.transmissionmanager.TransmissionManagerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +28,7 @@ import android.util.Log;
  * @author Moreno Ambrosin
  *
  */
-public class FastBroadcastService extends Service implements ICommunicationHandler{
+public class FastBroadcastService extends Service implements IFastBroadcastComponent{
 	
 	private String TAG = "it.unipd.fast.broadcast";
 	
@@ -201,12 +202,12 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 						newMessage.addContent(IMessage.MESSAGE_HOP_KEY, ""+hopCount);
 						newMessage.prepare();
 						LogPrinter.getInstance().writeTimedLine("no messages arrived while sleeping. Forwarding message \n\tHop numbers: "+hopCount+".\n\t Size "+messageQueue.size());
-						transmissionManager.send(devices, newMessage);
+						// Send broadcast the message
+						EventDispatcher.getInstance().triggerEvent(new SendBroadcastMessageEvent(newMessage));
 						
 						Log.e(TAG,"MESSAGE FORWARDED!!");
 						
-						if(handler != null)
-							handler.doOnForwarded();
+						EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
 					}else{
 						LogPrinter.getInstance().writeTimedLine("alert already brodcasted by someone else, discarded. Size "+messageQueue.size());
 						Log.e(TAG,"Double Alert, message discarded");
@@ -221,8 +222,7 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 						if(receivedFromBack(direction, latitude, longitude)){
 							// Someone else forwarded it already
 							Log.e(TAG,"MESSAGE RECEIVED FROM BACK!!");
-							if(handler != null)
-								handler.doOnForwarded();
+							EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
 						}
 						Log.e(TAG,"MESSAGE NOT FORWARDED!!");
 					}
@@ -240,15 +240,11 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 	 */
 	public class FastBroadcastServiceBinder extends Binder {
 		
-		public ICommunicationHandler getService() {
+		public IFastBroadcastComponent getService() {
 			return FastBroadcastService.this;
 		}
 	}
 	
-	/**
-	 * list of all the devices in the network
-	 */
-	private List<String> devices;
 	/**
 	 * Current-turn Maximum Front Range
 	 */
@@ -276,11 +272,6 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 	 * 
 	 */
 	private final float ERROR = 1f;
-	
-	/**
-	 * Trasmission manager used to send out messages
-	 */
-	private ITranmissionManager transmissionManager = TransmissionManagerFactory.getInstance().getTransmissionManager();
 	
 	/**
 	 * Tells whether another hello message arrived
@@ -316,7 +307,9 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 		helloMessage.addContent(IMessage.SENDER_DIRECTION_KEY,currentLocation.getBearing()+"");
 		
 		helloMessage.prepare();
-		transmissionManager.send(devices, helloMessage);
+		
+		// Send the hello message broadcast
+		EventDispatcher.getInstance().triggerEvent(new SendBroadcastMessageEvent(helloMessage));
 	}
 	
 	@Override
@@ -440,9 +433,6 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 	
 	@Override
 	public IBinder onBind(Intent intent) {
-		this.devices = intent.getStringArrayListExtra("devices");
-		// Start scheduling on service binding
-		scheduler.schedule(new HelloMessageSender(),TURN_DURATION,TURN_DURATION);
 		return new FastBroadcastServiceBinder();
 	}
 	
@@ -474,6 +464,7 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 				return true;
 			}
 		});
+		register();
 		
 	}
 	
@@ -502,13 +493,6 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 		currentLocation = location;
 	}
 	
-	OnForwardedHandler handler;
-	
-	@Override
-	public void setOnforwardedHadler(OnForwardedHandler handler) {
-		this.handler = handler;
-	}
-
 	@Override
 	public double getEstimatedRange() {
 		return Math.max(cmbr,lmbr);
@@ -530,5 +514,20 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 				longitude,
 				results);
 		return results[0];
+	}
+
+	@Override
+	public void handle(IEvent event) {
+		if(event instanceof EstimationPhaseStartEvent){
+			scheduler.schedule(new HelloMessageSender(),0,TURN_DURATION);
+			return;
+		}
+	}
+
+	@Override
+	public void register() {
+		List<Class<? extends IEvent>> events = new ArrayList<Class<? extends IEvent>>();
+		events.add(EstimationPhaseStartEvent.class);
+		EventDispatcher.getInstance().registerComponent(this, events);
 	}
 }

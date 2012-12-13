@@ -91,6 +91,7 @@ public class LocationService extends Service implements ILocationComponent {
 			}
 		};
 		registerLocationProviders(locationManager, listener);
+		register();
 	}
 
 	@Override
@@ -140,5 +141,6 @@ public class LocationService extends Service implements ILocationComponent {
 		events.add(UpdateLocationEvent.class);
 		events.add(SetupProviderEvent.class);
 		EventDispatcher.getInstance().registerComponent(this, events);
+		Log.d(TAG,this.getClass().getSimpleName()+" : service regitered to EventDispatcher");
 	}
 }
