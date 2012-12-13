@@ -1,6 +1,6 @@
 package it.unipd.fast.broadcast;
 
-import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
+import it.unipd.fast.broadcast.wificonnection.message.IMessage;
 
 import java.util.Map;
 

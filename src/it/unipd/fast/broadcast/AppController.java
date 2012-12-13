@@ -7,16 +7,17 @@ import it.unipd.fast.broadcast.event.location.SetupProviderEvent;
 import it.unipd.fast.broadcast.event.location.UpdateLocationEvent;
 import it.unipd.fast.broadcast.event.message.MessageReceivedEvent;
 import it.unipd.fast.broadcast.event.protocol.EstimationPhaseStartEvent;
+import it.unipd.fast.broadcast.event.protocol.HelloMessageArrivedEvent;
 import it.unipd.fast.broadcast.event.protocol.SendBroadcastMessageEvent;
-import it.unipd.fast.broadcast.protocol_implementation.FastBroadcastService;
-import it.unipd.fast.broadcast.protocol_implementation.IFastBroadcastComponent;
-import it.unipd.fast.broadcast.wifi_connection.connectionmanager.ConnectionManagerFactory;
-import it.unipd.fast.broadcast.wifi_connection.connectionmanager.IConnectionInfoManager;
-import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
-import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
-import it.unipd.fast.broadcast.wifi_connection.receiver.CollectionHandler;
-import it.unipd.fast.broadcast.wifi_connection.receiver.FastBroadcastReceiver;
-import it.unipd.fast.broadcast.wifi_connection.transmissionmanager.TransmissionManagerFactory;
+import it.unipd.fast.broadcast.protocol.FastBroadcastService;
+import it.unipd.fast.broadcast.protocol.IFastBroadcastComponent;
+import it.unipd.fast.broadcast.wificonnection.connectionmanager.ConnectionManagerFactory;
+import it.unipd.fast.broadcast.wificonnection.connectionmanager.IConnectionInfoManager;
+import it.unipd.fast.broadcast.wificonnection.message.IMessage;
+import it.unipd.fast.broadcast.wificonnection.message.MessageBuilder;
+import it.unipd.fast.broadcast.wificonnection.receiver.CollectionHandler;
+import it.unipd.fast.broadcast.wificonnection.receiver.FastBroadcastReceiver;
+import it.unipd.fast.broadcast.wificonnection.transmissionmanager.TransmissionManagerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -421,7 +422,7 @@ public class AppController implements IControllerComponent {
 
 	@Override
 	public void helloMessageArrived(IMessage message){
-		fastBroadcastService.helloMessageReceived(message);
+		EventDispatcher.getInstance().triggerEvent(new HelloMessageArrivedEvent(message));
 	}
 
 	@Override

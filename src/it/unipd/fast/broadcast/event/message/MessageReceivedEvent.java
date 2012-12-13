@@ -1,7 +1,7 @@
 package it.unipd.fast.broadcast.event.message;
 
 import it.unipd.fast.broadcast.event.IEvent;
-import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
+import it.unipd.fast.broadcast.wificonnection.message.IMessage;
 
 public class MessageReceivedEvent implements IEvent {
 	public IMessage message;

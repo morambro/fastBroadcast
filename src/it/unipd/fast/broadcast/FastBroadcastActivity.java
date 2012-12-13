@@ -2,8 +2,8 @@ package it.unipd.fast.broadcast;
 
 import it.unipd.fast.broadcast.AppController.SynchronizedDevicesList;
 import it.unipd.fast.broadcast.location.MockLocationService;
-import it.unipd.fast.broadcast.protocol_implementation.FastBroadcastService;
-import it.unipd.fast.broadcast.wifi_connection.receiver.DataReceiverService;
+import it.unipd.fast.broadcast.protocol.FastBroadcastService;
+import it.unipd.fast.broadcast.wificonnection.receiver.DataReceiverService;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
