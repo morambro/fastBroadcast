@@ -29,13 +29,12 @@ public class UDPTransmissionManager implements ITranmissionManager{
 					 * Create a client socket with the ID,
 					 * port, and timeout information.
 					 */
-					IMessage newMessage = MessageBuilder.getInstance().getMessage(msg.getType(), msg.getRecipientAddress());
+					// Including IP address in Message attribute
+					IMessage newMessage = MessageBuilder.getInstance().getMessage(msg.getType(), msg.getRecipientAddress(),getLocalIPAddress().getCanonicalHostName());
 					for(String contentKey : msg.getContent().keySet()){
 						newMessage.addContent(contentKey, msg.getContent().get(contentKey));
 					}
-					newMessage.addContent(IMessage.SENDER_IP_ADDR, getLocalIPAddress().getCanonicalHostName());
 					newMessage.prepare();
-					
 					int messageLength = newMessage.getMessage().length;
 					Log.d(TAG,UDPTransmissionManager.class.getSimpleName()+" : Message Length (bytes)= "+messageLength);
 					
@@ -63,7 +62,6 @@ public class UDPTransmissionManager implements ITranmissionManager{
 	                    InetAddress inetAddress = enumIpAddr.nextElement(); 
 	                    if (!inetAddress.isLoopbackAddress()) { 
 	                        if (inetAddress instanceof Inet4Address && !inetAddress.getCanonicalHostName().endsWith(".lan")) { 
-	                        	// fix for Galaxy Nexus. IPv4 is easy to use :-) 
 	                        	return inetAddress;
 	                        }
 	                        //return inetAddress.getHostAddress().toString(); // Galaxy Nexus returns IPv6 

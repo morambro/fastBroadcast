@@ -2,6 +2,7 @@ package it.unipd.fast.broadcast.wifi_connection.receiver;
 
 
 import it.unipd.fast.broadcast.wifi_connection.receiver.protocols.TCPPacketReceiver;
+import it.unipd.fast.broadcast.wifi_connection.receiver.protocols.UDPPacketReceiver;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +25,7 @@ public class DataReceiverService extends Service implements IDataReceiverService
 	protected final String TAG = "it.unipd.fast.broadcast";
 
 	private List<IDataCollectionHandler> handlers = new ArrayList<IDataCollectionHandler>();
-	private AbstractPacketReceiver packetReceiver = new TCPPacketReceiver();
+	private AbstractPacketReceiver packetReceiver;// = new UDPPacketReceiver();
 
 
 	public class DataReceiverBinder extends Binder {
@@ -59,7 +60,7 @@ public class DataReceiverService extends Service implements IDataReceiverService
 	public void onCreate() {
 		super.onCreate();
 		Log.d(TAG, this.getClass().getSimpleName()+": Servizio creato");
-		packetReceiver = new TCPPacketReceiver();
+		packetReceiver = new UDPPacketReceiver();
 		packetReceiver.start(handlers);
 	}
 

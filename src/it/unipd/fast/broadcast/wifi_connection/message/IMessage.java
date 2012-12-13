@@ -55,7 +55,8 @@ abstract public class IMessage {
 	
 	public static final String SENDER_DIRECTION_KEY = "direction";
 	public static final String MESSAGE_HOP_KEY = "hop_count";
-	public static final String SENDER_IP_ADDR = "ip_addr";
+	
+	public static final String SENDER_IP_ADDR = "sender_ip";
 	
 	/****************************************************** METHODS *******************************************/
 	
@@ -67,7 +68,12 @@ abstract public class IMessage {
 	public abstract Map<String, String> getContent();
 	public abstract byte[] getMessage();
 	public abstract int getType();
-	public abstract String getSenderId();
+	/**
+	 * Returns Sender ID if is available in the message, or null otherwise
+	 * 
+	 * @return
+	 */
+	public abstract String getSenderID();
 	public abstract String getRecipientAddress();
 	public abstract void setRecipientAddress(String recipientAddress);
 	

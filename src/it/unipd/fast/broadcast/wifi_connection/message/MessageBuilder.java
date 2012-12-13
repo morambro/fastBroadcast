@@ -17,8 +17,13 @@ public class MessageBuilder {
 	}
 
 	public IMessage getMessage(int type, String recipientID) {
-		return createMessage(type, recipientID);
+		return createMessage(type, recipientID,"");
 	}
+	
+	public IMessage getMessage(int type, String recipientID,String senderID) {
+		return createMessage(type, recipientID,senderID);
+	}
+	
 	public IMessage getMessage(int type, String recipientID, String contentKey, String content) {
 		IMessage temp = getMessage(type, recipientID);
 		temp.addContent(contentKey, content);
@@ -26,9 +31,10 @@ public class MessageBuilder {
 		return temp;
 	}
 	
-	private IMessage createMessage(int type, String recipientID) {
-		return new XmlMessage(type, recipientID);
+	private IMessage createMessage(int type, String recipientID,String senderID) {
+		return new XmlMessage(type, recipientID,senderID);
 	}
+	
 	
 	private IMessage createMessage(String message) {
 		return new XmlMessage(message);

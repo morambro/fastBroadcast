@@ -21,14 +21,15 @@ public class XmlMessage extends IMessage{
 	private static final String CONTENT_BLOCK_TAG = "content_block";
 	private static final String CONTENT_TAG = "content";
 	private static final String KEY_TAG = "key";
+	private static final String SENDER_IP_ATTRIBUTE = "sender_ip";
 	
 	private int type = -1;
 	private String message = "";
 	private Map<String, String> messageContent = null;
 	
-	public XmlMessage(int type, String recipientID) {
+	public XmlMessage(int type, String recipientID,String senderIP) {
 		this.type = type;
-		message += "<"+MSG_TAG+" "+TYPE_ATTRIBUTE+"='"+type+"' "+RECIPIENT_ID_TAG+"='"+recipientID+"'>";
+		message += "<"+MSG_TAG+" "+TYPE_ATTRIBUTE+"='"+type+"' "+RECIPIENT_ID_TAG+"='"+recipientID+"' "+SENDER_IP_ADDR+"='"+senderIP+"'>";
 	}
 	
 	public XmlMessage(String message) {
@@ -66,10 +67,8 @@ public class XmlMessage extends IMessage{
 	}
 
 	@Override
-	public String getSenderId() {
-		if(getType()==PING_MESSAGE_TYPE)
-			return getContent().get(PING_MESSAGE_ID_KEY);
-		return null;
+	public String getSenderID() {
+		return MessageParser.getSenderId(message);
 	}
 
 	@Override
@@ -111,6 +110,10 @@ public class XmlMessage extends IMessage{
 		
 		public static String getRecipientId(String xml) {
 			return XMLParser.estractTagAttributeFromXMLDoc(xml, MSG_TAG, RECIPIENT_ID_TAG);
+		}
+		
+		public static String getSenderId(String xml) {
+			return XMLParser.estractTagAttributeFromXMLDoc(xml, MSG_TAG, SENDER_IP_ATTRIBUTE);
 		}
 		
 		public static Map<String,String> getContent(String xml) {
