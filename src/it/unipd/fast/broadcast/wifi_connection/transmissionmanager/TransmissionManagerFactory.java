@@ -11,6 +11,6 @@ public class TransmissionManagerFactory {
 	}
 	
 	public ITranmissionManager getTransmissionManager() {
-		return new TcpTransmissionManager();
+		return new TCPTransmissionManager();
 	}
 }

@@ -37,6 +37,15 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 	 */
 	private static final int ACTUAL_MAX_RANGE = 600;
 	
+	/**
+	 * Slot size in milliseconds
+	 */
+	private static final int SLOT_SIZE = 100;
+	
+	/**
+	 * Turn duration in milliseconds
+	 */
+	public static final int TURN_DURATION = 20000;
 	/******************************************* DECLARATIONS ******************************************/
 	
 	/**
@@ -104,6 +113,7 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 		/*********************************** DECLARATIONS *************************************/
 		private ArrayBlockingQueue<IMessage> messageQueue = new ArrayBlockingQueue<IMessage>(30);
 		private Random randomGenerator = new Random();
+		private Object synchPoint = new Object();
 		
 		/************************************* METHODS ****************************************/
 		/**
@@ -115,6 +125,11 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 		public void put(IMessage message) throws InterruptedException{
 			LogPrinter.getInstance().writeTimedLine("alert message put into queue. Size "+(messageQueue.size()+1));
 			messageQueue.put(message);
+			// As soon as a new message arrived, notify the forwarder, to let him preceding without waiting 
+			// for the entire random amount 
+			synchronized (synchPoint) {
+				synchPoint.notify();
+			}
 		}
 		
 		@Override
@@ -159,11 +174,15 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 					Log.d(TAG,"Contention Window = "+contentionWindow);
 					
 					// wait for a random time... 
-					synchronized (this) {
+					synchronized (synchPoint) {
 						try {
-							long rnd = randomGenerator.nextInt(contentionWindow);
+							long rnd = randomGenerator.nextInt(contentionWindow*SLOT_SIZE);
 							Log.e(TAG,"BroadcastPhase: sleeping for "+rnd+" ms");
-							Thread.sleep(rnd);
+							//Thread.sleep(rnd);
+							// Waiting until:
+							//    1) A message arrives, so stop waiting and change position
+							//    2) Time expired, and so forward the message
+							synchPoint.wait(rnd);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 							Thread.currentThread().interrupt();
@@ -458,8 +477,8 @@ public class FastBroadcastService extends Service implements ICommunicationHandl
 		
 	}
 	
-	private static int CwMax = 10000;
-	private static int CwMin = 4000;
+	private static int CwMax = 1024;
+	private static int CwMin = 31;
 	
 	@Override
 	public void handleMessage(final IMessage message){

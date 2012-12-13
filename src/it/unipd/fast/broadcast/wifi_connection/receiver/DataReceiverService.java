@@ -1,13 +1,9 @@
 package it.unipd.fast.broadcast.wifi_connection.receiver;
 
-import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
+import it.unipd.fast.broadcast.protocol_implementation.AbstractPacketReceiver;
+import it.unipd.fast.broadcast.protocol_implementation.TCPPacketReceiver;
+import it.unipd.fast.broadcast.protocol_implementation.UDPPacketReceiver;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,13 +21,11 @@ import android.util.Log;
  * @author Moreno Ambrosin
  *
  */
-public class DataReceiverService extends Service implements Runnable, IDataReceiverService{
+public class DataReceiverService extends Service implements IDataReceiverService{
 	protected final String TAG = "it.unipd.fast.broadcast";
 
-	private boolean terminated = false;
-	private ServerSocket serverSocket;
 	private List<IDataCollectionHandler> handlers = new ArrayList<IDataCollectionHandler>();
-	
+	private AbstractPacketReceiver packetReceiver = new TCPPacketReceiver();
 
 
 	public class DataReceiverBinder extends Binder {
@@ -48,13 +42,15 @@ public class DataReceiverService extends Service implements Runnable, IDataRecei
 	@Override
 	public void registerHandler(IDataCollectionHandler handler) {
 		handlers.add(handler);
+		packetReceiver.add(handler);
 	}
 
 	@Override
 	public void unregisterHandler(IDataCollectionHandler handler) {
 		handlers.remove(handler);
+		packetReceiver.remove(handler);
 		if(handlers.size()==0) {
-			disconnectSocket();
+			packetReceiver.terminate();
 			Log.d(TAG, this.getClass().getSimpleName()+": Service terminated");
 			stopSelf();
 		}
@@ -64,91 +60,12 @@ public class DataReceiverService extends Service implements Runnable, IDataRecei
 	public void onCreate() {
 		super.onCreate();
 		Log.d(TAG, this.getClass().getSimpleName()+": Servizio creato");
-		new Thread(this).start();
+		packetReceiver = new TCPPacketReceiver();
+		packetReceiver.start(handlers);
 	}
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		return START_STICKY;
-	}
-
-	@Override
-	public void run(){
-
-		try{
-			// Create a server socket and wait for client connections. This
-			// call blocks until a connection is accepted from a client
-			Log.d(TAG, this.getClass().getSimpleName()+": Tiro su un socket TCP");
-			serverSocket = new ServerSocket(8888);
-			while(!terminated){
-				
-				// Waits for an incoming connection
-				Socket client = serverSocket.accept();
-				Log.d(TAG, this.getClass().getSimpleName()+": connessione in ingresso");
-				handleConnection(client);
-			}
-		}catch(IOException e){
-			for (IDataCollectionHandler handler : handlers) {
-				handler.onError(e.getMessage());
-			}
-			Log.d(TAG, this.getClass().getSimpleName()+":Exception "+e.getMessage(),e);
-		}
-		
-		// close the TCP socket before exiting
-		finally{
-			disconnectSocket();
-		}
-	}
-	
-	private void handleConnection(final Socket socket){
-		new Thread() {
-			
-			@Override
-			public void run() {
-				Log.d(TAG, this.getClass().getSimpleName()+": Gestione connessione in nuovo thread");
-				// Read from the input stream
-				try {
-					InputStream inputstream = socket.getInputStream();
-					InputStreamReader is = new InputStreamReader(inputstream);
-					StringBuilder sb = new StringBuilder();
-					BufferedReader br = new BufferedReader(is);
-					String read = br.readLine();
-
-					while(read != null) {
-						sb.append(read);
-						read =br.readLine();
-					}
-
-					String xmlMsg = new String(sb.toString());
-
-					// call handler's onDataCollected method passing the message and sender's ip address
-					Log.d(TAG, this.getClass().getSimpleName()+": handlers = "+handlers);
-					for (IDataCollectionHandler handler : handlers) {
-						handler.onDataCollected(
-								MessageBuilder.getInstance().getMessage(xmlMsg),
-								socket.getInetAddress().getCanonicalHostName()
-						);
-					}
-					socket.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}.start();
-	}
-	
-	/**
-	 * Method called to close the opened TCP socket if different to null and opened
-	 * 
-	 */
-	private void disconnectSocket(){
-		if(serverSocket != null && !serverSocket.isClosed()){
-			try{
-				serverSocket.close();
-				Log.d(TAG, this.getClass().getSimpleName()+": Ho chiuso il socket");
-			}catch(Exception e){
-				Log.d(TAG, this.getClass().getSimpleName()+": Impossibile chiudere il socket");
-			}
-		}
-	}
+	}	
 }

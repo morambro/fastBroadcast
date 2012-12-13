@@ -12,7 +12,7 @@ import java.util.List;
 
 import android.util.Log;
 
-public class TcpTransmissionManager implements ITranmissionManager {
+public class TCPTransmissionManager implements ITranmissionManager {
 	private static final String TAG = "it.unipd.fast.broadcast";
 	private static final int port = 8888;
 	
@@ -41,7 +41,7 @@ public class TcpTransmissionManager implements ITranmissionManager {
 					inputStream.close();
 					Log.d(TAG, this.getClass().getSimpleName()+": Data Sent to "+ID+" via TCP");
 				} catch (Exception e) {
-					Log.d(TAG, TcpTransmissionManager.class.getSimpleName()+": "+e.getMessage());
+					Log.d(TAG, TCPTransmissionManager.class.getSimpleName()+": "+e.getMessage());
 				}
 
 
