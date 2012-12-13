@@ -48,10 +48,6 @@ public class AppController implements IControllerComponent {
 	public static String MAC_ADDRESS = null;
 
 	private Handler guiHandler;
-//	private ServiceConnection dataReceiverServiceConnection = new DataServiceConnection();
-//	private ServiceConnection fastBroadcastServiceConnection = new FastBroadcastServiceConnection();
-//	private ServiceConnection locationServiceConn = new LocServiceConnection();
-//	private boolean isServiceBinded = false;
 	private Location currentLocation;
 	private IDataCollectionHandler collectionHandler = new CollectionHandler();
 	private WifiP2pManager manager;
@@ -72,60 +68,6 @@ public class AppController implements IControllerComponent {
 
 	/************************************************* INTERFACES/CLASSES ********************************************/
 	
-//	//ServiceConnection for LocationServiceListener
-//	class LocServiceConnection implements ServiceConnection {
-//
-//		public void onServiceConnected(ComponentName name, IBinder binder) {
-//			isServiceBinded = true;
-////			locationService = ((LocationService.LocServiceBinder) binder).getService();
-//			((LocationService.LocServiceBinder) binder).getService().addLocationListener(locServiceListener);
-//			Log.d(TAG, this.getClass().getSimpleName()+": Location Service Bound");
-//		}
-//
-//		public void onServiceDisconnected(ComponentName name) {
-//			//Service runs on the same process, should never be called.
-//			isServiceBinded = false;
-//		}
-//
-//	}
-
-//	private class DataServiceConnection implements ServiceConnection {
-//
-//		@Override
-//		public void onServiceConnected(ComponentName arg0, IBinder binder) {
-//			dataInterface = ((DataReceiverBinder)binder).getService();
-//			dataInterface.registerHandler(collectionHandler);
-//			Log.d(TAG, this.getClass().getSimpleName()+": Servizio ricezione dati binded");
-//		}
-//
-//		@Override
-//		public void onServiceDisconnected(ComponentName arg0) {
-//			Log.d(TAG, this.getClass().getSimpleName()+": Service lost");
-//		}
-//
-//	}
-
-//	private class FastBroadcastServiceConnection implements ServiceConnection{
-//		@Override
-//		public void onServiceConnected(ComponentName name, IBinder binder) {
-//			fastBroadcastService = ((FastBroadcastServiceBinder)binder).getService();
-//			// After creating the service, update the location
-//			fastBroadcastService.setCurrentLocation(currentLocation);
-//			fastBroadcastService.setOnforwardedHadler(new OnForwardedHandler() {
-//				
-//				@Override
-//				public void doOnForwarded() {
-//					EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
-//				}
-//			});
-//		}
-//
-//		@Override
-//		public void onServiceDisconnected(ComponentName name) {
-//			Log.d(TAG, this.getClass().getSimpleName()+": Estimation Service lost");
-//		}
-//	}
-
 	/**
 	 * Interface used to specify operation to do on data collected or when an error occurs
 	 * 
@@ -169,35 +111,17 @@ public class AppController implements IControllerComponent {
 
 	};
 
-//	/**
-//	 * Called when connection info are available
-//	 * 
-//	 */
-//	private OnConnectionInfoCollected connectionInfoCallback = new OnConnectionInfoCollected() {
-//
-//		@Override
-//		public void onInfoCollected(WifiP2pInfo info) {
-//			groupOwnerAddress = info.groupOwnerAddress.getCanonicalHostName();
-//			isGroupOwner = info.isGroupOwner;
-//		}
-//	};
-
-//	private LocationServiceListener locServiceListener = new LocationServiceListener() {
-//
-//		@Override
-//		public void onLocationChanged(Location location) {
-//			Log.d(TAG,AppController.class.getSimpleName() + " : " + location.getLatitude()+"; "+location.getLongitude());
-//			currentLocation = location;
-//			Log.e(TAG, "AppController: Bearing = "+location.getBearing());
-//			if(fastBroadcastService != null)
-//				fastBroadcastService.setCurrentLocation(location);
-//		}
-//	};
-
-	// Listener used to be notified, when connection info are available
+	/**
+	 * Listener defined to receive and handle connection info events.
+	 */
 	private IConnectionInfoManager connectionInfoListener = ConnectionManagerFactory.getInstance().getConnectionManager();
 
-
+	/**
+	 * Wrapper class used to access list via synchronized methods
+	 * 
+	 * @author Fabio De Gaspari
+	 *
+	 */
 	public class SynchronizedDevicesList {
 		
 		private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
@@ -245,29 +169,11 @@ public class AppController implements IControllerComponent {
 		broadcastReceiverIntentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
 		broadcastReceiverIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
-//		//Start DataReceiverService
-//		Log.d(TAG, this.getClass().getSimpleName()+": Bindo il servizio di ricezione dati");
-//		Intent dataService = new Intent(context, DataReceiverService.class);
-//		context.startService(dataService);
-//		context.bindService(dataService, dataReceiverServiceConnection, Context.BIND_AUTO_CREATE);
-		
-		//Start LocationService
-//		Intent locService = new Intent(context, MockLocationService.class);
-//		locationServiceConn = new LocServiceConnection();
-//		boolean temp = context.bindService(locService, locationServiceConn, Context.BIND_AUTO_CREATE);
-//		Log.d(TAG, this.getClass().getSimpleName()+": Location Service binding status : "+temp);
-
-		
-		List<Class<? extends IEvent>> events = new ArrayList<Class<? extends IEvent>>();
-		events.add(LocationChangedEvent.class);
-		events.add(MessageReceivedEvent.class);
-		events.add(WiFiInfoCollectedEvent.class);
-		events.add(SendBroadcastMessageEvent.class);
-		EventDispatcher.getInstance().registerComponent(this, events);
-		
 		// Setting static field which contains device MAC address
 		MAC_ADDRESS = getDeviceMacAddress();
 		Log.d(TAG, this.getClass().getSimpleName()+": il MAC address del dispositivo è = "+MAC_ADDRESS);
+		
+		register();
 	}
 
 	/**
@@ -530,7 +436,13 @@ public class AppController implements IControllerComponent {
 	
 	@Override
 	public void register() {
-		EventDispatcher.getInstance().registerComponent(this, null);
+		List<Class<? extends IEvent>> events = new ArrayList<Class<? extends IEvent>>();
+		events.add(LocationChangedEvent.class);
+		events.add(MessageReceivedEvent.class);
+		events.add(WiFiInfoCollectedEvent.class);
+		events.add(SendBroadcastMessageEvent.class);
+		
+		EventDispatcher.getInstance().registerComponent(this, events);
 	}
 
 	@Override

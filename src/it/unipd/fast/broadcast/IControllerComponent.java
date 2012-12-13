@@ -6,10 +6,35 @@ import java.util.Map;
 
 
 public interface IControllerComponent extends IComponent {
+	/**
+	 * Tells whether current device is WI-FI Direct group owner
+	 * 
+	 * @return
+	 */
 	boolean isGroupOwner();
+	/**
+	 * Returns group owner address
+	 * 
+	 * @return
+	 */
 	String getGroupOwnerAddress();
+	/**
+	 * Setter method for Peers Map
+	 * 
+	 * @param peersMap
+	 */
 	void setPeersIdIPmap(Map<String,String> peersMap);
+	/**
+	 * Method called when a message arrives
+	 * 
+	 * @param message
+	 */
 	void helloMessageArrived(IMessage message);
+	/**
+	 * Handles a message
+	 * 
+	 * @param message
+	 */
 	void handleMessage(IMessage message);
 	/**
 	 * @return unique device id (MAC Address in this case)

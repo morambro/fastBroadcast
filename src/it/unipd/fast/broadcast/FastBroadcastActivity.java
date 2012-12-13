@@ -48,7 +48,12 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 	}
 
 
-	//ServiceConnection for LocationServiceListener
+	/**
+	 * Connection class for Location Service
+	 * 
+	 * @author Moreno Ambrosin
+	 *
+	 */
 	class LocServiceConnection implements ServiceConnection {
 
 		public void onServiceConnected(ComponentName name, IBinder binder) {
@@ -62,7 +67,12 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 
 	}
 
-	
+	/**
+	 * Connection class for Fast Broadcast Service
+	 * 
+	 * @author Moreno Ambrosin
+	 *
+	 */
 	private class FastBroadcastServiceConnection implements ServiceConnection{
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder binder) {
@@ -75,12 +85,16 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 		}
 	}
 	
+	/**
+	 * Connection class for Data Receiver Service
+	 * 
+	 * @author Moreno Ambrosin
+	 *
+	 */
 	private class DataServiceConnection implements ServiceConnection {
 
 		@Override
 		public void onServiceConnected(ComponentName arg0, IBinder binder) {
-//			dataInterface = ((DataReceiverBinder)binder).getService();
-//			dataInterface.registerHandler(collectionHandler);
 			Log.d(TAG, this.getClass().getSimpleName()+": DataReceiverService binded");
 		}
 
@@ -90,6 +104,7 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 		}
 
 	}
+	
 	
 	private void startFastBroadcastService() {
 		Log.d(TAG, this.getClass().getSimpleName()+": Bindo il servizio di Range Estimation");
