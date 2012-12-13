@@ -19,7 +19,11 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.SeekBar;
+import android.widget.TextView;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Toast;
 
 public class FastBroadcastActivity extends FragmentActivity implements GuiHandlerInterface {
@@ -39,6 +43,8 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 	private Button connectToAllButton;
 	private IControllerComponent connectionController;
 	private ListView devicesListView;
+	private SeekBar slotSizeSeekBar;
+	private TextView slotSizeText;
 
 
 	//GuiHandler Implementation
@@ -215,7 +221,25 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 		connectToAllButton = (Button)this.findViewById(R.id.connect_to_all_button);
 		sendToAllButton = (Button)this.findViewById(R.id.send_button);
 		devicesListView = (ListView)this.findViewById(R.id.devices_list_view);
-
+		slotSizeSeekBar = (SeekBar)this.findViewById(R.id.seekBar1);
+		slotSizeText = (TextView)this.findViewById(R.id.slotSize);
+		
+		slotSizeSeekBar.setMax(100);
+		slotSizeSeekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+			
+			@Override
+			public void onStopTrackingTouch(SeekBar seekBar) {}
+			
+			@Override
+			public void onStartTrackingTouch(SeekBar seekBar) {}
+			
+			@Override
+			public void onProgressChanged(SeekBar seekBar, int progress,boolean fromUser) {
+				slotSizeText.setText((progress+50)+"");
+			}
+		});
+		
+		
 		sendToAllButton.setOnClickListener(new OnClickListener() {
 
 			public void onClick(View v) {
@@ -228,6 +252,8 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 			@Override
 			public void onClick(View v) {
 				connectionController.connectToAll();
+				slotSizeSeekBar.setEnabled(false);
+				slotSizeText.setEnabled(false);
 			}
 		});
 	}
