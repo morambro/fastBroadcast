@@ -1,22 +1,21 @@
 package it.unipd.fast.broadcast;
 
-import it.unipd.fast.broadcast.location.LocationChangedEvent;
-import it.unipd.fast.broadcast.location.SetupProviderEvent;
-import it.unipd.fast.broadcast.location.UpdateLocationEvent;
-import it.unipd.fast.broadcast.protocol_implementation.EstimationPhaseStartEvent;
+import it.unipd.fast.broadcast.event.IEvent;
+import it.unipd.fast.broadcast.event.connectioninfo.WiFiInfoCollectedEvent;
+import it.unipd.fast.broadcast.event.location.LocationChangedEvent;
+import it.unipd.fast.broadcast.event.location.SetupProviderEvent;
+import it.unipd.fast.broadcast.event.location.UpdateLocationEvent;
+import it.unipd.fast.broadcast.event.message.MessageReceivedEvent;
+import it.unipd.fast.broadcast.event.protocol.EstimationPhaseStartEvent;
+import it.unipd.fast.broadcast.event.protocol.SendBroadcastMessageEvent;
 import it.unipd.fast.broadcast.protocol_implementation.FastBroadcastService;
 import it.unipd.fast.broadcast.protocol_implementation.IFastBroadcastComponent;
-import it.unipd.fast.broadcast.protocol_implementation.SendBroadcastMessageEvent;
 import it.unipd.fast.broadcast.wifi_connection.connectionmanager.ConnectionManagerFactory;
 import it.unipd.fast.broadcast.wifi_connection.connectionmanager.IConnectionInfoManager;
-import it.unipd.fast.broadcast.wifi_connection.connectionmanager.WiFiInfoCollectedEvent;
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
 import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
 import it.unipd.fast.broadcast.wifi_connection.receiver.CollectionHandler;
 import it.unipd.fast.broadcast.wifi_connection.receiver.FastBroadcastReceiver;
-import it.unipd.fast.broadcast.wifi_connection.receiver.IDataReceiverComponent;
-import it.unipd.fast.broadcast.wifi_connection.receiver.IDataReceiverComponent.IDataCollectionHandler;
-import it.unipd.fast.broadcast.wifi_connection.receiver.protocols.MessageReceivedEvent;
 import it.unipd.fast.broadcast.wifi_connection.transmissionmanager.TransmissionManagerFactory;
 
 import java.util.ArrayList;
@@ -55,7 +54,6 @@ public class AppController implements IControllerComponent {
 //	private boolean isServiceBinded = false;
 	private Location currentLocation;
 	private IDataCollectionHandler collectionHandler = new CollectionHandler();
-	private IDataReceiverComponent dataInterface = null;
 	private WifiP2pManager manager;
 	private Channel channel;
 	private BroadcastReceiver receiver;
@@ -128,6 +126,18 @@ public class AppController implements IControllerComponent {
 //		}
 //	}
 
+	/**
+	 * Interface used to specify operation to do on data collected or when an error occurs
+	 * 
+	 * @author Moreno Ambrosin
+	 *
+	 */
+	public static interface IDataCollectionHandler {
+		public void setWiFiController(AppController controller);
+		public void onDataCollected(IMessage message,String sender);
+		public void onError(String error);
+	}
+	
 	/**
 	 * PeerListListener implementation
 	 * 

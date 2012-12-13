@@ -2,6 +2,7 @@ package it.unipd.fast.broadcast.wifi_connection.connectionmanager;
 
 import it.unipd.fast.broadcast.AppController;
 import it.unipd.fast.broadcast.EventDispatcher;
+import it.unipd.fast.broadcast.event.connectioninfo.WiFiInfoCollectedEvent;
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
 import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
 import it.unipd.fast.broadcast.wifi_connection.transmissionmanager.TransmissionManagerFactory;

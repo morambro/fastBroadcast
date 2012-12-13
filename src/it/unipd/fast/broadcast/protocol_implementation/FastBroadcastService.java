@@ -1,9 +1,11 @@
 package it.unipd.fast.broadcast.protocol_implementation;
 
 import it.unipd.fast.broadcast.EventDispatcher;
-import it.unipd.fast.broadcast.IEvent;
+import it.unipd.fast.broadcast.event.IEvent;
+import it.unipd.fast.broadcast.event.location.UpdateLocationEvent;
+import it.unipd.fast.broadcast.event.protocol.EstimationPhaseStartEvent;
+import it.unipd.fast.broadcast.event.protocol.SendBroadcastMessageEvent;
 import it.unipd.fast.broadcast.helper.LogPrinter;
-import it.unipd.fast.broadcast.location.UpdateLocationEvent;
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
 import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
 

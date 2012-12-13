@@ -1,12 +1,12 @@
 package it.unipd.fast.broadcast.wifi_connection.receiver;
 
 import it.unipd.fast.broadcast.AppController;
+import it.unipd.fast.broadcast.AppController.IDataCollectionHandler;
 import it.unipd.fast.broadcast.EventDispatcher;
 import it.unipd.fast.broadcast.IControllerComponent;
+import it.unipd.fast.broadcast.event.location.SetupProviderEvent;
 import it.unipd.fast.broadcast.helper.LogPrinter;
-import it.unipd.fast.broadcast.location.SetupProviderEvent;
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
-import it.unipd.fast.broadcast.wifi_connection.receiver.IDataReceiverComponent.IDataCollectionHandler;
 import it.unipd.fast.broadcast.wifi_connection.transmissionmanager.TransmissionManagerFactory;
 
 import java.util.HashMap;

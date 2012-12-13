@@ -1,5 +1,7 @@
 package it.unipd.fast.broadcast;
 
+import it.unipd.fast.broadcast.event.IEvent;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

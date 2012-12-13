@@ -1,6 +1,8 @@
 package it.unipd.fast.broadcast.location;
 
-import it.unipd.fast.broadcast.IEvent;
+import it.unipd.fast.broadcast.event.IEvent;
+import it.unipd.fast.broadcast.event.location.SetupProviderEvent;
+import it.unipd.fast.broadcast.event.location.UpdateLocationEvent;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.util.Log;

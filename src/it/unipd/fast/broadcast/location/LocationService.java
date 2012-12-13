@@ -1,7 +1,10 @@
 package it.unipd.fast.broadcast.location;
 
 import it.unipd.fast.broadcast.EventDispatcher;
-import it.unipd.fast.broadcast.IEvent;
+import it.unipd.fast.broadcast.event.IEvent;
+import it.unipd.fast.broadcast.event.location.LocationChangedEvent;
+import it.unipd.fast.broadcast.event.location.SetupProviderEvent;
+import it.unipd.fast.broadcast.event.location.UpdateLocationEvent;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,9 +1,9 @@
 package it.unipd.fast.broadcast.wifi_connection.receiver.protocols;
 
 import it.unipd.fast.broadcast.EventDispatcher;
+import it.unipd.fast.broadcast.event.message.MessageReceivedEvent;
 import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
 import it.unipd.fast.broadcast.wifi_connection.receiver.AbstractPacketReceiver;
-import it.unipd.fast.broadcast.wifi_connection.receiver.IDataReceiverComponent.IDataCollectionHandler;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -34,9 +34,7 @@ public class TCPPacketReceiver extends AbstractPacketReceiver{
 				handleConnection(client);
 			}
 		}catch(IOException e){
-			for (IDataCollectionHandler handler : handlers) {
-				handler.onError(e.getMessage());
-			}
+			// TODO : Introduce Error Event to be propagated
 			Log.d(TAG, TCPPacketReceiver.class.getSimpleName()+":Exception "+e.getMessage(),e);
 		}
 
@@ -82,14 +80,6 @@ public class TCPPacketReceiver extends AbstractPacketReceiver{
 
 					String xmlMsg = new String(sb.toString());
 
-					// call handler's onDataCollected method passing the message and sender's ip address
-//					Log.d(TAG, this.getClass().getSimpleName()+": handlers = "+handlers);
-//					for (IDataCollectionHandler handler : handlers) {
-//						handler.onDataCollected(
-//								MessageBuilder.getInstance().getMessage(xmlMsg),
-//								socket.getInetAddress().getCanonicalHostName()
-//						);
-//					}
 					EventDispatcher.getInstance().triggerEvent(new MessageReceivedEvent(
 							MessageBuilder.getInstance().getMessage(xmlMsg),
 							socket.getInetAddress().getCanonicalHostName()

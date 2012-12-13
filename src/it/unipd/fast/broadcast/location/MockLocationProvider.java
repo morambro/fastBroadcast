@@ -1,6 +1,7 @@
 package it.unipd.fast.broadcast.location;
 
 import it.unipd.fast.broadcast.EventDispatcher;
+import it.unipd.fast.broadcast.event.location.LocationChangedEvent;
 import it.unipd.fast.broadcast.helper.LogPrinter;
 
 import java.io.BufferedReader;

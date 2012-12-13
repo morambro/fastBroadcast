@@ -1,7 +1,7 @@
 package it.unipd.fast.broadcast.wifi_connection.receiver;
 
 
-import it.unipd.fast.broadcast.IEvent;
+import it.unipd.fast.broadcast.event.IEvent;
 import it.unipd.fast.broadcast.wifi_connection.receiver.protocols.UDPPacketReceiver;
 import android.app.Service;
 import android.content.Intent;
@@ -34,20 +34,6 @@ public class DataReceiverService extends Service implements IDataReceiverCompone
 		return new DataReceiverBinder();
 	}
 	
-	@Override
-	public void registerHandler(IDataCollectionHandler handler) {
-		packetReceiver.add(handler);
-	}
-
-	@Override
-	public void unregisterHandler(IDataCollectionHandler handler) {
-		if(packetReceiver.remove(handler)) {
-			packetReceiver.terminate();
-			Log.d(TAG, this.getClass().getSimpleName()+": Service terminated");
-			stopSelf();
-		}
-	}
-
 	@Override
 	public void onCreate() {
 		super.onCreate();

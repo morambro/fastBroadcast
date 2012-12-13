@@ -1,6 +1,7 @@
 package it.unipd.fast.broadcast.wifi_connection.receiver.protocols;
 
 import it.unipd.fast.broadcast.EventDispatcher;
+import it.unipd.fast.broadcast.event.message.MessageReceivedEvent;
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
 import it.unipd.fast.broadcast.wifi_connection.message.MessageBuilder;
 import it.unipd.fast.broadcast.wifi_connection.receiver.AbstractPacketReceiver;
@@ -34,13 +35,6 @@ public class UDPPacketReceiver extends AbstractPacketReceiver {
 						
 						Log.d(TAG,UDPPacketReceiver.class.getSimpleName() +"message : " + xmlMsg);
 						
-//						for (IDataCollectionHandler handler : handlers) {
-//							Log.d(TAG,"Calling handler ");
-//							handler.onDataCollected(
-//								xmlMessage ,
-//								xmlMessage.getSenderID()
-//							);
-//						}
 						EventDispatcher.getInstance().triggerEvent(new MessageReceivedEvent(
 								xmlMessage ,
 								xmlMessage.getSenderID()
