@@ -171,8 +171,11 @@ public class FastBroadcastService extends Service implements IFastBroadcastCompo
 					Log.d(TAG,"Distance = "+distance);
 					Log.d(TAG,"MaxRange = "+maxRange);
 					
-					// calculate contention window
-					int contentionWindow = (int)Math.floor(((Math.abs(maxRange-distance)/maxRange) * (CwMax-CwMin))+CwMin); 
+					int contentionWindow = CwMin;
+					if(maxRange - distance > 0){
+						// If the difference is negative, the device will use minimum contention window.
+						contentionWindow = (int)Math.floor((((maxRange-distance)/maxRange) * (CwMax-CwMin))+CwMin); 
+					}
 	
 					Log.d(TAG,"Contention Window = "+contentionWindow);
 					
