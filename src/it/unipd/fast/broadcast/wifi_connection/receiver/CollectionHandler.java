@@ -1,7 +1,7 @@
 package it.unipd.fast.broadcast.wifi_connection.receiver;
 
 import it.unipd.fast.broadcast.AppController;
-import it.unipd.fast.broadcast.IAppController;
+import it.unipd.fast.broadcast.IControllerComponent;
 import it.unipd.fast.broadcast.helper.LogPrinter;
 import it.unipd.fast.broadcast.location.MockLocationProvider;
 import it.unipd.fast.broadcast.wifi_connection.message.IMessage;
@@ -16,7 +16,7 @@ import android.util.Log;
 public class CollectionHandler implements IDataCollectionHandler {
 	private static final String TAG = "it.unipd.fast.broadcast";
 	
-	private IAppController controller = null;
+	private IControllerComponent controller = null;
 
 	public void onDataCollected(IMessage message, String hostIp) {
 		String recipient = message.getRecipientAddress();

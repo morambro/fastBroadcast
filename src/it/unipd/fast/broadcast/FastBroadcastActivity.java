@@ -27,7 +27,7 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 	// Wi-fi Direct fields
 	private Button sendToAllButton;
 	private Button connectToAllButton;
-	private IAppController connectionController;
+	private IControllerComponent connectionController;
 	private ListView devicesListView;
 
 
@@ -126,5 +126,9 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 				connectionController.connectToAll();
 			}
 		});
+	}
+	
+	private void startServices() {
+		
 	}
 }

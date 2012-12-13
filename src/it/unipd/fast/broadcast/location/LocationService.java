@@ -15,7 +15,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 
-public class LocationService extends Service implements LocServiceBroadcastInterface {
+public class LocationService extends Service implements ILocationComponent {
 	protected final String TAG = "it.unipd.fast.broadcast";
 
 	protected static final long TIME_THRESHOLD = 60000;//ms => 1 min
@@ -27,7 +27,7 @@ public class LocationService extends Service implements LocServiceBroadcastInter
 
 	//Service binder definition
 	public class LocServiceBinder extends Binder {
-		public LocServiceBroadcastInterface getService() {
+		public ILocationComponent getService() {
 			return LocationService.this;
 		}
 	}
@@ -123,10 +123,5 @@ public class LocationService extends Service implements LocServiceBroadcastInter
 		if(lessAcc && isNewer)
 			return true;
 		return false;
-	}
-
-	@Override
-	public Location getLastLocation() {
-		return locationManager.getLastKnownLocation(LOCATION_SERVICE);
 	}
 }

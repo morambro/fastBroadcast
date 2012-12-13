@@ -48,7 +48,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
 
-public class AppController implements IAppController{
+public class AppController implements IControllerComponent {
 
 	/********************************************** DECLARATIONS *************************************************/
 
