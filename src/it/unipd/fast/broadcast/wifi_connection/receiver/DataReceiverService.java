@@ -1,8 +1,7 @@
 package it.unipd.fast.broadcast.wifi_connection.receiver;
 
-import it.unipd.fast.broadcast.protocol_implementation.AbstractPacketReceiver;
-import it.unipd.fast.broadcast.protocol_implementation.TCPPacketReceiver;
-import it.unipd.fast.broadcast.protocol_implementation.UDPPacketReceiver;
+
+import it.unipd.fast.broadcast.wifi_connection.receiver.protocols.TCPPacketReceiver;
 
 import java.util.ArrayList;
 import java.util.List;
