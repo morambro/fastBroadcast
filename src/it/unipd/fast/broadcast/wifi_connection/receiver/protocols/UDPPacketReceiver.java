@@ -39,7 +39,7 @@ public class UDPPacketReceiver extends AbstractPacketReceiver {
 							Log.d(TAG,"Calling handler ");
 							handler.onDataCollected(
 								xmlMessage ,
-								xmlMessage .getContent().get(IMessage.SENDER_IP_ADDR)
+								xmlMessage.getSenderID()
 							);
 						}
 					}
