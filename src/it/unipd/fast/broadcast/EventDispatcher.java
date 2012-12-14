@@ -17,28 +17,33 @@ import android.util.Log;
  */
 public class EventDispatcher {
 	protected final String TAG = "it.unipd.fast.broadcast";
-	
+
 	private static EventDispatcher singleton = null;
 	private Map<IComponent, List<Class<? extends IEvent>>> components = new HashMap<IComponent, List<Class<? extends IEvent>>>();
-	
+
 	public static EventDispatcher getInstance() {
 		if(singleton==null)
 			singleton = new EventDispatcher();
 		return singleton;
 	}
-	
+
 	protected EventDispatcher(){}
-	
+
 	/**
 	 * Method called to register a component, to listen for certain event types
 	 * 
 	 * @param component
 	 * @param events
 	 */
-	public void registerComponent(IComponent component, List<Class<? extends IEvent>> events) {
+	public synchronized void registerComponent(IComponent component, List<Class<? extends IEvent>> events) {
+		Log.e(TAG, "*******************************************"+component.getClass().getSimpleName()+" now registered");
+		if(components.containsKey(component)) {
+			Log.e(TAG, this.getClass().getSimpleName()+": Component "+component.getClass().getSimpleName()+" already registered");
+			return;
+		}
 		components.put(component, events);
 	}
-	
+
 	/**
 	 * Method used to obtain a component reference.
 	 * 
@@ -52,28 +57,30 @@ public class EventDispatcher {
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Method used to fire an event and find the correct component
 	 * 
 	 * @param event
 	 * @return
 	 */
-	public boolean triggerEvent(IEvent event) {
-		boolean flag = false;
-		Log.d(TAG,this.getClass().getSimpleName()+" : event "+event.getClass().getSimpleName());
-		for(IComponent comp : components.keySet()) {
-			if(components.get(comp) != null) 
-				for (Class<? extends IEvent> evClass : components.get(comp)) {
-					if(evClass.equals(event.getClass())) {
-						Log.d(TAG,this.getClass().getSimpleName()+" : event match "+evClass.getSimpleName() +"" +
-								" handled by "+comp.getClass().getSimpleName());
-						flag = true;
-						comp.handle(event);
-						break;
+		public synchronized boolean triggerEvent(IEvent event) {
+			boolean flag = false;
+			Log.d(TAG,this.getClass().getSimpleName()+" : Triggered event "+event.getClass().getSimpleName());
+			for(IComponent comp : components.keySet()) {
+				if(components.get(comp) != null) 
+					for (Class<? extends IEvent> evClass : components.get(comp)) {
+						Log.d(TAG,this.getClass().getSimpleName()+" : checking event1 "+evClass.getSimpleName() +
+								" and event2: "+event.getClass().getSimpleName());
+						if(evClass.equals(event.getClass())) {
+							Log.d(TAG,this.getClass().getSimpleName()+" : event match "+evClass.getSimpleName() +"" +
+									" handled by "+comp.getClass().getSimpleName());
+							flag = true;
+							comp.handle(event);
+							break;
+						}
 					}
-				}
+			}
+			return flag;
 		}
-		return flag;
-	}
 }

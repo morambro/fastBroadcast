@@ -63,6 +63,7 @@ public class AppController implements IControllerComponent {
 
 	private String groupOwnerAddress;
 	private boolean isGroupOwner = false;
+	private boolean keepUpdatingPeers = true;
 
 	private DeviceConnector deviceConnector;
 	
@@ -89,7 +90,10 @@ public class AppController implements IControllerComponent {
 	private PeerListListener peerListener = new PeerListListener() {
 
 		public void onPeersAvailable(WifiP2pDeviceList peers_list) {
-
+			if(!keepUpdatingPeers) {
+				Log.d(TAG, this.getClass().getSimpleName()+": Ignoring peers update");
+				return;
+			}
 			// Adds only new devices
 			for(WifiP2pDevice device : peers_list.getDeviceList()){
 				peers.add(device);
@@ -267,13 +271,11 @@ public class AppController implements IControllerComponent {
 				EventDispatcher.getInstance().triggerEvent(new SetupProviderEvent(0, peerIdIpMap.size()+1));
 				//MockLocationProvider.__set_static_couter(0, peerIdIpMap.size()+1);
 				EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
-				Log.d(TAG,this.getClass().getCanonicalName()+": Invio la mappa a tutti : \n");
 				mapToBroadcast = new HashMap<String, String>(peerIdIpMap);
 				mapToBroadcast.put(MAC_ADDRESS,groupOwnerAddress);
 				IMessage message = createMapMessage(mapToBroadcast, IMessage.BROADCAST_ADDRESS);
-				
+				Log.d(TAG,this.getClass().getCanonicalName()+": Invio la mappa a tutti : \n");
 				sendBroadcast(message);
-				
 				mapSent = true;
 				// Now start fast broadcast service Estimation Phase
 				EventDispatcher.getInstance().triggerEvent(new EstimationPhaseStartEvent());
@@ -358,11 +360,12 @@ public class AppController implements IControllerComponent {
 
 	@Override
 	public void connectToAll() {
-//		for(int i = 0; i < peers.size(); i++){
-//			connect(peers.get(i));
-//		}
-		deviceConnector = new DeviceConnector(peers,manager,channel,this);
-		EventDispatcher.getInstance().triggerEvent(new ProceedWithNextEvent());
+		for(int i = 0; i < peers.size(); i++){
+			connect(peers.get(i));
+		}
+//		keepUpdatingPeers = false;
+//		deviceConnector = new DeviceConnector(peers,manager,channel,this);
+//		EventDispatcher.getInstance().triggerEvent(new ProceedWithNextEvent());
 	}
 
 	/**
