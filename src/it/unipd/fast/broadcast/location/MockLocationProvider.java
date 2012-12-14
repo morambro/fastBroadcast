@@ -117,7 +117,6 @@ public class MockLocationProvider {
 			Log.d(TAG, this.getClass().getSimpleName()+": NEW LOCATION: "+location.getBearing()+"; "+location.getLatitude()+"; "+location.getLongitude());
 			LogPrinter.getInstance().writeTimedLine("current position in car queue is "+(__tmp_debug_counter-2));
 			manager.setTestProviderLocation(name, location);
-			EventDispatcher.getInstance().triggerEvent(new LocationChangedEvent(location));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -126,7 +125,6 @@ public class MockLocationProvider {
 	public void setup(int counter, int peersNumber) {
 		isSetup = true;
 		Log.d(TAG, MockLocationProvider.class.getSimpleName()+": file counter: "+counter+"; peers number: "+peersNumber);
-		__debug_print_log("file counter: "+counter+"; peers number: "+peersNumber);
 		this.counter = counter;
 		this.peersNumber = peersNumber;
 	}

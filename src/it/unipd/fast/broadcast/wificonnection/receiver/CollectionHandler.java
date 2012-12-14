@@ -5,6 +5,8 @@ import it.unipd.fast.broadcast.AppController.IDataCollectionHandler;
 import it.unipd.fast.broadcast.EventDispatcher;
 import it.unipd.fast.broadcast.IControllerComponent;
 import it.unipd.fast.broadcast.event.location.SetupProviderEvent;
+import it.unipd.fast.broadcast.event.protocol.AlertMessageArrivedEvent;
+import it.unipd.fast.broadcast.event.protocol.HelloMessageArrivedEvent;
 import it.unipd.fast.broadcast.helper.LogPrinter;
 import it.unipd.fast.broadcast.wificonnection.message.IMessage;
 import it.unipd.fast.broadcast.wificonnection.transmissionmanager.TransmissionManagerFactory;
@@ -57,13 +59,13 @@ public class CollectionHandler implements IDataCollectionHandler {
 			case IMessage.ALERT_MESSAGE_TYPE :
 				LogPrinter.getInstance().writeTimedLine("alert message received from "+hostIp+". Hop number: "+message.getContent().get(IMessage.MESSAGE_HOP_KEY));
 				Log.d(TAG, this.getClass().getSimpleName()+": Ricevuto ALERT : \n"+message);
-				controller.handleMessage(message);
+				EventDispatcher.getInstance().triggerEvent(new AlertMessageArrivedEvent(message));
 				break;
 				
 			// case of fast broadcast hello message
 			case IMessage.HELLO_MESSAGE_TYPE :
 				Log.d(TAG, this.getClass().getSimpleName()+": Ricevuto  HELLO : \n"+message);
-				controller.helloMessageArrived(message);
+				EventDispatcher.getInstance().triggerEvent(new HelloMessageArrivedEvent(message));
 				break;
 				
 			// Ignoring unknown messages

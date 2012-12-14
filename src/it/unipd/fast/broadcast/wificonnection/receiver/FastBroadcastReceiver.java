@@ -100,12 +100,12 @@ public class FastBroadcastReceiver extends BroadcastReceiver {
         	// Extract network Info from the fired Intent
             NetworkInfo networkInfo = (NetworkInfo) intent.getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
             if (networkInfo.isConnected()) {
-            	Toast.makeText(context, "We are connected to a Group", Toast.LENGTH_LONG).show();
-                // We are connected with the other device, request connection
+            	Toast.makeText(context, "We are conencted to a Group", Toast.LENGTH_LONG).show();
+                // We are requestConnectionSent with the other device, request connection
                 // info to find group owner IP
                 manager.requestConnectionInfo(channel, connectionInfoListener);
             }else{
-            	Log.d(TAG, this.getClass().getSimpleName()+": Not connected anymore");
+            	Log.d(TAG, this.getClass().getSimpleName()+": Not requestConnectionSent anymore");
             }
         	
         } else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {

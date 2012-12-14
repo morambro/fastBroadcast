@@ -25,18 +25,6 @@ public interface IControllerComponent extends IComponent {
 	 */
 	void setPeersIdIPmap(Map<String,String> peersMap);
 	/**
-	 * Method called when a message arrives
-	 * 
-	 * @param message
-	 */
-	void helloMessageArrived(IMessage message);
-	/**
-	 * Handles a message
-	 * 
-	 * @param message
-	 */
-	void handleMessage(IMessage message);
-	/**
 	 * @return unique device id (MAC Address in this case)
 	 */
 	String getDeviceId();

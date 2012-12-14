@@ -2,6 +2,7 @@ package it.unipd.fast.broadcast.wificonnection.receiver;
 
 
 import it.unipd.fast.broadcast.event.IEvent;
+import it.unipd.fast.broadcast.wificonnection.receiver.protocols.TCPPacketReceiver;
 import it.unipd.fast.broadcast.wificonnection.receiver.protocols.UDPPacketReceiver;
 import android.app.Service;
 import android.content.Intent;
@@ -11,7 +12,7 @@ import android.util.Log;
 
 
 /**
- * Service used to receive data from other connected devices. It creates a Socket and waits 
+ * Service used to receive data from other requestConnectionSent devices. It creates a Socket and waits 
  * for incoming connections.
  * 
  * @author Moreno Ambrosin

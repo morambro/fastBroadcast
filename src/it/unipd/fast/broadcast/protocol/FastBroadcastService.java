@@ -2,7 +2,9 @@ package it.unipd.fast.broadcast.protocol;
 
 import it.unipd.fast.broadcast.EventDispatcher;
 import it.unipd.fast.broadcast.event.IEvent;
+import it.unipd.fast.broadcast.event.location.LocationChangedEvent;
 import it.unipd.fast.broadcast.event.location.UpdateLocationEvent;
+import it.unipd.fast.broadcast.event.protocol.AlertMessageArrivedEvent;
 import it.unipd.fast.broadcast.event.protocol.EstimationPhaseStartEvent;
 import it.unipd.fast.broadcast.event.protocol.HelloMessageArrivedEvent;
 import it.unipd.fast.broadcast.event.protocol.SendBroadcastMessageEvent;
@@ -523,14 +525,26 @@ public class FastBroadcastService extends Service implements IFastBroadcastCompo
 
 	@Override
 	public void handle(IEvent event) {
-		if(event instanceof EstimationPhaseStartEvent){
+		if(event.getClass().equals(EstimationPhaseStartEvent.class)){
+			Log.d(TAG,"TACO EL TIMER");
 			scheduler.schedule(new HelloMessageSender(),0,TURN_DURATION);
 			return;
 		}
-		if(event instanceof HelloMessageArrivedEvent){
+		if(event.getClass().equals(HelloMessageArrivedEvent.class)){
 			HelloMessageArrivedEvent ev = (HelloMessageArrivedEvent) event;
 			this.setHelloMessageArrived(true);
 			hanldeHelloMessage(ev.message);
+			return;
+		}
+		if(event.getClass().equals(AlertMessageArrivedEvent.class)){
+			HelloMessageArrivedEvent ev = (HelloMessageArrivedEvent) event;
+			this.setHelloMessageArrived(true);
+			handleMessage(ev.message);
+			return;
+		}
+		if(event.getClass().equals(LocationChangedEvent.class)){
+			LocationChangedEvent ev = (LocationChangedEvent) event;
+			this.currentLocation = ev.location;
 			return;
 		}
 	}
@@ -540,6 +554,8 @@ public class FastBroadcastService extends Service implements IFastBroadcastCompo
 		List<Class<? extends IEvent>> events = new ArrayList<Class<? extends IEvent>>();
 		events.add(EstimationPhaseStartEvent.class);
 		events.add(HelloMessageArrivedEvent.class);
+		events.add(LocationChangedEvent.class);
+		events.add(AlertMessageArrivedEvent.class);
 		EventDispatcher.getInstance().registerComponent(this, events);
 	}
 }

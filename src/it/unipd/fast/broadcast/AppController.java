@@ -7,7 +7,6 @@ import it.unipd.fast.broadcast.event.location.SetupProviderEvent;
 import it.unipd.fast.broadcast.event.location.UpdateLocationEvent;
 import it.unipd.fast.broadcast.event.message.MessageReceivedEvent;
 import it.unipd.fast.broadcast.event.protocol.EstimationPhaseStartEvent;
-import it.unipd.fast.broadcast.event.protocol.HelloMessageArrivedEvent;
 import it.unipd.fast.broadcast.event.protocol.SendBroadcastMessageEvent;
 import it.unipd.fast.broadcast.protocol.FastBroadcastService;
 import it.unipd.fast.broadcast.protocol.IFastBroadcastComponent;
@@ -65,6 +64,8 @@ public class AppController implements IControllerComponent {
 	private String groupOwnerAddress;
 	private boolean isGroupOwner = false;
 
+	private DeviceConnector deviceConnector;
+	
 	private IFastBroadcastComponent fastBroadcastService;
 
 	/************************************************* INTERFACES/CLASSES ********************************************/
@@ -147,6 +148,7 @@ public class AppController implements IControllerComponent {
 		synchronized WifiP2pDevice get(int index){
 			return peers.get(index);
 		}
+
 	}
 	
 	/******************************************************* METHODS ************************************************/
@@ -240,7 +242,7 @@ public class AppController implements IControllerComponent {
 
 	/**
 	 * Setter method for the map. If current device is the GroupOwner, it sends back to
-	 * all the devices connected to his group the complete map of all the peers
+	 * all the devices requestConnectionSent to his group the complete map of all the peers
 	 * 
 	 * @param map
 	 */
@@ -259,7 +261,9 @@ public class AppController implements IControllerComponent {
 		if(isGroupOwner){
 			if(!mapSent && peerIdIpMap.keySet().size() >= peers.size()){
 				//size()+1 because group owner is not included in this map (so the returned size() equals (device_number-1)
+				
 				fastBroadcastService = (IFastBroadcastComponent)EventDispatcher.getInstance().requestComponent(FastBroadcastService.class);
+				
 				EventDispatcher.getInstance().triggerEvent(new SetupProviderEvent(0, peerIdIpMap.size()+1));
 				//MockLocationProvider.__set_static_couter(0, peerIdIpMap.size()+1);
 				EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
@@ -271,8 +275,7 @@ public class AppController implements IControllerComponent {
 				sendBroadcast(message);
 				
 				mapSent = true;
-				// Now start fast broadcast
-//				startFastBroadcastService();
+				// Now start fast broadcast service Estimation Phase
 				EventDispatcher.getInstance().triggerEvent(new EstimationPhaseStartEvent());
 			}
 		} else {
@@ -283,25 +286,15 @@ public class AppController implements IControllerComponent {
 			EventDispatcher.getInstance().triggerEvent(new EstimationPhaseStartEvent());
 		}
 
-		if(mapToBroadcast == null) mapToBroadcast = peerIdIpMap;
+		if(mapToBroadcast == null)
+			mapToBroadcast = peerIdIpMap;
 		String s = "Map updated! \n";
 		for(String k : mapToBroadcast.keySet()){
 			s += k + "  " + mapToBroadcast.get(k)+"\n";
 		}
+		EventDispatcher.getInstance().triggerEvent(new ProceedWithNextEvent());
 		Log.d(TAG, this.getClass().getSimpleName()+": Message received\n"+s);
 	}
-
-//	/**
-//	 * Starts range estimator service
-//	 * 
-//	 */
-//	private void startFastBroadcastService() {
-//		Log.d(TAG, this.getClass().getSimpleName()+": Bindo il servizio di Range Estimation");
-//		Intent estimationService = new Intent(context, FastBroadcastService.class);
-//		estimationService.putStringArrayListExtra("devices",new ArrayList<String>(peerIdIpMap.values()));
-//		context.startService(estimationService);
-//		context.bindService(estimationService, fastBroadcastServiceConnection, Context.BIND_AUTO_CREATE);
-//	}
 
 	/**
 	 * Creates Map message for all the peers
@@ -361,22 +354,15 @@ public class AppController implements IControllerComponent {
 				Log.d(TAG, this.getClass().getSimpleName()+": Failed to remove group, reason = "+reason);
 			}
 		});
-//		context.unbindService(dataReceiverServiceConnection);
-//		if(isServiceBinded) {
-//			context.unbindService(locationServiceConn);
-//			isServiceBinded = false;
-//			Log.d(TAG, this.getClass().getSimpleName()+": location service unbound");
-//		}
-//		dataInterface.unregisterHandler(collectionHandler);
-//		if(fastBroadcastService != null) context.unbindService(fastBroadcastServiceConnection);
-
 	}
 
 	@Override
 	public void connectToAll() {
-		for(int i = 0; i < peers.size(); i++){
-			connect(peers.get(i));
-		}
+//		for(int i = 0; i < peers.size(); i++){
+//			connect(peers.get(i));
+//		}
+		deviceConnector = new DeviceConnector(peers,manager,channel,this);
+		EventDispatcher.getInstance().triggerEvent(new ProceedWithNextEvent());
 	}
 
 	/**
@@ -421,16 +407,6 @@ public class AppController implements IControllerComponent {
 	}
 
 	@Override
-	public void helloMessageArrived(IMessage message){
-		EventDispatcher.getInstance().triggerEvent(new HelloMessageArrivedEvent(message));
-	}
-
-	@Override
-	public void handleMessage(IMessage message){
-		fastBroadcastService.handleMessage(message);
-	}
-	
-	@Override
 	public String getDeviceId() {
 		return MAC_ADDRESS;
 	}
@@ -448,11 +424,10 @@ public class AppController implements IControllerComponent {
 
 	@Override
 	public void handle(IEvent event) {
+		
 		if(event instanceof LocationChangedEvent){
 			LocationChangedEvent ev = (LocationChangedEvent) event;
 			this.currentLocation = ev.location;
-			Log.d(TAG,this.getClass().getSimpleName()+" : fastBroadcast "+fastBroadcastService);
-			fastBroadcastService.setCurrentLocation(ev.location);
 			return;
 		}
 		if(event instanceof MessageReceivedEvent){

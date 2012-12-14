@@ -65,7 +65,7 @@ public class EventDispatcher {
 		for(IComponent comp : components.keySet()) {
 			if(components.get(comp) != null) 
 				for (Class<? extends IEvent> evClass : components.get(comp)) {
-					if(evClass.isInstance(event)) {
+					if(evClass.equals(event.getClass())) {
 						Log.d(TAG,this.getClass().getSimpleName()+" : event match "+evClass.getSimpleName() +"" +
 								" handled by "+comp.getClass().getSimpleName());
 						flag = true;

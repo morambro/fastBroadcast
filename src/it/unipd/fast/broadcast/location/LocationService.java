@@ -146,4 +146,5 @@ public class LocationService extends Service implements ILocationComponent {
 		EventDispatcher.getInstance().registerComponent(this, events);
 		Log.d(TAG,this.getClass().getSimpleName()+" : service regitered to EventDispatcher");
 	}
+
 }

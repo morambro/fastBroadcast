@@ -19,11 +19,10 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SeekBar;
-import android.widget.TextView;
 import android.widget.SeekBar.OnSeekBarChangeListener;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class FastBroadcastActivity extends FragmentActivity implements GuiHandlerInterface {
@@ -82,7 +81,7 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 	private class FastBroadcastServiceConnection implements ServiceConnection{
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder binder) {
-			Log.d(TAG, FastBroadcastServiceConnection.class.getSimpleName()+": Fast Broadcast Service connected");
+			Log.d(TAG, FastBroadcastServiceConnection.class.getSimpleName()+": Fast Broadcast Service requestConnectionSent");
 		}
 
 		@Override
@@ -131,7 +130,7 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 		Log.d(TAG, this.getClass().getSimpleName()+": Bindo il servizio di ricezione dati");
 		Intent dataService = new Intent(this, DataReceiverService.class);
 		this.startService(dataService);
-		this.bindService(dataService, dataReceiverServiceConnection, Context.BIND_AUTO_CREATE);
+		boolean f = this.bindService(dataService, dataReceiverServiceConnection, Context.BIND_AUTO_CREATE);
 	}
 	
 
@@ -201,7 +200,7 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 	protected void onDestroy() {
 		super.onDestroy();
 		if(isLocationServiceBinded) {
-			this.unbindService(locationServiceConn);
+			unbindService(locationServiceConn);
 			isLocationServiceBinded = false;
 			Log.d(TAG, this.getClass().getSimpleName()+": location service unbound");
 		}
