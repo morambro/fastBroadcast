@@ -126,11 +126,10 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 	}
 	
 	private void startDataReceiverService(){
-		//Start DataReceiverService
 		Log.d(TAG, this.getClass().getSimpleName()+": Bindo il servizio di ricezione dati");
 		Intent dataService = new Intent(this, DataReceiverService.class);
 		this.startService(dataService);
-		boolean f = this.bindService(dataService, dataReceiverServiceConnection, Context.BIND_AUTO_CREATE);
+		this.bindService(dataService, dataReceiverServiceConnection, Context.BIND_AUTO_CREATE);
 	}
 	
 
@@ -217,11 +216,11 @@ public class FastBroadcastActivity extends FragmentActivity implements GuiHandle
 	 * 
 	 */
 	private void setupGui() {
-		connectToAllButton = (Button)this.findViewById(R.id.connect_to_all_button);
-		sendToAllButton = (Button)this.findViewById(R.id.send_button);
-		devicesListView = (ListView)this.findViewById(R.id.devices_list_view);
-		slotSizeSeekBar = (SeekBar)this.findViewById(R.id.seekBar1);
-		slotSizeText = (TextView)this.findViewById(R.id.slotSize);
+		connectToAllButton 	= (Button)this.findViewById(R.id.connect_to_all_button);
+		sendToAllButton 	= (Button)this.findViewById(R.id.send_button);
+		devicesListView 	= (ListView)this.findViewById(R.id.devices_list_view);
+		slotSizeSeekBar 	= (SeekBar)this.findViewById(R.id.seekBar1);
+		slotSizeText 		= (TextView)this.findViewById(R.id.slotSize);
 		
 		slotSizeSeekBar.setMax(100);
 		slotSizeSeekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
