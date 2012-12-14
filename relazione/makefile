@@ -1,3 +1,3 @@
-consegna: relazione.tex
-	pdflatex -output-directory=build relazione.tex
-	pdflatex -output-directory=build relazione.tex
+consegna: report.tex
+	pdflatex -output-directory=build report.tex
+	pdflatex -output-directory=build report.tex

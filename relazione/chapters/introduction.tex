@@ -14,14 +14,6 @@
 % 
 % Here we have the typical use of a "T" for an initial drop letter
 % and "HIS" in caps to complete the first word.
-\IEEEPARstart{F}{ast} broadcast algorithm provides an easy-to-implement method to estimate vehicles' wireless range and to send messages vehicle-to-vehicle covering large distances. The algorithm doesn't require any pre-existent network infrastructure, and is essentially divided in two phases:
-	\begin{itemize}
-		\item \emph{Estimation phase}: in this phase time is divided into turns and at each turn $T$ a car (one car per turn) sends an \emph{Hello message} containing information about his estimated wireless range and his position. Every vehicle continuously listens for this kind of messages, and uses the information contained in the message to update its range estimation.
-		\item \emph{Broadcast phase}: 
-%		when an \emph{Alert message} is sent by a car, this must be forwarded by one of the cars hearing it. Any preceiding car receiving the message, has information about the distance from the source (whose position was included in the message) and use them to compute a \emph{contention window}; the window is used to generate a random time to wait before forwarding back the message.
-%If someone else already forwarded the message, every car waiting on the contention window aborts the forwarding operation.
-		once a vehicle receives an \textit{Alert Message}, it must forward it to its neighbors. To prevent network flooding, every vehicle that receives the message computes a \textit{Contention Window}: this window is used to generate a random time to wait before forwarding the message. If the vehicle then receives the same message it was about to forward, it can simply discard it, because someone else already forwarded the message.
-	\end{itemize} 
-	
-This brief introduction, describes roughly the algorithm idea. We will focus on our implementation in the next sections.
-Our simulation involves the use of a finite number of devices, each running the same application. We use fake locations to put our devices on a straight line, with random distances between them, in order to simulate an higher number of vehicles, and changes each device's position when needed. See Section \ref{sec:position_change} for a complete explanation of how this is obtained.
+\IEEEPARstart{H}{ere} goes the introduction, describing owr work...
+ 
+Our simulation involves the use of a finite number of devices, each running the same application. We use fake locations to put our devices on a straight line, with random distances between them, in order to simulate an higher number of vehicles, and changes each device's virtual position when needed.
