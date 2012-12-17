@@ -41,6 +41,8 @@ public class DeviceConnector implements Runnable,IComponent{
 	}
 	
 	public void run() {
+		if(currentDevice >= peers.size())
+			return;
 		WifiP2pDevice device = peers.get(currentDevice);
 		
 		requestConnectionSent = false;

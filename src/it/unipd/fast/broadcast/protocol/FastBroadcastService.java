@@ -11,6 +11,7 @@ import it.unipd.fast.broadcast.event.protocol.SendBroadcastMessageEvent;
 import it.unipd.fast.broadcast.helper.LogPrinter;
 import it.unipd.fast.broadcast.wificonnection.message.IMessage;
 import it.unipd.fast.broadcast.wificonnection.message.MessageBuilder;
+import it.unipd.fast.broadcast.wificonnection.receiver.DataReceiverService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +34,7 @@ import android.util.Log;
  * @author Moreno Ambrosin
  *
  */
-public class FastBroadcastService extends Service implements IFastBroadcastComponent{
+public class FastBroadcastService implements IFastBroadcastComponent{
 	
 	private String TAG = "it.unipd.fast.broadcast";
 	
@@ -440,21 +441,16 @@ public class FastBroadcastService extends Service implements IFastBroadcastCompo
 		}
 	}
 	
+	private static FastBroadcastService instance = null;
 	
-	@Override
-	public IBinder onBind(Intent intent) {
-		return new FastBroadcastServiceBinder();
+	
+	public static FastBroadcastService getInstance() {
+		if(instance == null)
+			instance = new FastBroadcastService();
+		return instance;
 	}
-	
-	@Override
-	public boolean onUnbind(Intent intent) {
-		stopExecuting();
-		return super.onUnbind(intent);
-	}
-	
-	@Override
-	public void onCreate() {
-		super.onCreate();
+
+	public FastBroadcastService() {
 		Log.d(TAG,this.getClass().getSimpleName()+" : Estimator Service is Up");
 		// On service creation, starts hello message sender Scheduler
 		// creating a timer to schedule hello message sending
@@ -475,7 +471,6 @@ public class FastBroadcastService extends Service implements IFastBroadcastCompo
 			}
 		});
 		register();
-		
 	}
 	
 	@Override
@@ -537,9 +532,9 @@ public class FastBroadcastService extends Service implements IFastBroadcastCompo
 			return;
 		}
 		if(event.getClass().equals(AlertMessageArrivedEvent.class)){
-			HelloMessageArrivedEvent ev = (HelloMessageArrivedEvent) event;
+			AlertMessageArrivedEvent ev = (AlertMessageArrivedEvent) event;
 			this.setHelloMessageArrived(true);
-			handleMessage(ev.message);
+			handleMessage(ev.alertMessage);
 			return;
 		}
 		if(event.getClass().equals(LocationChangedEvent.class)){
