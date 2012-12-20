@@ -8,6 +8,7 @@ import it.unipd.testbase.eventdispatcher.event.protocol.AlertMessageArrivedEvent
 import it.unipd.testbase.eventdispatcher.event.protocol.EstimationPhaseStartEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.HelloMessageArrivedEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.SendBroadcastMessageEvent;
+import it.unipd.testbase.eventdispatcher.event.protocol.StopSimulationEvent;
 import it.unipd.testbase.helper.LogPrinter;
 import it.unipd.testbase.wificonnection.message.IMessage;
 import it.unipd.testbase.wificonnection.message.MessageBuilder;
@@ -555,6 +556,10 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 			this.currentLocation = ev.location;
 			return;
 		}
+		if(event.getClass().equals(StopSimulationEvent.class)){
+			stopExecuting();
+			return;
+		}
 	}
 
 	@Override
@@ -564,6 +569,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		events.add(HelloMessageArrivedEvent.class);
 		events.add(LocationChangedEvent.class);
 		events.add(AlertMessageArrivedEvent.class);
+		events.add(StopSimulationEvent.class);
 		EventDispatcher.getInstance().registerComponent(this, events);
 	}
 }

@@ -5,12 +5,14 @@ import it.unipd.testbase.eventdispatcher.event.IEvent;
 import it.unipd.testbase.eventdispatcher.event.connectioninfo.WiFiInfoCollectedEvent;
 import it.unipd.testbase.eventdispatcher.event.deviceconnector.ProceedWithNextEvent;
 import it.unipd.testbase.eventdispatcher.event.location.LocationChangedEvent;
+import it.unipd.testbase.eventdispatcher.event.location.PositionsTerminatedEvent;
 import it.unipd.testbase.eventdispatcher.event.location.SetupProviderEvent;
 import it.unipd.testbase.eventdispatcher.event.location.UpdateLocationEvent;
 import it.unipd.testbase.eventdispatcher.event.message.MessageReceivedEvent;
 import it.unipd.testbase.eventdispatcher.event.message.SendUnicastMessageEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.EstimationPhaseStartEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.SendBroadcastMessageEvent;
+import it.unipd.testbase.eventdispatcher.event.protocol.StopSimulationEvent;
 import it.unipd.testbase.protocol.FastBroadcastService;
 import it.unipd.testbase.protocol.IFastBroadcastComponent;
 import it.unipd.testbase.wificonnection.connectionmanager.ConnectionManagerFactory;
@@ -458,6 +460,7 @@ public class AppController implements IControllerComponent {
 		events.add(WiFiInfoCollectedEvent.class);
 		events.add(SendBroadcastMessageEvent.class);
 		events.add(SendUnicastMessageEvent.class);
+		events.add(PositionsTerminatedEvent.class);
 		EventDispatcher.getInstance().registerComponent(this, events);
 	}
 
@@ -488,6 +491,10 @@ public class AppController implements IControllerComponent {
 			WiFiInfoCollectedEvent ev = (WiFiInfoCollectedEvent) event;
 			groupOwnerAddress 	= ev.wifiConnectionInfo.groupOwnerAddress.getCanonicalHostName();
 			isGroupOwner 		= ev.wifiConnectionInfo.isGroupOwner;
+			return;
+		}
+		if(event instanceof PositionsTerminatedEvent){
+			EventDispatcher.getInstance().triggerEvent(new StopSimulationEvent());
 			return;
 		}
 	}
