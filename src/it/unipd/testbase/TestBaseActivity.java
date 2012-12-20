@@ -1,6 +1,5 @@
 package it.unipd.testbase;
 
-import it.unipd.fast.broadcast.R;
 import it.unipd.testbase.AppController.SynchronizedDevicesList;
 import it.unipd.testbase.location.MockLocationService;
 import it.unipd.testbase.protocol.FastBroadcastService;
@@ -8,7 +7,6 @@ import it.unipd.testbase.wificonnection.message.IMessage;
 import it.unipd.testbase.wificonnection.message.MessageBuilder;
 import it.unipd.testbase.wificonnection.receiver.DataReceiverService;
 import it.unipd.testbase.wificonnection.transmissionmanager.TransmissionManagerFactory;
-import android.app.ActionBar.Tab;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;

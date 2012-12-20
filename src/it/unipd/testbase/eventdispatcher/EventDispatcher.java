@@ -71,7 +71,6 @@ public class EventDispatcher {
 			if(components.get(comp) != null && components.get(comp).contains(event.getClass())) {
 				flag = true;
 				comp.handle(event);
-				break;
 			}
 		}
 		return flag;
