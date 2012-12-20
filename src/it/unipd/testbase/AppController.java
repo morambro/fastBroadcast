@@ -396,6 +396,7 @@ public class AppController implements IControllerComponent {
 		message.addContent(IMessage.MESSAGE_HOP_KEY, "1");
 		message.prepare();
 		sendBroadcast(message);
+		EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
 	}
 
 	@Override
@@ -403,14 +404,14 @@ public class AppController implements IControllerComponent {
 		
 		if(peerIdIpMap != null){
 			int transportType = TransmissionManagerFactory.RELIABLE_TRANSPORT;
-			switch(message.getType()){
-				case IMessage.ALERT_MESSAGE_TYPE : 
-					transportType = TransmissionManagerFactory.UNRELIABLE_TRANSPORT;
-					break;
-				case IMessage.HELLO_MESSAGE_TYPE :
-					transportType = TransmissionManagerFactory.UNRELIABLE_TRANSPORT;
-					break;
-			}
+//			switch(message.getType()){
+//				case IMessage.ALERT_MESSAGE_TYPE : 
+//					transportType = TransmissionManagerFactory.UNRELIABLE_TRANSPORT;
+//					break;
+//				case IMessage.HELLO_MESSAGE_TYPE :
+//					transportType = TransmissionManagerFactory.UNRELIABLE_TRANSPORT;
+//					break;
+//			}
 			TransmissionManagerFactory.getInstance().getTransmissionManager(transportType).send(
 				new ArrayList<String>(peerIdIpMap.values()),
 				message

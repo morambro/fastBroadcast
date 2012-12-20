@@ -89,7 +89,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	 * Static field which indicates the simulated actual range of each device
 	 * This value is used to filter messages received from a "distance" > ACTUAL_MAX_RANGE
 	 */
-	private static final int ACTUAL_MAX_RANGE = 600;
+	private static final int ACTUAL_MAX_RANGE = 900;
 	
 	/**
 	 * Slot size in milliseconds
@@ -99,7 +99,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	/**
 	 * Turn duration in milliseconds
 	 */
-	public static final int TURN_DURATION = 20000;
+	public static final int TURN_DURATION = 100000;
 	
 	/**
 	 * Contention window bouds
@@ -478,6 +478,10 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 				double longitude 	= Double.parseDouble(content.get(IMessage.SENDER_LONGITUDE_KEY));
 				float distance = getDistance(latitude, longitude);
 				// If distance is > actual maximum range, message shouldn't be heard...
+				
+				Log.d(TAG,FastBroadcastService.class.getSimpleName()+" : ACTUAL RANGE = "+ACTUAL_MAX_RANGE);
+				Log.d(TAG,FastBroadcastService.class.getSimpleName()+" : ESTIMATED RANGE = "+distance);
+				
 				if(distance > ACTUAL_MAX_RANGE) return false;
 				return true;
 			}
