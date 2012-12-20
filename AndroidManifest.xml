@@ -23,7 +23,7 @@
         android:theme="@style/AppTheme" >
         <activity
 	    android:theme="@android:style/Theme.Holo"
-            android:name=".FastBroadcastActivity"
+            android:name=".TestBaseActivity"
             android:label="@string/title_activity_main"
 	    android:screenOrientation="portrait" android:configChanges="orientation|keyboardHidden" > <!-- Force portrait orientation (avoid runtime fragment crash on rotation) --> >
             <intent-filter>
@@ -34,8 +34,6 @@
         </activity>
 	<service android:name=".location.LocationService"/>
     <service android:name=".location.MockLocationService"/>
-    <service android:name=".wificonnection.receiver.DataReceiverService" />
-    <service android:name=".protocol.FastBroadcastService" />
     </application>
 
 </manifest>
