@@ -1,8 +1,10 @@
 package it.unipd.testbase.helper;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 
 import android.os.Environment;
@@ -43,7 +45,7 @@ public class LogPrinter {
 	}
 	
 	public void writeTimedLine(String line) {
-		line = (new String("Time "+System.currentTimeMillis()+": ").concat(line));
+		line = (new String(System.currentTimeMillis()+": ").concat(line));
 		writeLine(line);
 	}
 	
@@ -54,5 +56,22 @@ public class LogPrinter {
 			Log.e("LogPrinter", e.getMessage());
 			e.printStackTrace();
 		}
+	}
+	
+	public String getResults(){
+		StringBuilder results = new StringBuilder("");
+		try {
+			BufferedReader s = new BufferedReader(
+					new FileReader(new File(Environment.getExternalStorageDirectory(), fileName)));
+			String line = "";
+			while((line = s.readLine()) != null){
+				results.append(line).append("\n");
+			}
+			s.close();
+		} catch (IOException e) {
+			Log.e("LogPrinter", e.getMessage());
+			e.printStackTrace();
+		}
+		return results.toString();
 	}
 }

@@ -59,6 +59,7 @@ public class CollectionHandler implements IDataCollectionHandler {
 				break;
 	
 			case IMessage.ALERT_MESSAGE_TYPE :
+				LogPrinter.getInstance().writeTimedLine("------------------------------------\n");
 				LogPrinter.getInstance().writeTimedLine("ALERT FROM "+hostIp+". HOPS "+message.getContent().get(IMessage.MESSAGE_HOP_KEY));
 				Log.d(TAG, this.getClass().getSimpleName()+": Ricevuto ALERT : \n"+message);
 				EventDispatcher.getInstance().triggerEvent(new AlertMessageArrivedEvent(message));

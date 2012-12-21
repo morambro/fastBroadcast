@@ -33,19 +33,12 @@ public class TCPPacketReceiver extends AbstractPacketReceiver{
 				Log.d(TAG, TCPPacketReceiver.class.getSimpleName()+": connessione in ingresso");
 				handleConnection(client);
 			}
+			serverSocket.close();
 		}catch(IOException e){
 			Log.d(TAG, TCPPacketReceiver.class.getSimpleName()+":Exception "+e.getMessage(),e);
 		}
 		// close the TCP socket before exiting
 		disconnectSocket();
-	}
-	
-	private void initializeSocket() throws IOException{
-		if(serverSocket == null || !serverSocket.isBound() || serverSocket.isClosed()){
-			Log.d(TAG, TCPPacketReceiver.class.getSimpleName()+": Socket closed, reopen it");
-			serverSocket = new ServerSocket(TCP_PORT);
-			serverSocket.setSoTimeout(0);
-		}
 	}
 	
 	/**

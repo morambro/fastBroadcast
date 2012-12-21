@@ -1,12 +1,20 @@
 package it.unipd.testbase;
 
 import it.unipd.testbase.AppController.SynchronizedDevicesList;
+import it.unipd.testbase.eventdispatcher.EventDispatcher;
+import it.unipd.testbase.eventdispatcher.IComponent;
+import it.unipd.testbase.eventdispatcher.event.IEvent;
+import it.unipd.testbase.eventdispatcher.event.ShowSimulationResultsEvent;
 import it.unipd.testbase.location.MockLocationService;
 import it.unipd.testbase.protocol.FastBroadcastService;
 import it.unipd.testbase.wificonnection.message.IMessage;
 import it.unipd.testbase.wificonnection.message.MessageBuilder;
 import it.unipd.testbase.wificonnection.receiver.DataReceiverService;
 import it.unipd.testbase.wificonnection.transmissionmanager.TransmissionManagerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -28,7 +36,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class TestBaseActivity extends FragmentActivity implements GuiHandlerInterface {
+public class TestBaseActivity extends FragmentActivity implements GuiHandlerInterface,IComponent {
 	protected final String TAG = "it.unipd.testbase";
 	private final int TOTAL_SERVICES = 1;
 
@@ -142,6 +150,8 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		register();
 		setContentView(R.layout.activity_main);
 		activityHandler = new Handler() {
 			@SuppressWarnings("unchecked")
@@ -165,6 +175,7 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 		startLocationService();
 //		startFastBroadcastService();
 //		startDataReceiverService();
+//		
 		
 	}
 
@@ -236,11 +247,13 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 			
 			@Override
 			public void onClick(View v) {
-				IMessage message = MessageBuilder.getInstance().getMessage(5,"192.168.49.255","ciaoooo");
-				message.addContent("ciao", "ciao");
-				message.prepare();
-				TransmissionManagerFactory.getInstance().getTransmissionManager(TransmissionManagerFactory.UNRELIABLE_TRANSPORT)
-				.send("192.168.49.255", message);
+//				IMessage message = MessageBuilder.getInstance().getMessage(5,"192.168.49.255","ciaoooo");
+//				message.addContent("ciao", "ciao");
+//				message.prepare();
+//				TransmissionManagerFactory.getInstance().getTransmissionManager(TransmissionManagerFactory.UNRELIABLE_TRANSPORT)
+//				.send("192.168.49.255", message);
+				Intent myIntent = new Intent(TestBaseActivity.this, SimulationResultsActivity.class);
+				TestBaseActivity.this.startActivity(myIntent);
 			}
 		});
 		
@@ -284,5 +297,20 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 			connectionController = new AppController(this, this);
 			connectionController.setFastBroadCastReceiverRegistered(true);
 		}
+	}
+
+	@Override
+	public void handle(IEvent event) {
+		if(event.getClass().equals(ShowSimulationResultsEvent.class)){
+			Intent myIntent = new Intent(this, SimulationResultsActivity.class);
+			this.startActivity(myIntent);
+		}
+	}
+
+	@Override
+	public void register() {
+		List<Class<? extends IEvent>> events = new ArrayList<Class<? extends IEvent>>();
+		events.add(ShowSimulationResultsEvent.class);
+		EventDispatcher.getInstance().registerComponent(this,events);
 	}
 }

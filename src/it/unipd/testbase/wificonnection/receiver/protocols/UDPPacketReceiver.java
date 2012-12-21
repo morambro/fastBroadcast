@@ -36,12 +36,12 @@ public class UDPPacketReceiver extends AbstractPacketReceiver {
 						
 						EventDispatcher.getInstance().triggerEvent(new MessageReceivedEvent(
 								xmlMessage ,
-								p.getAddress().getCanonicalHostName()
+								p.getAddress().getHostAddress()
 						));
 					}
 				}.start();
 			}
-			
+			socket.close();
 		}catch(Exception e){
 			e.printStackTrace();
 		}
