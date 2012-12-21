@@ -205,19 +205,18 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 
 	@Override
 	protected void onDestroy() {
-		super.onDestroy();
 		if(isLocationServiceBinded) {
 			unbindService(locationServiceConn);
 			isLocationServiceBinded = false;
 			Log.d(TAG, this.getClass().getSimpleName()+": location service unbound");
 		}
 		FastBroadcastService.getInstance().stopExecuting();
-		DataReceiverService.getInstance().terminate();
+		DataReceiverService.getInstance().stopExecuting();
 //		unbindService(fastBroadcastServiceConnection);
 //		unbindService(dataReceiverServiceConnection);
 		Log.d(TAG, this.getClass().getSimpleName()+": onDestroy called");
 		connectionController.disconnect();
-
+		super.onDestroy();
 	}
 
 	/**
@@ -237,7 +236,7 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 			
 			@Override
 			public void onClick(View v) {
-				IMessage message = MessageBuilder.getInstance().getMessage(5,"192.168.49.255");
+				IMessage message = MessageBuilder.getInstance().getMessage(5,"192.168.49.255","ciaoooo");
 				message.addContent("ciao", "ciao");
 				message.prepare();
 				TransmissionManagerFactory.getInstance().getTransmissionManager(TransmissionManagerFactory.UNRELIABLE_TRANSPORT)

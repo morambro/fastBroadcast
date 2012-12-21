@@ -24,8 +24,12 @@ public class CollectionHandler implements IDataCollectionHandler {
 	public void onDataCollected(IMessage message, String hostIp) {
 		
 		int messageType = message.getType();
-		
 		Log.d(TAG, this.getClass().getSimpleName()+": Message received, of type = "+messageType);
+		
+		if(message.getSenderID().equals(controller.getDeviceId())){
+			Log.d(TAG, this.getClass().getSimpleName()+": Message Discarded");
+			return;
+		}
 		
 		switch(messageType){
 			// In case of Hello message 
@@ -55,10 +59,11 @@ public class CollectionHandler implements IDataCollectionHandler {
 				break;
 	
 			case IMessage.ALERT_MESSAGE_TYPE :
-				LogPrinter.getInstance().writeTimedLine("alert message received from "+hostIp+". Hop number: "+message.getContent().get(IMessage.MESSAGE_HOP_KEY));
+				LogPrinter.getInstance().writeTimedLine("ALERT FROM "+hostIp+". HOPS "+message.getContent().get(IMessage.MESSAGE_HOP_KEY));
 				Log.d(TAG, this.getClass().getSimpleName()+": Ricevuto ALERT : \n"+message);
 				EventDispatcher.getInstance().triggerEvent(new AlertMessageArrivedEvent(message));
 				break;
+				
 				
 			// case of fast broadcast hello message
 			case IMessage.HELLO_MESSAGE_TYPE :

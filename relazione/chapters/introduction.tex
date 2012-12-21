@@ -15,12 +15,17 @@
 % Here we have the typical use of a "T" for an initial drop letter
 % and "HIS" in caps to complete the first word.
 \IEEEPARstart{R}{esearch} on Vehicolar Networks makes large use of software simulations, this because it is unfeasible to build a vehicular network of real vehicles that can act as relays of a message that could travel long distances.
-To reduce costs, a possible solution is using common and small devices like smartphones to perform real tests carring them on vehicles, or to perform simulations.
-To develop a complete testbed application, different features must be provided:
+To reduce costs, a possible solution is using common and small devices like smartphones to perform real tests carring them on vehicles, or to run simulations taking advantage of the features they offers.
+To develop a complete testbed application for mobile devices, different features must be provided:
 \begin{itemize}
 	\item Possibility to use GPS location or fake positions.
 	\item Wireless connectivity.
 \end{itemize}
-
 This features are very easy to supply: the most of the smartphones in commerce has GPS and WI-FI devices installed, and their Operating Systems provide APIs to use them.
-The application we developed, involves the use of a finite number of devices each running the same application. Fake locations are used to put our devices on a straight line, with random distances between them, in order to simulate an higher number of vehicles, and changes each device's virtual position when needed.
+Our work is exentially composed by two parts:
+\begin{itemize}
+	\item A distributed Android application, which involves the use of a finite number of devices each running the same application. It lets users to specify fake locations for different devices with random distances between them, in order to simulate an higher number of vehicles, and changes each device's virtual position when needed, or to use real GPS position in case of real tests. Our testbed application uses Android WI-FI technologies for devices communication, expecially \direct standard developed by WI-FI Alliance\textsuperscript{\texttrademark}.
+	\item A Java Desktop application for laptops running Fedora. Only fake positions can be used with it, and for what regards connectivity, C Raw Socket where implemented to provide a connection and state free message sending via WI-FI. 
+\end{itemize}
+Both of our two products have the same architecture, that will be introduced in the next sections. To test our work, we used Fast Broadcast algorithm, which will be briefly introduced in section \ref{sec:fast_broadcast}.
+

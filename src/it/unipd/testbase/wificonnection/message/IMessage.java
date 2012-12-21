@@ -72,8 +72,6 @@ abstract public class IMessage {
 	 * @return
 	 */
 	public abstract String getSenderID();
-	public abstract String getRecipientAddress();
-	public abstract void setRecipientAddress(String recipientAddress);
 	
 	public static String concatContent(String ...contents) {
 		String result = contents[0];

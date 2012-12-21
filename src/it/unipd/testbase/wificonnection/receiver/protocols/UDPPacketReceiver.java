@@ -45,9 +45,7 @@ public class UDPPacketReceiver extends AbstractPacketReceiver {
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-		finally{
-			disconnectSocket();
-		}
+		disconnectSocket();
 	}
 
 	@Override

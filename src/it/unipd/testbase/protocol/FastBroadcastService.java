@@ -1,5 +1,6 @@
 package it.unipd.testbase.protocol;
 
+import it.unipd.testbase.AppController;
 import it.unipd.testbase.eventdispatcher.EventDispatcher;
 import it.unipd.testbase.eventdispatcher.event.IEvent;
 import it.unipd.testbase.eventdispatcher.event.location.LocationChangedEvent;
@@ -95,7 +96,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	/**
 	 * Slot size in milliseconds
 	 */
-	private static final int SLOT_SIZE = 100;
+	private static final int SLOT_SIZE = 50;
 	
 	/**
 	 * Turn duration in milliseconds
@@ -171,6 +172,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 					Log.d(TAG,this.getClass().getSimpleName()+" : Hello Message was already sent!!");
 				}
 			}
+			Log.d(TAG,HelloMessageSender.class.getSimpleName()+" : Tearing down Hello Message Sender");
 		}
 		
 		/**
@@ -179,6 +181,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		 */
 		public void stopExecuting(){
 			keepRunning = false;
+			Log.d(TAG,HelloMessageSender.class.getSimpleName()+" : keepRunning = "+keepRunning);
 		}
 		
 		/**
@@ -224,7 +227,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		 * @throws InterruptedException
 		 */
 		public void put(IMessage message) throws InterruptedException{
-			LogPrinter.getInstance().writeTimedLine("alert message put into queue. Size "+(messageQueue.size()+1));
+			LogPrinter.getInstance().writeTimedLine("ALERT PUT IN QUEUE. SIZE "+(messageQueue.size()+1));
 			messageQueue.put(message);
 			// As soon as a new message arrived, notify the forwarder, to let him preceding without waiting 
 			// for the entire random amount 
@@ -238,6 +241,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		 */
 		public void stopExecuting(){
 			keepRunning = false;
+			Log.d(TAG,MessageForwarder.class.getSimpleName()+" : keepRunning = "+keepRunning);
 		}
 		
 		@Override
@@ -248,7 +252,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 					message = messageQueue.take();
 					Map<String,String> content = message.getContent();
 					int hopCount = Integer.valueOf(content.get(IMessage.MESSAGE_HOP_KEY));
-					LogPrinter.getInstance().writeTimedLine("alert message taken from queue. Hop number: "+hopCount+". Size "+messageQueue.size());
+					LogPrinter.getInstance().writeTimedLine("ALET TAKEN FROM QUEUE. HOPS "+hopCount+". Size "+messageQueue.size());
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 					Thread.currentThread().interrupt();
@@ -260,8 +264,8 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 					arrived = arrived & (filter.filter(message));
 				}
 				if(!arrived){
-					LogPrinter.getInstance().writeTimedLine("message discarded from queue, sender was too far away. Size "+messageQueue.size());
-					Log.e(TAG,"MESSAGE SHOULDN'T HAVE BEEN ARRIVED SHIT!!");
+					LogPrinter.getInstance().writeTimedLine("ALERT DISCARDED: TOO FAR AWAY. QUEUE SIZE "+messageQueue.size());
+					Log.e(TAG,"MESSAGE SHOULDN'T HAVE BEEN ARRIVED");
 				}else{
 					Log.e(TAG,"ALERT MESSAGE ARRIVED!!");
 					// now I am sure message != null
@@ -270,7 +274,8 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 					double longitude 	= Double.parseDouble(content.get(IMessage.SENDER_LONGITUDE_KEY));
 					double maxRange 	= Double.valueOf(content.get(IMessage.SENDER_RANGE_KEY));
 					float direction 	= Float.valueOf(content.get(IMessage.SENDER_DIRECTION_KEY));
-					int hopCount = Integer.valueOf(content.get(IMessage.MESSAGE_HOP_KEY))+1;
+					int hopCount 		= Integer.valueOf(content.get(IMessage.MESSAGE_HOP_KEY));
+					hopCount ++;
 					float distance = getDistance(latitude, longitude);
 					
 					Log.d(TAG,"Distance = "+distance);
@@ -289,7 +294,6 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 						try {
 							long rnd = randomGenerator.nextInt(contentionWindow*SLOT_SIZE);
 							Log.e(TAG,"BroadcastPhase: sleeping for "+rnd+" ms");
-							//Thread.sleep(rnd);
 							// Waiting until:
 							//    1) A message arrives, so stop waiting and change position
 							//    2) Time expired, and so forward the message
@@ -304,14 +308,16 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 						// No message arrived while I was asleep
 						IMessage newMessage = MessageBuilder.getInstance().getMessage(
 								message.getType(),
-								ITranmissionManager.BROADCAST_ADDRESS);
+								ITranmissionManager.BROADCAST_ADDRESS,
+								AppController.MAC_ADDRESS);
+						
 						newMessage.addContent(IMessage.SENDER_LATITUDE_KEY,currentLocation.getLatitude()+"");
 						newMessage.addContent(IMessage.SENDER_LONGITUDE_KEY,currentLocation.getLongitude()+"");
 						newMessage.addContent(IMessage.SENDER_RANGE_KEY,Math.max(lmbr,cmbr)+"");
 						newMessage.addContent(IMessage.SENDER_DIRECTION_KEY,currentLocation.getBearing()+"");
 						newMessage.addContent(IMessage.MESSAGE_HOP_KEY, ""+hopCount);
 						newMessage.prepare();
-						LogPrinter.getInstance().writeTimedLine("no messages arrived while sleeping. Forwarding message \n\tHop numbers: "+hopCount+".\n\t Size "+messageQueue.size());
+						LogPrinter.getInstance().writeTimedLine("ALERT MESSAGE FROWARDED. HOPS "+hopCount+".SIZE "+messageQueue.size());
 						// Send broadcast the message
 						EventDispatcher.getInstance().triggerEvent(new SendBroadcastMessageEvent(newMessage));
 						
@@ -331,7 +337,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 					}
 				}
 			}
-			
+			Log.d(TAG,HelloMessageSender.class.getSimpleName()+" : Tearing down Message Forwarder");
 		}
 	}
 	
@@ -450,9 +456,11 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	public void stopExecuting(){
 		// Stop hello message sender and message forwarder
 		if(helloMessageSender != null){
+			Log.d(TAG,"STOPPING HELLO");
 			helloMessageSender.stopExecuting();
 		}
 		if(messageForwarder != null){
+			Log.d(TAG,"STOPPING FORWARDER");
 			messageForwarder.stopExecuting();
 		}
 	}

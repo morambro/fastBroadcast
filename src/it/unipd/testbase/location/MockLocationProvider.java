@@ -122,11 +122,9 @@ public class MockLocationProvider {
 //			}
 			if(firstExec){
 				currentIndex = currentIndex + counter;
-				__debug_print_log("Current position found in line "+(currentIndex+1)+": "+lines.get(currentIndex));
 				firstExec = false;
 			} else {
 				currentIndex = currentIndex + peersNumber;
-				__debug_print_log("Current position found in line "+(currentIndex+1)+": "+lines.get(currentIndex));
 			}
 			
 			if(lines.size() <= currentIndex){
@@ -135,6 +133,7 @@ public class MockLocationProvider {
 				EventDispatcher.getInstance().triggerEvent(new PositionsTerminatedEvent());
 				return;
 			}
+			__debug_print_log("Current position found in line "+(currentIndex+1)+": "+lines.get(currentIndex));
 //			if(line == null) {//TODO: end of file reached, shutdown the simulation
 //				Log.d(TAG, this.getClass().getSimpleName()+": end of file reached");
 //				return;

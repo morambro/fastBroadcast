@@ -28,7 +28,7 @@ public class DataReceiverService implements IDataReceiverComponent{
 		return instance;
 	}
 	
-	public void terminate() {
+	public void stopExecuting() {
 		udpPacketReceiver.terminate();
 		tcpPacketReceiver.terminate();
 	}

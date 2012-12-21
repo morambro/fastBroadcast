@@ -7,7 +7,6 @@ import it.unipd.testbase.wificonnection.receiver.AbstractPacketReceiver;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -24,8 +23,9 @@ public class TCPPacketReceiver extends AbstractPacketReceiver{
 			// Create a server socket and wait for client connections. This
 			// call blocks until a connection is accepted from a client
 			Log.d(TAG, this.getClass().getSimpleName()+": Tiro su un socket TCP terminated = ");
+//			serverSocket = new ServerSocket(TCP_PORT);
+//			initializeSocket();
 			serverSocket = new ServerSocket(TCP_PORT);
-			
 			while(!terminated){
 				Log.d(TAG, TCPPacketReceiver.class.getSimpleName()+": Attendo una connessione");
 				// Waits for an incoming connection
@@ -36,10 +36,15 @@ public class TCPPacketReceiver extends AbstractPacketReceiver{
 		}catch(IOException e){
 			Log.d(TAG, TCPPacketReceiver.class.getSimpleName()+":Exception "+e.getMessage(),e);
 		}
-
 		// close the TCP socket before exiting
-		finally{
-			disconnectSocket();
+		disconnectSocket();
+	}
+	
+	private void initializeSocket() throws IOException{
+		if(serverSocket == null || !serverSocket.isBound() || serverSocket.isClosed()){
+			Log.d(TAG, TCPPacketReceiver.class.getSimpleName()+": Socket closed, reopen it");
+			serverSocket = new ServerSocket(TCP_PORT);
+			serverSocket.setSoTimeout(0);
 		}
 	}
 	
@@ -66,8 +71,7 @@ public class TCPPacketReceiver extends AbstractPacketReceiver{
 				Log.d(TAG, this.getClass().getSimpleName()+": Gestione connessione in nuovo thread");
 				// Read from the input stream
 				try {
-					InputStream inputstream = socket.getInputStream();
-					InputStreamReader is = new InputStreamReader(inputstream);
+					InputStreamReader is = new InputStreamReader(socket.getInputStream());
 					StringBuilder sb = new StringBuilder();
 					BufferedReader br = new BufferedReader(is);
 					String read = br.readLine();
@@ -76,12 +80,12 @@ public class TCPPacketReceiver extends AbstractPacketReceiver{
 						sb.append(read);
 						read =br.readLine();
 					}
-
+					
 					String xmlMsg = new String(sb.toString());
 
 					EventDispatcher.getInstance().triggerEvent(new MessageReceivedEvent(
 							MessageBuilder.getInstance().getMessage(xmlMsg),
-							socket.getInetAddress().getCanonicalHostName()
+							socket.getInetAddress().getHostAddress()
 					));
 					
 					socket.close();

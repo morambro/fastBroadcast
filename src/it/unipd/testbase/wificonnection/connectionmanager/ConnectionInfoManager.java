@@ -16,6 +16,8 @@ import android.util.Log;
 public class ConnectionInfoManager implements IConnectionInfoManager{
 
 	protected final String TAG = "it.unipd.testbase";
+	
+	boolean __ping_sent = false;
 
 	@Override
 	public void onConnectionInfoAvailable(final WifiP2pInfo info) {
@@ -46,27 +48,32 @@ public class ConnectionInfoManager implements IConnectionInfoManager{
 						// Not group Owner, so send an Hello Message to the GroupOwner
 						Log.d(TAG, ConnectionInfoManager.class.getSimpleName()+": Sending info!!");
 
-						new Thread(){
-							public void run() {
-								try{
-									String groupOwnerAddress = info.groupOwnerAddress.getCanonicalHostName();
-									IMessage message = MessageBuilder.getInstance().getMessage(
-											IMessage.PING_MESSAGE_TYPE, 
-											groupOwnerAddress,
-											IMessage.PING_MESSAGE_ID_KEY, 
-											AppController.MAC_ADDRESS);
-									Log.d(TAG, ConnectionInfoManager.class.getSimpleName()+": Sending my address to Group owner");
-//									TransmissionManagerFactory.getInstance().getTransmissionManager(TransmissionManagerFactory.RELIABLE_TRANSPORT)
-//										.send(
-//											groupOwnerAddress,	// GroupOwner IP
-//											message); //PING message
-									EventDispatcher.getInstance().triggerEvent(
-											new SendUnicastMessageEvent(message, groupOwnerAddress));
-								}catch(Exception e){
-									e.printStackTrace();
-								}
-							};
-						}.start();
+						if(__ping_sent == false){
+							new Thread(){
+								public void run() {
+									try{
+										String groupOwnerAddress = info.groupOwnerAddress.getCanonicalHostName();
+										IMessage message = MessageBuilder.getInstance().getMessage(
+												IMessage.PING_MESSAGE_TYPE, 
+												groupOwnerAddress,
+												IMessage.PING_MESSAGE_ID_KEY, 
+												AppController.MAC_ADDRESS);
+										Log.d(TAG, ConnectionInfoManager.class.getSimpleName()+": Sending my address to Group owner");
+	//									TransmissionManagerFactory.getInstance().getTransmissionManager(TransmissionManagerFactory.RELIABLE_TRANSPORT)
+	//										.send(
+	//											groupOwnerAddress,	// GroupOwner IP
+	//											message); //PING message
+										EventDispatcher.getInstance().triggerEvent(
+												new SendUnicastMessageEvent(message, groupOwnerAddress));
+									}catch(Exception e){
+										e.printStackTrace();
+									}
+								};
+							}.start();
+							__ping_sent = true;
+						} else {
+							Log.d(TAG, this.getClass().getSimpleName()+": Second attempt to send PING");
+						}
 
 						Log.d(TAG, this.getClass().getSimpleName()+": I am NOT the group owner");
 					}

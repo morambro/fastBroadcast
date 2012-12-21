@@ -369,7 +369,7 @@ public class AppController implements IControllerComponent {
 		for(int i = 0; i < peers.size(); i++){
 			connect(peers.get(i));
 		}
-//		keepUpdatingPeers = false;
+		keepUpdatingPeers = false;
 //		deviceConnector = new DeviceConnector(peers,manager,channel,this);
 //		EventDispatcher.getInstance().triggerEvent(new ProceedWithNextEvent());
 	}
@@ -389,13 +389,14 @@ public class AppController implements IControllerComponent {
 	public void sendAlert() {
 		IMessage message = MessageBuilder.getInstance().getMessage(
 				IMessage.ALERT_MESSAGE_TYPE, 
-				ITranmissionManager.BROADCAST_ADDRESS
+				ITranmissionManager.BROADCAST_ADDRESS,
+				MAC_ADDRESS
 		);
 		message.addContent(IMessage.SENDER_LATITUDE_KEY, ""+currentLocation.getLatitude());
 		message.addContent(IMessage.SENDER_LONGITUDE_KEY, ""+currentLocation.getLongitude());
 		message.addContent(IMessage.SENDER_RANGE_KEY, ""+fastBroadcastService.getEstimatedTrasmissionRange());
 		message.addContent(IMessage.SENDER_DIRECTION_KEY, ""+currentLocation.getBearing());
-		message.addContent(IMessage.MESSAGE_HOP_KEY, "1");
+		message.addContent(IMessage.MESSAGE_HOP_KEY, "0");
 		message.prepare();
 		sendBroadcast(message);
 		EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
@@ -406,14 +407,14 @@ public class AppController implements IControllerComponent {
 		
 		if(peerIdIpMap != null){
 			int transportType = TransmissionManagerFactory.RELIABLE_TRANSPORT;
-//			switch(message.getType()){
-//				case IMessage.ALERT_MESSAGE_TYPE : 
-//					transportType = TransmissionManagerFactory.UNRELIABLE_TRANSPORT;
-//					break;
-//				case IMessage.HELLO_MESSAGE_TYPE :
-//					transportType = TransmissionManagerFactory.UNRELIABLE_TRANSPORT;
-//					break;
-//			}
+			switch(message.getType()){
+				case IMessage.ALERT_MESSAGE_TYPE : 
+					transportType = TransmissionManagerFactory.UNRELIABLE_TRANSPORT;
+					break;
+				case IMessage.HELLO_MESSAGE_TYPE :
+					transportType = TransmissionManagerFactory.UNRELIABLE_TRANSPORT;
+					break;
+			}
 			TransmissionManagerFactory.getInstance().getTransmissionManager(transportType).send(
 				new ArrayList<String>(peerIdIpMap.values()),
 				message
