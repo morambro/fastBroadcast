@@ -175,7 +175,6 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 		startLocationService();
 //		startFastBroadcastService();
 //		startDataReceiverService();
-//		
 		
 	}
 
@@ -247,13 +246,11 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 			
 			@Override
 			public void onClick(View v) {
-//				IMessage message = MessageBuilder.getInstance().getMessage(5,"192.168.49.255","ciaoooo");
-//				message.addContent("ciao", "ciao");
-//				message.prepare();
-//				TransmissionManagerFactory.getInstance().getTransmissionManager(TransmissionManagerFactory.UNRELIABLE_TRANSPORT)
-//				.send("192.168.49.255", message);
-				Intent myIntent = new Intent(TestBaseActivity.this, SimulationResultsActivity.class);
-				TestBaseActivity.this.startActivity(myIntent);
+				IMessage message = MessageBuilder.getInstance().getMessage(5,"192.168.49.255","ciaoooo");
+				message.addContent("ciao", "ciao");
+				message.prepare();
+				TransmissionManagerFactory.getInstance().getTransmissionManager(TransmissionManagerFactory.UNRELIABLE_TRANSPORT)
+				.send("192.168.49.255", message);
 			}
 		});
 		
