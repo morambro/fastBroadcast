@@ -3,6 +3,7 @@ package it.unipd.testbase.protocol;
 import it.unipd.testbase.AppController;
 import it.unipd.testbase.eventdispatcher.EventDispatcher;
 import it.unipd.testbase.eventdispatcher.event.IEvent;
+import it.unipd.testbase.eventdispatcher.event.ShowSimulationResultsEvent;
 import it.unipd.testbase.eventdispatcher.event.location.LocationChangedEvent;
 import it.unipd.testbase.eventdispatcher.event.location.UpdateLocationEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.AlertMessageArrivedEvent;
@@ -51,11 +52,11 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	/**
 	 * Current-turn Maximum Front Range
 	 */
-	private double cmfr = 100;
+	private double cmfr = 300;
 	/**
 	 * Current-turn Maximum Back Range
 	 */
-	private double cmbr = 100;
+	private double cmbr = 300;
 	/**
 	 * Last-turn Maximum Front Range
 	 */
@@ -96,7 +97,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	/**
 	 * Slot size in milliseconds
 	 */
-	private static final int SLOT_SIZE = 50;
+	private static final int SLOT_SIZE = 10;
 	
 	/**
 	 * Turn duration in milliseconds
@@ -107,7 +108,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	 * Contention window bouds
 	 */
 	private static int CwMax = 1024;
-	private static int CwMin = 31;
+	private static int CwMin = 32;
 	
 	private HelloMessageSender helloMessageSender;
 	/****************************************************** DECLARATIONS ***************************************************/
@@ -293,6 +294,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 					synchronized (synchPoint) {
 						try {
 							long rnd = randomGenerator.nextInt(contentionWindow*SLOT_SIZE);
+							LogPrinter.getInstance().writeTimedLine("CONTENTION WINDOW = "+contentionWindow+" WAITING "+rnd+"ms");
 							Log.e(TAG,"BroadcastPhase: sleeping for "+rnd+" ms");
 							// Waiting until:
 							//    1) A message arrives, so stop waiting and change position
@@ -566,6 +568,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		}
 		if(event.getClass().equals(StopSimulationEvent.class)){
 			stopExecuting();
+			EventDispatcher.getInstance().triggerEvent(new ShowSimulationResultsEvent());
 			return;
 		}
 	}

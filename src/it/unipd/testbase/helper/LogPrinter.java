@@ -16,6 +16,8 @@ public class LogPrinter {
 	private static LogPrinter log = null;
 	private File file;
 	private FileOutputStream outStream;
+	private boolean init = true;
+	private long startTime;
 	
 	public static LogPrinter getInstance() {
 		if(log == null)
@@ -45,7 +47,13 @@ public class LogPrinter {
 	}
 	
 	public void writeTimedLine(String line) {
-		line = (new String(System.currentTimeMillis()+": ").concat(line));
+		if(init) {
+			startTime = System.currentTimeMillis();
+			writeLine("Starting simulation at time "+startTime);
+			init = false;
+		}
+		float timestamp = ((float)(System.currentTimeMillis()-startTime))/1000f;
+		line = (timestamp+"s : "+(line));
 		writeLine(line);
 	}
 	

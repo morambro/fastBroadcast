@@ -407,14 +407,11 @@ public class AppController implements IControllerComponent {
 		
 		if(peerIdIpMap != null){
 			int transportType = TransmissionManagerFactory.RELIABLE_TRANSPORT;
-			switch(message.getType()){
-				case IMessage.ALERT_MESSAGE_TYPE : 
-					transportType = TransmissionManagerFactory.UNRELIABLE_TRANSPORT;
-					break;
-				case IMessage.HELLO_MESSAGE_TYPE :
-					transportType = TransmissionManagerFactory.UNRELIABLE_TRANSPORT;
-					break;
-			}
+			
+//			if(message.getType() == IMessage.ALERT_MESSAGE_TYPE || message.getType() == IMessage.HELLO_MESSAGE_TYPE){
+//					transportType = TransmissionManagerFactory.UNRELIABLE_TRANSPORT;
+//			}
+			
 			TransmissionManagerFactory.getInstance().getTransmissionManager(transportType).send(
 				new ArrayList<String>(peerIdIpMap.values()),
 				message
