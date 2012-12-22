@@ -24,6 +24,7 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.support.v4.app.FragmentActivity;
 import android.view.Menu;
 import android.view.View;
@@ -157,8 +158,7 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 		register();
 		setContentView(R.layout.activity_main);
 		activityHandler = new Handler() {
-			@SuppressWarnings("unchecked")
-			public void handleMessage(android.os.Message msg) {
+			public void handleMessage(Message msg) {
 				switch (msg.what) {
 				case SHOW_TOAST_MSG:
 					Toast.makeText(TestBaseActivity.this, msg.obj.toString(), Toast.LENGTH_LONG).show();

@@ -36,7 +36,7 @@ public class EventDispatcher {
 	 * @param events
 	 */
 	public synchronized void registerComponent(IComponent component, List<Class<? extends IEvent>> events) {
-		logger.d("*********************** "+component.getClass().getSimpleName()+" Now registered");
+		logger.d("** "+component.getClass().getSimpleName()+" Now registered");
 		if(components.containsKey(component)) {
 			logger.d("Component "+component.getClass().getSimpleName()+" already registered");
 			return;
