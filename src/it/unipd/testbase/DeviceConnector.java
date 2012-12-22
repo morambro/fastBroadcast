@@ -1,5 +1,12 @@
 package it.unipd.testbase;
 
+import it.unipd.testbase.AppController.SynchronizedDevicesList;
+import it.unipd.testbase.eventdispatcher.EventDispatcher;
+import it.unipd.testbase.eventdispatcher.IComponent;
+import it.unipd.testbase.eventdispatcher.event.IEvent;
+import it.unipd.testbase.eventdispatcher.event.deviceconnector.ProceedWithNextEvent;
+import it.unipd.testbase.helper.DebugLogger;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,16 +16,11 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.ActionListener;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
-import android.util.Log;
-import it.unipd.testbase.AppController.SynchronizedDevicesList;
-import it.unipd.testbase.eventdispatcher.EventDispatcher;
-import it.unipd.testbase.eventdispatcher.IComponent;
-import it.unipd.testbase.eventdispatcher.event.IEvent;
-import it.unipd.testbase.eventdispatcher.event.deviceconnector.ProceedWithNextEvent;
 
 public class DeviceConnector implements Runnable,IComponent{
 	protected final String TAG = "it.unipd.testbase";
 	
+	private DebugLogger logger = new DebugLogger(DeviceConnector.class);
 	protected static final int MAX_ATTEMPTS = 	5;
 	protected static final int MAX_WAIT 	=	500; 
 	
@@ -100,10 +102,10 @@ public class DeviceConnector implements Runnable,IComponent{
 		if(event instanceof ProceedWithNextEvent){
 			// If there are more devices to connect to continue
 			if(peers != null && currentDevice < peers.size()){
-				Log.d(TAG,this.getClass().getSimpleName() + " : Proceed with peer "+currentDevice+" of "+peers.size());
+				logger.d("Proceed with peer "+currentDevice+" of "+peers.size());
 				new Thread(this).start();
 			}else{
-				Log.d(TAG,this.getClass().getSimpleName()+" : No other peer to ask to");
+				logger.d("No other peer to ask to");
 			}
 		}
 	}

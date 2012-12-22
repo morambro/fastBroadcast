@@ -1,5 +1,6 @@
 package it.unipd.testbase.wificonnection.receiver;
 
+import it.unipd.testbase.helper.DebugLogger;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -11,7 +12,6 @@ import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
 import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
 import android.provider.Settings;
-import android.util.Log;
 import android.widget.Toast;
 
 /**
@@ -22,6 +22,8 @@ import android.widget.Toast;
  */
 public class WifiBroadcastReceiver extends BroadcastReceiver {
 	protected final String TAG = "it.unipd.testbase";
+	
+	DebugLogger logger = new DebugLogger(WifiBroadcastReceiver.class);
 
 	private WifiP2pManager manager;
     private Channel channel;
@@ -54,13 +56,20 @@ public class WifiBroadcastReceiver extends BroadcastReceiver {
 		
 		if (WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION.equals(action)) {
 			// Check to see if Wi-Fi is enabled and notify appropriate activity
-//			Log.d(TAG, this.getClass().getSimpleName()+": onReceive called with action WIFI_P2P_STATE_CHANGED_ACTION");
 			int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
 	        if (state == WifiP2pManager.WIFI_P2P_STATE_ENABLED) {
-	        	Log.d(TAG, this.getClass().getSimpleName()+": All OK, Wi-Fi Direct is enabled");
+	        	logger.d("All OK, Wi-Fi Direct is enabled");
 	        	
 	        	// If Wifi is enabled, launch peers discovering
-	        	manager.discoverPeers(channel, null);
+	        	manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
+	    			public void onSuccess() {
+	    				logger.d("Discover Peers onSuccess called");
+	    			}
+
+	    			public void onFailure(int reasonCode) {
+	    				logger.d("Discover Peers ERROR: "+reasonCode);
+	    			}
+	    		});
 	        
 	        } else {
 	            // Wi-Fi Direct is not enabled, show Wireless settings
@@ -83,19 +92,17 @@ public class WifiBroadcastReceiver extends BroadcastReceiver {
         
 		} else if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
             // Call WifiP2pManager.requestPeers() to get a list of current peers
-//			Log.d(TAG, this.getClass().getSimpleName()+": Peers Received on WIFI_P2P_PEERS_CHANGED_ACTION");
         	if (manager != null) {
-        		Log.d(TAG, this.getClass().getSimpleName()+": Requesting peers...");
+        		logger.d("Requesting peers...");
         		manager.requestPeers(channel, peerListener);
             }else {
-            	Log.d(TAG, this.getClass().getSimpleName()+": manager is null!");
+            	logger.d("manager is null!");
             }
         	
         } else if (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)) {
             // Respond to new connection or disconnections
-//        	Log.d(TAG, this.getClass().getSimpleName()+": onReceive called with action WIFI_P2P_CONNECTION_CHANGED_ACTION");
         	if (manager == null) {
-        		Log.d(TAG, this.getClass().getSimpleName()+": manager is null!");
+        		logger.d("manager is null!");
                 return;
             }
         	
@@ -107,12 +114,11 @@ public class WifiBroadcastReceiver extends BroadcastReceiver {
                 // info to find group owner IP
                 manager.requestConnectionInfo(channel, connectionInfoListener);
             }else{
-            	Log.d(TAG, this.getClass().getSimpleName()+": Not requestConnectionSent anymore");
+            	logger.d("Not requestConnectionSent anymore");
             }
         	
         } else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
             // Respond to this device's wifi state changing
-//        	Log.d(TAG, this.getClass().getSimpleName()+": onReceive called with action WIFI_P2P_THIS_DEVICE_CHANGED_ACTION");
         	manager.discoverPeers(channel, null);
         }
 	}

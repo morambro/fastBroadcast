@@ -1,12 +1,11 @@
 package it.unipd.testbase.eventdispatcher;
 
 import it.unipd.testbase.eventdispatcher.event.IEvent;
+import it.unipd.testbase.helper.DebugLogger;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import android.util.Log;
 
 /**
  * This class implements an Event Bus, at which classes implementing IComponent can register
@@ -18,6 +17,7 @@ import android.util.Log;
 public class EventDispatcher {
 	protected final String TAG = "it.unipd.testbase";
 
+	private DebugLogger logger = new DebugLogger(EventDispatcher.class);
 	private static EventDispatcher singleton = null;
 	private Map<IComponent, List<Class<? extends IEvent>>> components = new HashMap<IComponent, List<Class<? extends IEvent>>>();
 
@@ -36,9 +36,9 @@ public class EventDispatcher {
 	 * @param events
 	 */
 	public synchronized void registerComponent(IComponent component, List<Class<? extends IEvent>> events) {
-		Log.e(TAG, "*******************************************"+component.getClass().getSimpleName()+" now registered");
+		logger.d("*********************** "+component.getClass().getSimpleName()+" Now registered");
 		if(components.containsKey(component)) {
-			Log.e(TAG, this.getClass().getSimpleName()+": Component "+component.getClass().getSimpleName()+" already registered");
+			logger.d("Component "+component.getClass().getSimpleName()+" already registered");
 			return;
 		}
 		components.put(component, events);
@@ -66,7 +66,7 @@ public class EventDispatcher {
 	 */
 	public synchronized boolean triggerEvent(IEvent event) {
 		boolean flag = false;
-		Log.d(TAG,this.getClass().getSimpleName()+" : Triggered event "+event.getClass().getSimpleName());
+		logger.d("Triggered event "+event.getClass().getSimpleName());
 		for(IComponent comp : components.keySet()) {
 			if(components.get(comp) != null && components.get(comp).contains(event.getClass())) {
 				flag = true;

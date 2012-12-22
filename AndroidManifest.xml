@@ -33,7 +33,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:label="@string/app_name" android:name="SimulationResultsActivity"/>
+        <activity android:label="@string/app_name" android:name=".SimulationResultsActivity"/>
 	<service android:name=".location.LocationService"/>
     <service android:name=".location.MockLocationService"/>
     </application>

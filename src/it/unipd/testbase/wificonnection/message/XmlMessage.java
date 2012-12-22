@@ -1,5 +1,6 @@
 package it.unipd.testbase.wificonnection.message;
 
+import it.unipd.testbase.helper.DebugLogger;
 import it.unipd.testbase.helper.XMLParser;
 
 import java.io.UnsupportedEncodingException;
@@ -20,6 +21,7 @@ public class XmlMessage extends IMessage{
 	private static final String KEY_TAG = "key";
 	private static final String SENDER_ID = "sender_ip";
 	
+	private DebugLogger logger = new DebugLogger(XmlMessage.class);
 	private int type = -1;
 	private String header 	= "";
 	private String message 	= "";
@@ -52,7 +54,7 @@ public class XmlMessage extends IMessage{
 		try {
 			return message.getBytes("UTF-8");
 		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
+			logger.e(e);
 			return null;
 		}
 	}

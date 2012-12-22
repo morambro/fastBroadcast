@@ -1,5 +1,6 @@
 package it.unipd.testbase.wificonnection.transmissionmanager;
 
+import it.unipd.testbase.helper.DebugLogger;
 import it.unipd.testbase.wificonnection.message.IMessage;
 
 import java.io.ByteArrayInputStream;
@@ -10,10 +11,11 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.List;
 
-import android.util.Log;
-
 public class TCPTransmissionManager implements ITranmissionManager {
-	private static final String TAG = "it.unipd.testbase";
+	
+	DebugLogger logger = new DebugLogger(TCPTransmissionManager.class);
+	
+	protected static final String TAG = "it.unipd.testbase";
 	
 	@Override
 	public void send(final String ID,final IMessage msg) {
@@ -38,9 +40,9 @@ public class TCPTransmissionManager implements ITranmissionManager {
 					}
 					outputStream.close();
 					inputStream.close();
-					Log.d(TAG, this.getClass().getSimpleName()+": Data Sent to "+ID+" via TCP");
+					logger.d("Data Sent to "+ID+" via TCP");
 				} catch (Exception e) {
-					Log.d(TAG, TCPTransmissionManager.class.getSimpleName()+": "+e.getMessage());
+					logger.d(e.getMessage());
 				}
 
 

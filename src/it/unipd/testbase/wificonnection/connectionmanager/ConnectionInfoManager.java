@@ -4,6 +4,7 @@ import it.unipd.testbase.AppController;
 import it.unipd.testbase.eventdispatcher.EventDispatcher;
 import it.unipd.testbase.eventdispatcher.event.connectioninfo.WiFiInfoCollectedEvent;
 import it.unipd.testbase.eventdispatcher.event.message.SendUnicastMessageEvent;
+import it.unipd.testbase.helper.DebugLogger;
 import it.unipd.testbase.wificonnection.message.IMessage;
 import it.unipd.testbase.wificonnection.message.MessageBuilder;
 import android.net.wifi.p2p.WifiP2pInfo;
@@ -16,7 +17,7 @@ import android.util.Log;
 public class ConnectionInfoManager implements IConnectionInfoManager{
 
 	protected final String TAG = "it.unipd.testbase";
-	
+	private DebugLogger logger = new DebugLogger(ConnectionInfoManager.class);
 	boolean __ping_sent = false;
 
 	@Override
@@ -28,9 +29,9 @@ public class ConnectionInfoManager implements IConnectionInfoManager{
 				String groupOwnerAddress = info.groupOwnerAddress.getCanonicalHostName();
 
 				// After the group negotiation, we can determine the group owner.
-				Log.d(TAG, this.getClass().getSimpleName()+": GroupFormed = "+info.groupFormed);
-				Log.d(TAG, this.getClass().getSimpleName()+": isGroupOwner = "+info.isGroupOwner);
-				Log.d(TAG, this.getClass().getSimpleName()+": Address = "+groupOwnerAddress);
+				logger.d("GroupFormed = "+info.groupFormed);
+				logger.d("isGroupOwner = "+info.isGroupOwner);
+				logger.d("Address = "+groupOwnerAddress);
 
 				// Check if the group is formed
 				if (info.groupFormed){
@@ -42,11 +43,11 @@ public class ConnectionInfoManager implements IConnectionInfoManager{
 					// to do at this point
 					if(info.isGroupOwner){
 						// Do nothing, simply waits for other devices to send Hello messages
-						Log.d(TAG, this.getClass().getSimpleName()+": I'am the group owner");
+						logger.d("I'am the group owner");
 
 					}else{
 						// Not group Owner, so send an Hello Message to the GroupOwner
-						Log.d(TAG, ConnectionInfoManager.class.getSimpleName()+": Sending info!!");
+						logger.d("Sending info!!");
 
 						if(__ping_sent == false){
 							new Thread(){
@@ -59,23 +60,19 @@ public class ConnectionInfoManager implements IConnectionInfoManager{
 												IMessage.PING_MESSAGE_ID_KEY, 
 												AppController.MAC_ADDRESS);
 										Log.d(TAG, ConnectionInfoManager.class.getSimpleName()+": Sending my address to Group owner");
-	//									TransmissionManagerFactory.getInstance().getTransmissionManager(TransmissionManagerFactory.RELIABLE_TRANSPORT)
-	//										.send(
-	//											groupOwnerAddress,	// GroupOwner IP
-	//											message); //PING message
 										EventDispatcher.getInstance().triggerEvent(
 												new SendUnicastMessageEvent(message, groupOwnerAddress));
 									}catch(Exception e){
-										e.printStackTrace();
+										logger.e(e);
 									}
 								};
 							}.start();
 							__ping_sent = true;
 						} else {
-							Log.d(TAG, this.getClass().getSimpleName()+": Second attempt to send PING");
+							logger.d("Second attempt to send PING");
 						}
 
-						Log.d(TAG, this.getClass().getSimpleName()+": I am NOT the group owner");
+						logger.d("I am NOT the group owner");
 					}
 				}
 			}

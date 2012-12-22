@@ -2,6 +2,7 @@ package it.unipd.testbase.location;
 
 import it.unipd.testbase.eventdispatcher.EventDispatcher;
 import it.unipd.testbase.eventdispatcher.event.location.PositionsTerminatedEvent;
+import it.unipd.testbase.helper.DebugLogger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,17 +13,10 @@ import java.util.List;
 import android.content.Context;
 import android.location.Location;
 import android.location.LocationManager;
-import android.util.Log;
 
 public class MockLocationProvider {
 	protected static final String TAG = "it.unipd.testbase";
-
-//	private int __tmp_debug_counter = 1;
-	
-	private static void __debug_print_log(String message){
-		Log.e(TAG, MockLocationProvider.class.getSimpleName()+": "+message);
-	}
-
+	private DebugLogger logger = new DebugLogger(MockLocationProvider.class);
 	private boolean isSetup = false;
 	private int counter;
 	private int peersNumber;
@@ -49,7 +43,7 @@ public class MockLocationProvider {
 	private BufferedReader file;
 
 	public MockLocationProvider(LocationManager manager, Context context) {
-		Log.d(TAG, this.getClass().getSimpleName()+": registering provider: "+name);
+		logger.d("Registering provider: "+name);
 		this.manager = manager;
 		// Horrible Workaround: When shutting app from application manager (long press home+swipe) TestBaseActivity.onDestroy and, 
 		// consequently, doUnbindService get called, but LocationService.onDestroy doesn't for some reason, leaving 
@@ -85,41 +79,6 @@ public class MockLocationProvider {
 	}
 
 	public void updateLocation() {
-//		try {
-//			String line = new String("not empty");
-//			if(firstExec) {
-//				//skip header line
-//				line = file.readLine();
-//				__tmp_debug_counter++;
-//				line = file.readLine();
-//				__tmp_debug_counter++;
-//				bearing = Float.parseFloat(line);
-//				__debug_print_log("bearing: "+bearing);
-//				//skip lines according to __counter
-//				while(line!=null && !line.equals("") && counter!=-1) {
-//					line = file.readLine();
-//					if(counter==0){
-//						__debug_print_log("Current position found in line "+__tmp_debug_counter+": "+line);
-//					}
-//					__tmp_debug_counter++;
-//					counter--;
-//				}
-//				firstExec = false;
-//			} else {
-//				int tempFlag = peersNumber-1;
-//				while((tempFlag != -1) && (line = file.readLine())!=null) {
-//					if(tempFlag == 0)
-//					{
-//						__debug_print_log("Current position found in line "+__tmp_debug_counter+": "+line);
-//						__tmp_debug_counter++;
-//					}
-//					else
-//					{
-//						__tmp_debug_counter++;
-//					}
-//					tempFlag--;
-//				}
-//			}
 			if(firstExec){
 				currentIndex = currentIndex + counter;
 				firstExec = false;
@@ -128,35 +87,26 @@ public class MockLocationProvider {
 			}
 			
 			if(lines.size() <= currentIndex){
-				// TODO : PROBLEMA
-				Log.d(TAG, this.getClass().getSimpleName()+": end of file reached");
+				logger.d("End of file reached");
+				// Trigger an event to communicate the end of positions
 				EventDispatcher.getInstance().triggerEvent(new PositionsTerminatedEvent());
 				return;
 			}
-			__debug_print_log("Current position found in line "+(currentIndex+1)+": "+lines.get(currentIndex));
-//			if(line == null) {//TODO: end of file reached, shutdown the simulation
-//				Log.d(TAG, this.getClass().getSimpleName()+": end of file reached");
-//				return;
-//			}
-//			String[] positions = line.split(",");
+			logger.d("Current position found in line "+(currentIndex+1)+": "+lines.get(currentIndex));
 			String[] positions = lines.get(currentIndex).split(",");
 			Location location = new Location(name);
 			location.setLatitude(Double.valueOf(positions[0]));
 			location.setLongitude(Double.valueOf(positions[1]));
 			location.setTime(System.currentTimeMillis());
 			location.setBearing(bearing);
-			__debug_print_log(": NEW LOCATION: "+location.getBearing()+"; "+location.getLatitude()+"; "+location.getLongitude());
-//			LogPrinter.getInstance().writeTimedLine("current position in car queue is "+(__tmp_debug_counter-2));
-			__debug_print_log("Current position found in car queue is "+(currentIndex+1));
+			logger.d("NEW LOCATION: "+location.getBearing()+"; "+location.getLatitude()+"; "+location.getLongitude());
+			logger.d("Current position found in car queue is "+(currentIndex+1));
 			manager.setTestProviderLocation(name, location);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
 	}
 
 	public void setup(int counter, int peersNumber) {
 		isSetup = true;
-		Log.d(TAG, MockLocationProvider.class.getSimpleName()+": file counter: "+counter+"; peers number: "+peersNumber);
+		logger.d("File counter: "+counter+"; peers number: "+peersNumber);
 		this.counter = counter;
 		this.peersNumber = peersNumber;
 	}

@@ -2,9 +2,9 @@ package it.unipd.testbase.wificonnection.receiver;
 
 
 import it.unipd.testbase.eventdispatcher.event.IEvent;
-import it.unipd.testbase.wificonnection.receiver.protocols.TCPPacketReceiver;
-import it.unipd.testbase.wificonnection.receiver.protocols.UDPPacketReceiver;
-import android.util.Log;
+import it.unipd.testbase.helper.DebugLogger;
+import it.unipd.testbase.wificonnection.receiver.transport.TCPPacketReceiver;
+import it.unipd.testbase.wificonnection.receiver.transport.UDPPacketReceiver;
 
 
 /**
@@ -17,6 +17,7 @@ import android.util.Log;
 public class DataReceiverService implements IDataReceiverComponent{
 	protected final String TAG = "it.unipd.testbase";
 
+	private DebugLogger logger = new DebugLogger(DataReceiverService.class);
 	private AbstractPacketReceiver udpPacketReceiver;
 	private AbstractPacketReceiver tcpPacketReceiver;
 	
@@ -34,7 +35,7 @@ public class DataReceiverService implements IDataReceiverComponent{
 	}
 
 	protected DataReceiverService() {
-		Log.d(TAG, this.getClass().getSimpleName()+": Servizio creato");
+		logger.d("Servizio creato");
 		udpPacketReceiver = new UDPPacketReceiver();
 		tcpPacketReceiver = new TCPPacketReceiver();
 		udpPacketReceiver.start();

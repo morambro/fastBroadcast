@@ -13,6 +13,7 @@ import it.unipd.testbase.eventdispatcher.event.message.SendUnicastMessageEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.EstimationPhaseStartEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.SendBroadcastMessageEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.StopSimulationEvent;
+import it.unipd.testbase.helper.DebugLogger;
 import it.unipd.testbase.protocol.FastBroadcastService;
 import it.unipd.testbase.protocol.IFastBroadcastComponent;
 import it.unipd.testbase.wificonnection.connectionmanager.ConnectionManagerFactory;
@@ -44,12 +45,13 @@ import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 
 public class AppController implements IControllerComponent {
 
 	/********************************************** DECLARATIONS *************************************************/
 
+	private DebugLogger logger = new DebugLogger(AppController.class);
+	
 	protected final String TAG = "it.unipd.testbase";
 	public static String MAC_ADDRESS = null;
 
@@ -97,7 +99,7 @@ public class AppController implements IControllerComponent {
 
 		public void onPeersAvailable(WifiP2pDeviceList peers_list) {
 			if(!keepUpdatingPeers) {
-				Log.d(TAG, this.getClass().getSimpleName()+": Ignoring peers update");
+				logger.d("Ignoring peers update");
 				return;
 			}
 			// Adds only new devices
@@ -108,7 +110,7 @@ public class AppController implements IControllerComponent {
 			for(int i = 0; i < peers.size(); i++){
 				WifiP2pDevice device = peers.get(i);
 				if(!peers_list.getDeviceList().contains(device)){
-					Log.d(TAG,this.getClass().getSimpleName() + "Device not in the list, removed");
+					logger.d("Device not in the list, removed");
 					peers.remove(device);
 				}
 			}
@@ -118,7 +120,7 @@ public class AppController implements IControllerComponent {
 			msg.what = GuiHandlerInterface.UPDATE_PEERS;
 			guiHandler.sendMessage(msg);
 
-			Log.d(TAG, this.getClass().getSimpleName()+": Peers Added to the List");
+			logger.d("Peers Added to the List");
 		}
 
 	};
@@ -148,10 +150,10 @@ public class AppController implements IControllerComponent {
 
 		synchronized void add(WifiP2pDevice device){
 			if(!peers.contains(device)){
-				Log.d(TAG,this.getClass().getSimpleName() + "Aggiunto device");
+				logger.d("Aggiunto device");
 				peers.add(device);
 			}else{
-				Log.d(TAG,this.getClass().getSimpleName() + "Device already in the list");
+				logger.d("Device already in the list");
 			}
 		}
 		
@@ -184,7 +186,7 @@ public class AppController implements IControllerComponent {
 
 		// Setting static field which contains device MAC address
 		MAC_ADDRESS = getDeviceMacAddress();
-		Log.d(TAG, this.getClass().getSimpleName()+": il MAC address del dispositivo è = "+MAC_ADDRESS);
+		logger.d("il MAC address del dispositivo è = "+MAC_ADDRESS);
 		
 		register();
 	}
@@ -280,7 +282,7 @@ public class AppController implements IControllerComponent {
 				mapToBroadcast = new HashMap<String, String>(peerIdIpMap);
 				mapToBroadcast.put(MAC_ADDRESS,groupOwnerAddress);
 				IMessage message = createMapMessage(mapToBroadcast, ITranmissionManager.BROADCAST_ADDRESS);
-				Log.d(TAG,this.getClass().getCanonicalName()+": Invio la mappa a tutti : \n");
+				logger.d("Invio la mappa a tutti : ");
 				sendBroadcast(message);
 				mapSent = true;
 				// Now start fast broadcast service Estimation Phase
@@ -301,7 +303,7 @@ public class AppController implements IControllerComponent {
 			s += k + "  " + mapToBroadcast.get(k)+"\n";
 		}
 		EventDispatcher.getInstance().triggerEvent(new ProceedWithNextEvent());
-		Log.d(TAG, this.getClass().getSimpleName()+": Message received\n"+s);
+		logger.d("Message received\n"+s);
 	}
 
 	/**
@@ -336,30 +338,29 @@ public class AppController implements IControllerComponent {
 		return peerIdIpMap;
 	}
 
-	/**
-	 * Starts peers discovering
-	 * 
-	 */
-	public void discoverPeers(){
-		manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
-			public void onSuccess() {
-				Log.d(TAG, this.getClass().getSimpleName()+": Discover Peers onSuccess called");
-			}
-
-			public void onFailure(int reasonCode) {
-				Log.d(TAG, this.getClass().getSimpleName()+": Discover Peers ERROR: "+reasonCode);
-			}
-		});
-	}
-
 	@Override
 	public void disconnect() {
 		manager.removeGroup(channel, new ActionListener(){
 			public void onSuccess() {
-				Log.d(TAG, this.getClass().getSimpleName()+": Group removed");
+				logger.d("Group removed");
 			}
 			public void onFailure(int reason) {
-				Log.d(TAG, this.getClass().getSimpleName()+": Failed to remove group, reason = "+reason);
+				if(reason == 2){
+					logger.d("Failed to remove group reason = ("+reason+")");
+				}
+			}
+		});
+		manager.cancelConnect(channel, new ActionListener(){
+			@Override
+			public void onFailure(int reason) {
+				if(reason == 2){
+					logger.d("Failed to cancel connection requests, reason = ("+reason+")");
+				}
+			}
+			
+			@Override
+			public void onSuccess() {
+				logger.d("Canceled connection requests");
 			}
 		});
 	}

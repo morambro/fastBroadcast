@@ -10,5 +10,4 @@ import android.location.Location;
  */
 public interface LocationServiceListener {
 	void onLocationChanged(Location location);
-//	MockLocationProvider __set_mock_provider(MockLocationProvider prov);
 }

@@ -5,6 +5,7 @@ import it.unipd.testbase.eventdispatcher.event.IEvent;
 import it.unipd.testbase.eventdispatcher.event.location.LocationChangedEvent;
 import it.unipd.testbase.eventdispatcher.event.location.SetupProviderEvent;
 import it.unipd.testbase.eventdispatcher.event.location.UpdateLocationEvent;
+import it.unipd.testbase.helper.DebugLogger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,12 +19,11 @@ import android.location.LocationProvider;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.util.Log;
-
 
 public class LocationService extends Service implements ILocationComponent {
 	protected final String TAG = "it.unipd.testbase";
 
+	private DebugLogger logger = new DebugLogger(LocationService.class);
 	protected static final long TIME_THRESHOLD = 60000;//ms => 1 min
 	protected static final int ACCURACY_THRESHOLD = 50;//mt
 	protected List<LocationServiceListener> listeners = new ArrayList<LocationServiceListener>();
@@ -66,13 +66,13 @@ public class LocationService extends Service implements ILocationComponent {
 			public void onStatusChanged(String provider, int status, Bundle extras) {
 				switch(status) {
 				case LocationProvider.OUT_OF_SERVICE:
-					Log.d(TAG, this.getClass().getSimpleName()+": provider "+provider+" out of service");
+					logger.d("Provider "+provider+" out of service");
 					break;
 				case LocationProvider.TEMPORARILY_UNAVAILABLE:
-					Log.d(TAG, this.getClass().getSimpleName()+": provider "+provider+" temporarily unavailable");
+					logger.d("Provider "+provider+" temporarily unavailable");
 					break;
 				case LocationProvider.AVAILABLE:
-					Log.d(TAG, this.getClass().getSimpleName()+": provider "+provider+" available again");
+					logger.d("Provider "+provider+" available again");
 					break;
 				}
 			}
@@ -85,10 +85,6 @@ public class LocationService extends Service implements ILocationComponent {
 
 			public void onLocationChanged(Location location) {
 				if(useNewLocation(location, lastLoc)) {
-//					for (LocationServiceListener locListener : listeners) {
-//						locListener.onLocationChanged(location);
-//						lastLoc = location;
-//					}
 					EventDispatcher.getInstance().triggerEvent(new LocationChangedEvent(location));
 				}
 			}
@@ -99,7 +95,7 @@ public class LocationService extends Service implements ILocationComponent {
 
 	@Override
 	public void onDestroy() {
-		Log.d(TAG, this.getClass().getSimpleName()+": Unregistering location listener..");
+		logger.d("Unregistering location listener..");
 		cleanup();
 		locationManager.removeUpdates(listener);
 		super.onDestroy();
@@ -144,7 +140,7 @@ public class LocationService extends Service implements ILocationComponent {
 		events.add(UpdateLocationEvent.class);
 		events.add(SetupProviderEvent.class);
 		EventDispatcher.getInstance().registerComponent(this, events);
-		Log.d(TAG,this.getClass().getSimpleName()+" : service regitered to EventDispatcher");
+		logger.d("Service regitered to EventDispatcher");
 	}
 
 }

@@ -4,7 +4,8 @@ import it.unipd.testbase.AppController.SynchronizedDevicesList;
 import it.unipd.testbase.eventdispatcher.EventDispatcher;
 import it.unipd.testbase.eventdispatcher.IComponent;
 import it.unipd.testbase.eventdispatcher.event.IEvent;
-import it.unipd.testbase.eventdispatcher.event.ShowSimulationResultsEvent;
+import it.unipd.testbase.eventdispatcher.event.protocol.ShowSimulationResultsEvent;
+import it.unipd.testbase.helper.DebugLogger;
 import it.unipd.testbase.location.MockLocationService;
 import it.unipd.testbase.protocol.FastBroadcastService;
 import it.unipd.testbase.wificonnection.message.IMessage;
@@ -24,7 +25,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.app.FragmentActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -38,6 +38,9 @@ import android.widget.Toast;
 
 public class TestBaseActivity extends FragmentActivity implements GuiHandlerInterface,IComponent {
 	protected final String TAG = "it.unipd.testbase";
+	
+	private DebugLogger logger = new DebugLogger(TestBaseActivity.class);
+	
 	private final int TOTAL_SERVICES = 1;
 
 	private ServiceConnection locationServiceConn = new LocServiceConnection();
@@ -74,7 +77,7 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 		public void onServiceConnected(ComponentName name, IBinder binder) {
 			isLocationServiceBinded = true;
 			serviceCreated();
-			Log.d(TAG, this.getClass().getSimpleName()+": Location Service Bound");
+			logger.d("Location Service Bound");
 		}
 
 		public void onServiceDisconnected(ComponentName name) {
@@ -135,7 +138,7 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 		Intent locService = new Intent(this, MockLocationService.class);
 		locationServiceConn = new LocServiceConnection();
 		boolean temp = this.bindService(locService, locationServiceConn, Context.BIND_AUTO_CREATE);
-		Log.d(TAG, this.getClass().getSimpleName()+": Location Service binding status : "+temp);
+		logger.d("Location Service binding status : "+temp);
 	}
 
 //	private void startDataReceiverService(){
@@ -218,13 +221,13 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 		if(isLocationServiceBinded) {
 			unbindService(locationServiceConn);
 			isLocationServiceBinded = false;
-			Log.d(TAG, this.getClass().getSimpleName()+": location service unbound");
+			logger.d("location service unbound");
 		}
 		FastBroadcastService.getInstance().stopExecuting();
 		DataReceiverService.getInstance().stopExecuting();
 //		unbindService(fastBroadcastServiceConnection);
 //		unbindService(dataReceiverServiceConnection);
-		Log.d(TAG, this.getClass().getSimpleName()+": onDestroy called");
+		logger.d("onDestroy called");
 		connectionController.disconnect();
 		super.onDestroy();
 	}

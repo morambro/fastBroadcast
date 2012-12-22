@@ -3,14 +3,15 @@ package it.unipd.testbase.location;
 import it.unipd.testbase.eventdispatcher.event.IEvent;
 import it.unipd.testbase.eventdispatcher.event.location.SetupProviderEvent;
 import it.unipd.testbase.eventdispatcher.event.location.UpdateLocationEvent;
+import it.unipd.testbase.helper.DebugLogger;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.util.Log;
 
 public class MockLocationService extends LocationService implements IMockLocationComponent {
 
 	private MockLocationProvider mockProvider;
-
+	private DebugLogger logger = new DebugLogger(MockLocationService.class);
+	
 	@Override
 	protected void registerLocationProviders(LocationManager locationManager, LocationListener listener) {
 		mockProvider = new MockLocationProvider(locationManager, this);
@@ -32,12 +33,12 @@ public class MockLocationService extends LocationService implements IMockLocatio
 		if(!mockProvider.isSetup())
 			mockProvider.setup(counter, peersNumber);
 		else
-			Log.e(TAG, this.getClass().getSimpleName()+": double setup attempt!");
+			logger.d("Double setup attempt!");
 	}
 	
 	@Override
 	public void handle(IEvent event) {
-		Log.d(TAG,this.getClass().getSimpleName()+" : Handle called "+event.getClass().getSimpleName());
+		logger.d("Handle called "+event.getClass().getSimpleName());
 		if(event instanceof UpdateLocationEvent) {
 			updateLocation();
 			return;
