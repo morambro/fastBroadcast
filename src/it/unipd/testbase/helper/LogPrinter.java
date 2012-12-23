@@ -18,6 +18,7 @@ public class LogPrinter {
 	private FileOutputStream outStream;
 	private boolean init = true;
 	private long startTime;
+	private long endTime;
 	
 	public static LogPrinter getInstance() {
 		if(log == null)
@@ -52,7 +53,8 @@ public class LogPrinter {
 			writeLine("Starting simulation at time "+startTime);
 			init = false;
 		}
-		float timestamp = ((float)(System.currentTimeMillis()-startTime))/1000f;
+		endTime = System.currentTimeMillis();
+		float timestamp = ((float)(endTime-startTime))/1000f;
 		line = (timestamp+"s : "+(line));
 		writeLine(line);
 	}
@@ -75,6 +77,7 @@ public class LogPrinter {
 			while((line = s.readLine()) != null){
 				results.append(line).append("\n");
 			}
+			results.append("\nExecution Time = "+((float)(endTime-startTime))/1000f + "sec");
 			s.close();
 		} catch (IOException e) {
 			Log.e("LogPrinter", e.getMessage());

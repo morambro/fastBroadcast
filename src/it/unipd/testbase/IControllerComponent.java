@@ -1,7 +1,6 @@
 package it.unipd.testbase;
 
 import it.unipd.testbase.eventdispatcher.IComponent;
-import it.unipd.testbase.wificonnection.message.IMessage;
 
 import java.util.Map;
 
@@ -19,12 +18,14 @@ public interface IControllerComponent extends IComponent {
 	 * @return
 	 */
 	String getGroupOwnerAddress();
+	
 	/**
 	 * Setter method for Peers Map
 	 * 
 	 * @param peersMap
 	 */
 	void setPeersIdIPmap(Map<String,String> peersMap);
+	
 	/**
 	 * @return unique device id (MAC Address in this case)
 	 */
@@ -41,12 +42,6 @@ public interface IControllerComponent extends IComponent {
 	 */
 	void sendAlert();
 	
-	/**
-	 * Send the given message to all
-	 * 
-	 * @param message
-	 */
-	void sendBroadcast(IMessage message);
 	/**
 	 * Disconnects the current peer
 	 */

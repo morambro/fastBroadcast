@@ -15,7 +15,7 @@ import it.unipd.testbase.helper.DebugLogger;
 import it.unipd.testbase.helper.LogPrinter;
 import it.unipd.testbase.wificonnection.message.IMessage;
 import it.unipd.testbase.wificonnection.message.MessageBuilder;
-import it.unipd.testbase.wificonnection.transmissionmanager.ITranmissionManager;
+import it.unipd.testbase.wificonnection.transmissionmanager.sender.IPaketSender;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +24,6 @@ import java.util.Random;
 import java.util.concurrent.ArrayBlockingQueue;
 
 import android.location.Location;
-import android.os.Binder;
 
 /**
  * An implementation of fast broadcast estimation phase.
@@ -37,18 +36,6 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	protected static final String TAG = "it.unipd.testbase";
 	
 	private DebugLogger logger = new DebugLogger(FastBroadcastService.class);
-	/**
-	 * Binder to get service interface
-	 * 
-	 * @author Moreno Ambrosin
-	 *
-	 */
-	public class FastBroadcastServiceBinder extends Binder {
-		
-		public IFastBroadcastComponent getService() {
-			return FastBroadcastService.this;
-		}
-	}
 	
 	/**
 	 * Current-turn Maximum Front Range
@@ -87,7 +74,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	/**
 	 * Filters
 	 */
-	private List<Filter> filters = new ArrayList<Filter>();
+	private List<DistanceFilter> filters = new ArrayList<DistanceFilter>();
 	
 	/**
 	 * Static field which indicates the simulated actual range of each device
@@ -120,7 +107,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	 * @author Moreno Ambrosin
 	 *
 	 */
-	public interface Filter {
+	public interface DistanceFilter {
 		/**
 		 * Returns message if is not filtered
 		 * 
@@ -192,7 +179,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		private void sendHelloMessage(){
 			IMessage helloMessage = MessageBuilder.getInstance().getMessage(
 					IMessage.HELLO_MESSAGE_TYPE,
-					ITranmissionManager.BROADCAST_ADDRESS);
+					IPaketSender.BROADCAST_ADDRESS);
 			
 			helloMessage.addContent(IMessage.SENDER_LATITUDE_KEY,currentLocation.getLatitude()+"");
 			helloMessage.addContent(IMessage.SENDER_LONGITUDE_KEY,currentLocation.getLongitude()+"");
@@ -230,7 +217,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		 * @throws InterruptedException
 		 */
 		public void put(IMessage message) throws InterruptedException{
-			LogPrinter.getInstance().writeTimedLine("ALERT PUT IN QUEUE. SIZE "+(messageQueue.size()+1));
+			LogPrinter.getInstance().writeTimedLine("ALERT PUT IN QUEUE. (SIZE "+(messageQueue.size()+1)+")");
 			messageQueue.put(message);
 			// As soon as a new message arrived, notify the forwarder, to let him preceding without waiting 
 			// for the entire random amount 
@@ -255,14 +242,14 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 					message = messageQueue.take();
 					Map<String,String> content = message.getContent();
 					int hopCount = Integer.valueOf(content.get(IMessage.MESSAGE_HOP_KEY));
-					LogPrinter.getInstance().writeTimedLine("ALET TAKEN FROM QUEUE. HOPS "+hopCount+". Size "+messageQueue.size());
+					LogPrinter.getInstance().writeTimedLine("ALET TAKEN FROM QUEUE. #HOPS = "+hopCount+". Size "+messageQueue.size());
 				} catch (InterruptedException e) {
 					logger.e(e);
 					return;
 				}
 
 				boolean arrived = true;
-				for(Filter filter : filters){
+				for(DistanceFilter filter : filters){
 					arrived = arrived & (filter.filter(message));
 				}
 				
@@ -312,7 +299,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 						// No message arrived while I was asleep
 						IMessage newMessage = MessageBuilder.getInstance().getMessage(
 								message.getType(),
-								ITranmissionManager.BROADCAST_ADDRESS,
+								IPaketSender.BROADCAST_ADDRESS,
 								AppController.MAC_ADDRESS);
 						
 						newMessage.addContent(IMessage.SENDER_LATITUDE_KEY,currentLocation.getLatitude()+"");
@@ -482,7 +469,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		// Start message forwarder
 		if(messageForwarder == null) messageForwarder = new MessageForwarder();
 		messageForwarder.start();
-		filters.add(new Filter(){
+		filters.add(new DistanceFilter(){
 			@Override
 			public boolean filter(IMessage message) {
 				Map<String,String> content = message.getContent();

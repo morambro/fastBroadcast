@@ -14,6 +14,7 @@ import it.unipd.testbase.eventdispatcher.event.protocol.EstimationPhaseStartEven
 import it.unipd.testbase.eventdispatcher.event.protocol.SendBroadcastMessageEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.StopSimulationEvent;
 import it.unipd.testbase.helper.DebugLogger;
+import it.unipd.testbase.helper.LogPrinter;
 import it.unipd.testbase.protocol.FastBroadcastService;
 import it.unipd.testbase.protocol.IFastBroadcastComponent;
 import it.unipd.testbase.wificonnection.connectionmanager.ConnectionManagerFactory;
@@ -22,8 +23,10 @@ import it.unipd.testbase.wificonnection.message.IMessage;
 import it.unipd.testbase.wificonnection.message.MessageBuilder;
 import it.unipd.testbase.wificonnection.receiver.CollectionHandler;
 import it.unipd.testbase.wificonnection.receiver.WifiBroadcastReceiver;
-import it.unipd.testbase.wificonnection.transmissionmanager.ITranmissionManager;
-import it.unipd.testbase.wificonnection.transmissionmanager.TransmissionManagerFactory;
+import it.unipd.testbase.wificonnection.transmissionmanager.PacketSenderFactory;
+import it.unipd.testbase.wificonnection.transmissionmanager.TransmissionManager;
+import it.unipd.testbase.wificonnection.transmissionmanager.TransmissionManager.TransportSelectorFilter;
+import it.unipd.testbase.wificonnection.transmissionmanager.sender.IPaketSender;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -73,8 +76,6 @@ public class AppController implements IControllerComponent {
 	private boolean isGroupOwner = false;
 	private boolean keepUpdatingPeers = true;
 
-//	private DeviceConnector deviceConnector;
-	
 	private IFastBroadcastComponent fastBroadcastService;
 
 	/************************************************* INTERFACES/CLASSES ********************************************/
@@ -188,6 +189,19 @@ public class AppController implements IControllerComponent {
 		MAC_ADDRESS = getDeviceMacAddress();
 		logger.d("il MAC address del dispositivo è = "+MAC_ADDRESS);
 		
+		// Force creation of TransportManager
+		TransmissionManager.getInstance().setFilter(
+			new TransportSelectorFilter() {
+				@Override
+				public int getTransportForMessage(IMessage message) {
+//					if(message.getType() == IMessage.ALERT_MESSAGE_TYPE || message.getType() == IMessage.HELLO_MESSAGE_TYPE){
+//						return PacketSenderFactory.UNRELIABLE_TRANSPORT;
+//					}
+					return PacketSenderFactory.RELIABLE_TRANSPORT;
+				}
+			}
+		);
+		
 		register();
 	}
 
@@ -281,7 +295,7 @@ public class AppController implements IControllerComponent {
 				EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
 				mapToBroadcast = new HashMap<String, String>(peerIdIpMap);
 				mapToBroadcast.put(MAC_ADDRESS,groupOwnerAddress);
-				IMessage message = createMapMessage(mapToBroadcast, ITranmissionManager.BROADCAST_ADDRESS);
+				IMessage message = createMapMessage(mapToBroadcast, IPaketSender.BROADCAST_ADDRESS);
 				logger.d("Invio la mappa a tutti : ");
 				sendBroadcast(message);
 				mapSent = true;
@@ -390,7 +404,7 @@ public class AppController implements IControllerComponent {
 	public void sendAlert() {
 		IMessage message = MessageBuilder.getInstance().getMessage(
 				IMessage.ALERT_MESSAGE_TYPE, 
-				ITranmissionManager.BROADCAST_ADDRESS,
+				IPaketSender.BROADCAST_ADDRESS,
 				MAC_ADDRESS
 		);
 		message.addContent(IMessage.SENDER_LATITUDE_KEY, ""+currentLocation.getLatitude());
@@ -400,40 +414,20 @@ public class AppController implements IControllerComponent {
 		message.addContent(IMessage.MESSAGE_HOP_KEY, "0");
 		message.prepare();
 		sendBroadcast(message);
+		
+		LogPrinter.getInstance().writeTimedLine("ALERT message sent, #HOPS = 0");
+		
 		EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
 	}
 
-	@Override
-	public void sendBroadcast(IMessage message) {
-		
-		if(peerIdIpMap != null){
-			int transportType = TransmissionManagerFactory.RELIABLE_TRANSPORT;
-			
-//			if(message.getType() == IMessage.ALERT_MESSAGE_TYPE || message.getType() == IMessage.HELLO_MESSAGE_TYPE){
-//					transportType = TransmissionManagerFactory.UNRELIABLE_TRANSPORT;
-//			}
-			
-			TransmissionManagerFactory.getInstance().getTransmissionManager(transportType).send(
-				new ArrayList<String>(peerIdIpMap.values()),
-				message
-			);
-		}
+	private void sendBroadcast(IMessage message) {
+		TransmissionManager.getInstance().sendBroadcast(
+				new ArrayList<String>(peerIdIpMap.values()), 
+				message);
 	}
 	
 	private void sendUnicast(String recipient, IMessage message) {
-		int transportType = TransmissionManagerFactory.RELIABLE_TRANSPORT;
-		switch(message.getType()){
-			case IMessage.ALERT_MESSAGE_TYPE : 
-				transportType = TransmissionManagerFactory.UNRELIABLE_TRANSPORT;
-				break;
-			case IMessage.HELLO_MESSAGE_TYPE :
-				transportType = TransmissionManagerFactory.UNRELIABLE_TRANSPORT;
-				break;
-		}
-		TransmissionManagerFactory.getInstance().getTransmissionManager(transportType).send(
-			recipient,
-			message
-		);
+		TransmissionManager.getInstance().sendUnicast(recipient, message);
 	}
 
 	@Override

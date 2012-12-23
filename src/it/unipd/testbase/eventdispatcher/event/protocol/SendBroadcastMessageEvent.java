@@ -7,6 +7,6 @@ public class SendBroadcastMessageEvent implements IEvent {
 	public IMessage message;
 	
 	public SendBroadcastMessageEvent(IMessage message) {
-		this.message = message;
+		this.message 		= message;
 	}
 }

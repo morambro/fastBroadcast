@@ -11,7 +11,7 @@ import it.unipd.testbase.protocol.FastBroadcastService;
 import it.unipd.testbase.wificonnection.message.IMessage;
 import it.unipd.testbase.wificonnection.message.MessageBuilder;
 import it.unipd.testbase.wificonnection.receiver.DataReceiverService;
-import it.unipd.testbase.wificonnection.transmissionmanager.TransmissionManagerFactory;
+import it.unipd.testbase.wificonnection.transmissionmanager.PacketSenderFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +54,7 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 	// Wi-fi Direct fields
 	private Button sendToAllButton;
 	private Button connectToAllButton;
-	private IControllerComponent connectionController;
+	private IControllerComponent controller;
 	private ListView devicesListView;
 	private SeekBar slotSizeSeekBar;
 	private TextView slotSizeText;
@@ -205,15 +205,17 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 	@Override
 	protected void onResume() {
 		super.onResume();
-		if(connectionController != null)
-			connectionController.setFastBroadCastReceiverRegistered(true);
+		if(controller != null){
+			controller.setFastBroadCastReceiverRegistered(true);
+		}
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
-		if(connectionController != null)
-			connectionController.setFastBroadCastReceiverRegistered(false);
+		if(controller != null){
+			controller.setFastBroadCastReceiverRegistered(false);
+		}
 	}
 
 	@Override
@@ -228,7 +230,7 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 //		unbindService(fastBroadcastServiceConnection);
 //		unbindService(dataReceiverServiceConnection);
 		logger.d("onDestroy called");
-		connectionController.disconnect();
+		controller.disconnect();
 		super.onDestroy();
 	}
 
@@ -252,7 +254,7 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 				IMessage message = MessageBuilder.getInstance().getMessage(5,"192.168.49.255","ciaoooo");
 				message.addContent("ciao", "ciao");
 				message.prepare();
-				TransmissionManagerFactory.getInstance().getTransmissionManager(TransmissionManagerFactory.UNRELIABLE_TRANSPORT)
+				PacketSenderFactory.getInstance().getTransmissionManager(PacketSenderFactory.UNRELIABLE_TRANSPORT)
 				.send("192.168.49.255", message);
 			}
 		});
@@ -276,7 +278,7 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 		sendToAllButton.setOnClickListener(new OnClickListener() {
 
 			public void onClick(View v) {
-				connectionController.sendAlert();
+				controller.sendAlert();
 			}
 		});
 
@@ -284,7 +286,7 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 
 			@Override
 			public void onClick(View v) {
-				connectionController.connectToAll();
+				controller.connectToAll();
 				slotSizeSeekBar.setEnabled(false);
 				slotSizeText.setEnabled(false);
 			}
@@ -294,16 +296,18 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 	private synchronized void serviceCreated() {
 		bindedServices++;
 		if(bindedServices == TOTAL_SERVICES) {
-			connectionController = new AppController(this, this);
-			connectionController.setFastBroadCastReceiverRegistered(true);
+			controller = new AppController(this, this);
+			controller.setFastBroadCastReceiverRegistered(true);
 		}
 	}
 
 	@Override
 	public void handle(IEvent event) {
 		if(event.getClass().equals(ShowSimulationResultsEvent.class)){
-			Intent myIntent = new Intent(this, SimulationResultsActivity.class);
-			this.startActivity(myIntent);
+			if(!SimulationResultsActivity.isOpened) {
+				Intent myIntent = new Intent(this, SimulationResultsActivity.class);
+				this.startActivity(myIntent);
+			}
 		}
 	}
 
