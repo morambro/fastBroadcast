@@ -23,11 +23,11 @@ The messages we used contain data espressed as pairs \ttt{<key,content>}. All co
 In our implementation, there are four different kinds of messages:
 	\begin{description}
 		\item[\textbf{Ping message (0)}] \hfill \\
-		Message used to send MAC address to the \textit{group owner}.
+		Application Control Message used to send MAC address to the \textit{group owner}.
 		\item[\textbf{Map message (1)}] \hfill \\
-		Message used by the group owner to send the complete \ttt{<MAC address,IP address>} pairs map to all the connected devices.
+		Application Control Message used by the group owner to send the complete \ttt{<MAC address,IP address>} pairs map to all the connected devices.
 		\item[\textbf{Alert message (2)}] \hfill \\
-		Message used to send an alert to be forwarded to the other connected devices.
+		Protocol specific Message used to send an alert to be forwarded to the other connected devices.
 		\item[\textbf{Hello message (3)}] \hfill \\
-		Message corresponding with Fast Broadcast algorithm \textit{Hello message}.
+		Fast Broadcast protocol Message corresponding with Fast Broadcast algorithm \textit{Hello message}.
 	\end{description}

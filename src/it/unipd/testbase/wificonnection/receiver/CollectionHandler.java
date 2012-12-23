@@ -5,10 +5,8 @@ import it.unipd.testbase.AppController.IDataCollectionHandler;
 import it.unipd.testbase.IControllerComponent;
 import it.unipd.testbase.eventdispatcher.EventDispatcher;
 import it.unipd.testbase.eventdispatcher.event.location.SetupProviderEvent;
-import it.unipd.testbase.eventdispatcher.event.protocol.AlertMessageArrivedEvent;
-import it.unipd.testbase.eventdispatcher.event.protocol.HelloMessageArrivedEvent;
+import it.unipd.testbase.eventdispatcher.event.protocol.NewMessageArrivedEvent;
 import it.unipd.testbase.helper.DebugLogger;
-import it.unipd.testbase.helper.LogPrinter;
 import it.unipd.testbase.wificonnection.message.IMessage;
 
 import java.util.HashMap;
@@ -24,8 +22,7 @@ public class CollectionHandler implements IDataCollectionHandler {
 	public void onDataCollected(IMessage message, String hostIp) {
 		
 		int messageType = message.getType();
-		logger.d("Message received, of type = "+messageType);
-		
+
 		if(message.getSenderID().equals(controller.getDeviceId())){
 			logger.d("Message Discarded");
 			return;
@@ -58,23 +55,29 @@ public class CollectionHandler implements IDataCollectionHandler {
 				controller.setPeersIdIPmap(allPeerData);
 				break;
 	
-			case IMessage.ALERT_MESSAGE_TYPE :
-				LogPrinter.getInstance().writeLine("\n");
-				LogPrinter.getInstance().writeTimedLine("ALERT RECEIVED FROM "+hostIp+". #HOPS = "+message.getContent().get(IMessage.MESSAGE_HOP_KEY));
-				logger.d("Ricevuto ALERT : \n"+message);
-				EventDispatcher.getInstance().triggerEvent(new AlertMessageArrivedEvent(message));
-				break;
+//			case IMessage.ALERT_MESSAGE_TYPE :
+//				LogPrinter.getInstance().writeLine("\n");
+//				LogPrinter.getInstance().writeTimedLine("ALERT RECEIVED FROM "+hostIp+". #HOPS = "+message.getContent().get(IMessage.MESSAGE_HOP_KEY));
+//				logger.d("Ricevuto ALERT : \n"+message);
+//				EventDispatcher.getInstance().triggerEvent(new NewMessageArrivedEvent(message,hostIp));
+//				break;
+//				
+//				
+//			// case of fast broadcast hello message
+//			case IMessage.HELLO_MESSAGE_TYPE :
+//				logger.d("Ricevuto  HELLO : \n"+message);
+//				EventDispatcher.getInstance().triggerEvent(new HelloMessageArrivedEvent(message));
+//				break;
 				
-				
-			// case of fast broadcast hello message
-			case IMessage.HELLO_MESSAGE_TYPE :
-				logger.d("Ricevuto  HELLO : \n"+message);
-				EventDispatcher.getInstance().triggerEvent(new HelloMessageArrivedEvent(message));
+//			case IMessage.ALERT_MESSAGE_TYPE :
+			default:
+				logger.d("Ricevuto MESSAGGIO : \n"+message);
+				EventDispatcher.getInstance().triggerEvent(new NewMessageArrivedEvent(message,hostIp));
 				break;
 				
 			// Ignoring unknown messages
-			default : 
-				logger.d("Unknown message type "+messageType+", discarded.");
+//			default : 
+//				logger.d("Unknown message type "+messageType+", discarded.");
 		}
 	}
 

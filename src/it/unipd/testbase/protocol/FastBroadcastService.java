@@ -5,11 +5,10 @@ import it.unipd.testbase.eventdispatcher.EventDispatcher;
 import it.unipd.testbase.eventdispatcher.event.IEvent;
 import it.unipd.testbase.eventdispatcher.event.location.LocationChangedEvent;
 import it.unipd.testbase.eventdispatcher.event.location.UpdateLocationEvent;
-import it.unipd.testbase.eventdispatcher.event.protocol.AlertMessageArrivedEvent;
-import it.unipd.testbase.eventdispatcher.event.protocol.SimulationStartEvent;
-import it.unipd.testbase.eventdispatcher.event.protocol.HelloMessageArrivedEvent;
+import it.unipd.testbase.eventdispatcher.event.protocol.NewMessageArrivedEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.SendBroadcastMessageEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.ShowSimulationResultsEvent;
+import it.unipd.testbase.eventdispatcher.event.protocol.SimulationStartEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.StopSimulationEvent;
 import it.unipd.testbase.helper.DebugLogger;
 import it.unipd.testbase.helper.LogPrinter;
@@ -563,16 +562,29 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 			helloMessageSender.start();
 			return;
 		}
-		if(event.getClass().equals(HelloMessageArrivedEvent.class)){
-			HelloMessageArrivedEvent ev = (HelloMessageArrivedEvent) event;
-			this.setHelloMessageArrived(true);
-			this.hanldeHelloMessage(ev.message);
-			return;
-		}
-		if(event.getClass().equals(AlertMessageArrivedEvent.class)){
-			AlertMessageArrivedEvent ev = (AlertMessageArrivedEvent) event;
-			this.handleAlertMessage(ev.alertMessage);
-			return;
+//		if(event.getClass().equals(HelloMessageArrivedEvent.class)){
+//			HelloMessageArrivedEvent ev = (HelloMessageArrivedEvent) event;
+//			this.setHelloMessageArrived(true);
+//			this.hanldeHelloMessage(ev.message);
+//			return;
+//		}
+		if(event.getClass().equals(NewMessageArrivedEvent.class)){
+			NewMessageArrivedEvent ev = (NewMessageArrivedEvent) event;
+			
+			if(ev.message.getType() == IMessage.ALERT_MESSAGE_TYPE){
+				LogPrinter.getInstance().writeLine("\n");
+				LogPrinter.getInstance().writeTimedLine(
+						"ALERT RECEIVED FROM "+ev.senderID+". " +
+						"#HOPS = "+ev.message.getContent().get(IMessage.MESSAGE_HOP_KEY));
+				this.handleAlertMessage(ev.message);
+				return;
+			}else if(ev.message.getType() == IMessage.HELLO_MESSAGE_TYPE){
+				this.setHelloMessageArrived(true);
+				this.hanldeHelloMessage(ev.message);
+				return;
+			}
+			// All other kind of messages will be discarded
+			
 		}
 		if(event.getClass().equals(LocationChangedEvent.class)){
 			LocationChangedEvent ev = (LocationChangedEvent) event;
@@ -590,9 +602,9 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	public void register() {
 		List<Class<? extends IEvent>> events = new ArrayList<Class<? extends IEvent>>();
 		events.add(SimulationStartEvent.class);
-		events.add(HelloMessageArrivedEvent.class);
+//		events.add(HelloMessageArrivedEvent.class);
 		events.add(LocationChangedEvent.class);
-		events.add(AlertMessageArrivedEvent.class);
+		events.add(NewMessageArrivedEvent.class);
 		events.add(StopSimulationEvent.class);
 		EventDispatcher.getInstance().registerComponent(this, events);
 	}
