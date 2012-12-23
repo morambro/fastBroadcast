@@ -90,7 +90,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	/**
 	 * Turn duration in milliseconds
 	 */
-	public static final int TURN_DURATION = 100000;
+	public static final int TURN_DURATION = 2000;
 	
 	/**
 	 * Contention window bouds
@@ -242,7 +242,10 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 					message = messageQueue.take();
 					Map<String,String> content = message.getContent();
 					int hopCount = Integer.valueOf(content.get(IMessage.MESSAGE_HOP_KEY));
-					LogPrinter.getInstance().writeTimedLine("ALET TAKEN FROM QUEUE. #HOPS = "+hopCount+". Size "+messageQueue.size());
+					LogPrinter.getInstance().writeTimedLine("ALET TAKEN FROM QUEUE (SIZE = "+messageQueue.size()+")");
+					LogPrinter.getInstance().writeTimedLine("" +
+							"CURRENT POSITION = ("+currentLocation.getLatitude()+","+currentLocation.getLongitude()+") " +
+									"#HOPS = "+hopCount);
 				} catch (InterruptedException e) {
 					logger.e(e);
 					return;

@@ -55,7 +55,7 @@ public class LogPrinter {
 		}
 		endTime = System.currentTimeMillis();
 		float timestamp = ((float)(endTime-startTime))/1000f;
-		line = (timestamp+"s : "+(line));
+		line = (timestamp+"s\t: "+(line));
 		writeLine(line);
 	}
 	
