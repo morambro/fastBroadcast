@@ -13,6 +13,7 @@ import it.unipd.testbase.wificonnection.message.MessageBuilder;
 import it.unipd.testbase.wificonnection.receiver.DataReceiverService;
 import it.unipd.testbase.wificonnection.transmissionmanager.PacketSenderFactory;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,9 +33,6 @@ import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.SeekBar;
-import android.widget.SeekBar.OnSeekBarChangeListener;
-import android.widget.TextView;
 import android.widget.Toast;
 
 public class TestBaseActivity extends FragmentActivity implements GuiHandlerInterface,IComponent {
@@ -56,8 +54,6 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 	private Button connectToAllButton;
 	private IControllerComponent controller;
 	private ListView devicesListView;
-	private SeekBar slotSizeSeekBar;
-	private TextView slotSizeText;
 
 
 	//GuiHandler Implementation
@@ -150,6 +146,36 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 //		boolean f = this.bindService(dataService, dataReceiverServiceConnection, Context.BIND_AUTO_CREATE);
 //	}
 
+	/**
+	 * Handler class to implement Interprocess communication
+	 * 
+	 * @author Moreno Ambrosin
+	 *
+	 */
+	static class ActivityHandler extends Handler{
+		
+		private WeakReference<TestBaseActivity> activity;
+		
+		public ActivityHandler(TestBaseActivity activity) {
+			this.activity = new WeakReference<TestBaseActivity>(activity);
+		}
+		
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+				case SHOW_TOAST_MSG:
+					Toast.makeText(activity.get(), msg.obj.toString(), Toast.LENGTH_LONG).show();
+					break;
+	
+				case UPDATE_PEERS:
+					activity.get().savePeers((SynchronizedDevicesList)msg.obj);
+	
+				default:
+					break;
+			}
+		}
+	}
+	
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -157,21 +183,7 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 		
 		register();
 		setContentView(R.layout.activity_main);
-		activityHandler = new Handler() {
-			public void handleMessage(Message msg) {
-				switch (msg.what) {
-				case SHOW_TOAST_MSG:
-					Toast.makeText(TestBaseActivity.this, msg.obj.toString(), Toast.LENGTH_LONG).show();
-					break;
-
-				case UPDATE_PEERS:
-					savePeers((SynchronizedDevicesList)msg.obj);
-
-				default:
-					break;
-				}
-			}
-		};
+		activityHandler = new ActivityHandler(this);
 		setupGui();
 		FastBroadcastService.getInstance();
 		DataReceiverService.getInstance();
@@ -196,10 +208,25 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 		String[] new_list = new String[peers.size()];
 		for(int i = 0; i < peers.size() ; i++){
 			WifiP2pDevice dev = peers.get(i);
-			new_list[i] = dev.deviceName;
+			String status = "";
+			switch(dev.status){
+				case WifiP2pDevice.AVAILABLE : status = "Available";break;
+				case WifiP2pDevice.CONNECTED : status = "Connected";break;
+				case WifiP2pDevice.FAILED : status = "Failed";break;
+				case WifiP2pDevice.INVITED : status = "Invited";break;
+				case WifiP2pDevice.UNAVAILABLE : status = "Unavailable";break;
+			}
+			new_list[i] = dev.deviceName + "  (" + status +")";
 		}
-		devicesListView.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, android.R.id.text1, new_list));
-
+		devicesListView.setAdapter(
+				new ArrayAdapter<String>(
+						this, 
+						android.R.layout.simple_list_item_1, 
+						android.R.id.text1,
+						new_list
+				)
+		);
+		
 	}
 
 	@Override
@@ -242,8 +269,6 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 		connectToAllButton 	= (Button)this.findViewById(R.id.connect_to_all_button);
 		sendToAllButton 	= (Button)this.findViewById(R.id.send_button);
 		devicesListView 	= (ListView)this.findViewById(R.id.devices_list_view);
-		slotSizeSeekBar 	= (SeekBar)this.findViewById(R.id.seekBar1);
-		slotSizeText 		= (TextView)this.findViewById(R.id.slotSize);
 		
 		Button sendBroadUdp = (Button)this.findViewById(R.id.debugSendUDP);
 		
@@ -259,22 +284,6 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 			}
 		});
 		
-		slotSizeSeekBar.setMax(100);
-		slotSizeSeekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
-
-			@Override
-			public void onStopTrackingTouch(SeekBar seekBar) {}
-
-			@Override
-			public void onStartTrackingTouch(SeekBar seekBar) {}
-
-			@Override
-			public void onProgressChanged(SeekBar seekBar, int progress,boolean fromUser) {
-				slotSizeText.setText((progress+50)+"");
-			}
-		});
-
-
 		sendToAllButton.setOnClickListener(new OnClickListener() {
 
 			public void onClick(View v) {
@@ -287,8 +296,6 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 			@Override
 			public void onClick(View v) {
 				controller.connectToAll();
-				slotSizeSeekBar.setEnabled(false);
-				slotSizeText.setEnabled(false);
 			}
 		});
 	}

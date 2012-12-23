@@ -10,21 +10,26 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="5dp"
         android:layout_marginRight="5dp"
-        android:layout_marginTop="15dp"
+        android:layout_marginTop="10dp"
         android:orientation="vertical" >
 
-        <Button
-            android:id="@+id/debugSendUDP"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Send UDP Broadcast" />
+            android:layout_height="wrap_content" >
 
-        <Button
-            android:id="@+id/connect_to_all_button"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1.04"
-            android:text="Connect To All" />
+            <Button
+                android:id="@+id/connect_to_all_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.50"
+                android:text="Connect To All" />
+
+            <Button
+                android:id="@+id/debugSendUDP"
+                android:layout_width="154dp"
+                android:layout_height="wrap_content"
+                android:text="DEBUG" />
+        </LinearLayout>
 
         <Button
             android:id="@+id/send_button"
@@ -32,50 +37,46 @@
             android:layout_height="wrap_content"
             android:layout_weight="0.57"
             android:text="Send ALERT" />
-
     </LinearLayout>
 
-    <ListView
-        android:id="@+id/devices_list_view"
-        android:layout_width="wrap_content"
-        android:layout_height="312dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_marginTop="5dp"
-        android:clickable="false" >
-
-    </ListView>
-
-    <LinearLayout
+    <TextView
+        android:id="@+id/textView1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
-        android:layout_marginTop="15dp" >
+        android:layout_marginTop="5dp"
+        android:text="Devices:"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
-        <TextView
-            android:id="@+id/textView1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="10dp"
-            android:text="Slot Size"
-            android:textAppearance="?android:attr/textAppearanceLarge" />
+    <ScrollView
+        android:id="@+id/scrollView1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
 
-        <SeekBar
-            android:id="@+id/seekBar1"
-            android:layout_width="106dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.03" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
 
-        <TextView
-            android:id="@+id/slotSize"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.09"
-            android:gravity="center_horizontal"
-            android:text=""
-            android:textAppearance="?android:attr/textAppearanceLarge" />
+            <ListView
+                android:id="@+id/devices_list_view"
+                android:layout_width="wrap_content"
+                android:layout_height="212dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginTop="5dp"
+                android:clickable="false" >
+            </ListView>
 
-    </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="1dip"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="10dp"
+        android:background="#696969" />
 
 </LinearLayout>

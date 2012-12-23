@@ -17,25 +17,19 @@ public final class R {
         public static final int rounded_background=0x7f020003;
     }
     public static final class id {
-        public static final int ScrollView01=0x7f07000a;
-        public static final int connect_to_all_button=0x7f070001;
-        public static final int debugSendUDP=0x7f070000;
-        public static final int devices_list_view=0x7f070003;
-        public static final int item_dev_id=0x7f070008;
-        public static final int menu_settings=0x7f07000b;
-        public static final int peers_list=0x7f070007;
-        public static final int seekBar1=0x7f070005;
+        public static final int ScrollView01=0x7f070007;
+        public static final int connect_to_all_button=0x7f070000;
+        public static final int debugSendUDP=0x7f070001;
+        public static final int devices_list_view=0x7f070005;
+        public static final int menu_settings=0x7f070008;
+        public static final int scrollView1=0x7f070004;
         public static final int send_button=0x7f070002;
-        public static final int slotSize=0x7f070006;
-        public static final int textView1=0x7f070004;
-        public static final int textView2=0x7f070009;
+        public static final int textView1=0x7f070003;
+        public static final int textView2=0x7f070006;
     }
     public static final class layout {
         public static final int activity_main=0x7f030000;
-        public static final int copy_of_activity_main=0x7f030001;
-        public static final int list_fragment_layout=0x7f030002;
-        public static final int list_item=0x7f030003;
-        public static final int show_results=0x7f030004;
+        public static final int show_results=0x7f030001;
     }
     public static final class menu {
         public static final int activity_main=0x7f060000;

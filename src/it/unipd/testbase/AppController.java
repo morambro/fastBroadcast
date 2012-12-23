@@ -29,6 +29,7 @@ import it.unipd.testbase.wificonnection.transmissionmanager.TransmissionManager.
 import it.unipd.testbase.wificonnection.transmissionmanager.sender.IPaketSender;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -101,20 +102,30 @@ public class AppController implements IControllerComponent {
 		public void onPeersAvailable(WifiP2pDeviceList peers_list) {
 			if(!keepUpdatingPeers) {
 				logger.d("Ignoring peers update");
-				return;
-			}
-			// Adds only new devices
-			for(WifiP2pDevice device : peers_list.getDeviceList()){
-				peers.add(device);
-			}
-			// remove disappeared devices
-			for(int i = 0; i < peers.size(); i++){
-				WifiP2pDevice device = peers.get(i);
-				if(!peers_list.getDeviceList().contains(device)){
-					logger.d("Device not in the list, removed");
-					peers.remove(device);
+				Collection<WifiP2pDevice> devs = peers_list.getDeviceList();
+				for(int i = 0 ; i < peers.size(); i++){
+					if(devs.contains(peers.get(i))){
+						for(WifiP2pDevice d : devs){
+							peers.set(i,d);
+
+						}
+					}
+				}
+			}else{
+				peers = new SynchronizedDevicesList();
+				// Adds only new devices
+				for(WifiP2pDevice device : peers_list.getDeviceList()){
+					peers.add(device);
 				}
 			}
+//			// remove disappeared devices
+//			for(int i = 0; i < peers.size(); i++){
+//				WifiP2pDevice device = peers.get(i);
+//				if(!peers_list.getDeviceList().contains(device)){
+//					logger.d("Device no longer in the list, removed");
+//					peers.remove(device);
+//				}
+//			}
 
 			Message msg = new Message();
 			msg.obj = peers;
@@ -161,6 +172,10 @@ public class AppController implements IControllerComponent {
 		synchronized WifiP2pDevice get(int index){
 			return peers.get(index);
 		}
+		
+		synchronized WifiP2pDevice set(int i, WifiP2pDevice device){
+			return peers.set(i,device);
+		}
 
 	}
 	
@@ -174,6 +189,7 @@ public class AppController implements IControllerComponent {
 	public AppController(Context context, GuiHandlerInterface guiHandlerInterface) {
 		this.context = context;
 		this.guiHandler = guiHandlerInterface.getGuiHandler();
+		
 		collectionHandler.setWiFiController(this);
 		// manager and channel initialization
 		manager = (WifiP2pManager) context.getSystemService(Context.WIFI_P2P_SERVICE);
