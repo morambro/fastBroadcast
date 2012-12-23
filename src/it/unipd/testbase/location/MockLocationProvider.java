@@ -90,6 +90,8 @@ public class MockLocationProvider {
 				logger.d("End of file reached");
 				// Trigger an event to communicate the end of positions
 				firstExec = true;
+				// Restart 
+				currentIndex = 1;
 				EventDispatcher.getInstance().triggerEvent(new PositionsTerminatedEvent());
 				return;
 			}
