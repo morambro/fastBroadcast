@@ -1,6 +1,6 @@
 \section{Fast Broadcast Algorithm}
 \label{sec:fast_broadcast}
-Fast Broadcast Aeclipslgorithm provides an easy-to-implement method to estimate vehicles' wireless range and to send Alert messages vehicle-to-vehicle covering large distances. The algorithm does not require any pre-existent network infrastructure, and is essentially divided in two phases:
+Fast Broadcast Algorithm provides an easy-to-implement method to estimate vehicles' wireless range and to send Alert messages vehicle-to-vehicle covering large distances. The algorithm does not require any pre-existent network infrastructure, and is essentially divided in two phases:
 	\begin{itemize}
 		\item \emph{Estimation phase}: in this phase time is divided into \textit{turns}, and at each turn $T$ a vehicle (one per turn) sends an \emph{Hello message} containing information about its estimated wireless range and its position. Every vehicle continuously listens for this kind of messages, and uses the information contained in them to update its range estimation.
 		\item \emph{Broadcast phase}: 
