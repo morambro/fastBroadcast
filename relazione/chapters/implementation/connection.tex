@@ -1,9 +1,7 @@
 \subsection{Devices connection}
 
-Due to the last two \direct features described in the previous section, devices cannot create and destroy connection opportunistically, so for our simulation we had to 
-%introduce a connection establishing phase which creates a \direct group and provides to all the devices a complete address map to let them communicate.
-manually create a \direct \textit{group} and also to provide devices a complete address map, in order to let them communicate with each
-devices.
+For Android application, we used an initial connection setup phase between devices.
+Due to the last two \direct features described in the previous section, devices cannot create and destroy connection opportunistically, so for our simulation we had to manually create a \direct \textit{group} and also to provide devices a complete address map, in order to  let them communicate with each devices.
 
 \begin{figure}[!htbp]
 \centering
@@ -29,3 +27,5 @@ Once that all these operations have been done, all the devices are connected and
 \caption{Network of four devices. Blu lines indicates the \direct group topology, and green lines the logical network}
 \label{fig:device_network}
 \end{figure}
+
+For what concerns Desktop Application ...
