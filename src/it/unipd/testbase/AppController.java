@@ -10,7 +10,7 @@ import it.unipd.testbase.eventdispatcher.event.location.SetupProviderEvent;
 import it.unipd.testbase.eventdispatcher.event.location.UpdateLocationEvent;
 import it.unipd.testbase.eventdispatcher.event.message.MessageReceivedEvent;
 import it.unipd.testbase.eventdispatcher.event.message.SendUnicastMessageEvent;
-import it.unipd.testbase.eventdispatcher.event.protocol.EstimationPhaseStartEvent;
+import it.unipd.testbase.eventdispatcher.event.protocol.SimulationStartEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.SendBroadcastMessageEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.StopSimulationEvent;
 import it.unipd.testbase.helper.DebugLogger;
@@ -316,14 +316,14 @@ public class AppController implements IControllerComponent {
 				sendBroadcast(message);
 				mapSent = true;
 				// Now start fast broadcast service Estimation Phase
-				EventDispatcher.getInstance().triggerEvent(new EstimationPhaseStartEvent());
+				EventDispatcher.getInstance().triggerEvent(new SimulationStartEvent());
 			}
 		} else {
 			// If I'm not the group owner and I'm here, I received the map. So I can start estimation phase
 			fastBroadcastService = (IFastBroadcastComponent)EventDispatcher.getInstance().requestComponent(FastBroadcastService.class);
 			EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
 			//__mock_provider.updateLocation();
-			EventDispatcher.getInstance().triggerEvent(new EstimationPhaseStartEvent());
+			EventDispatcher.getInstance().triggerEvent(new SimulationStartEvent());
 		}
 
 		if(mapToBroadcast == null)

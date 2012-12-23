@@ -6,7 +6,7 @@ import it.unipd.testbase.eventdispatcher.event.IEvent;
 import it.unipd.testbase.eventdispatcher.event.location.LocationChangedEvent;
 import it.unipd.testbase.eventdispatcher.event.location.UpdateLocationEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.AlertMessageArrivedEvent;
-import it.unipd.testbase.eventdispatcher.event.protocol.EstimationPhaseStartEvent;
+import it.unipd.testbase.eventdispatcher.event.protocol.SimulationStartEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.HelloMessageArrivedEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.SendBroadcastMessageEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.ShowSimulationResultsEvent;
@@ -36,6 +36,15 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	protected static final String TAG = "it.unipd.testbase";
 	
 	private DebugLogger logger = new DebugLogger(FastBroadcastService.class);
+	
+	private static FastBroadcastService instance = null;
+	
+	
+	public static FastBroadcastService getInstance() {
+		if(instance == null)
+			instance = new FastBroadcastService();
+		return instance;
+	}
 	
 	/**
 	 * Current-turn Maximum Front Range
@@ -93,12 +102,15 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	public static final int TURN_DURATION = 2000;
 	
 	/**
-	 * Contention window bouds
+	 * Contention window bounds
 	 */
 	private static int CwMax = 1024;
 	private static int CwMin = 32;
 	
+	private Location currentLocation;
+	
 	private HelloMessageSender helloMessageSender;
+	
 	/****************************************************** DECLARATIONS ***************************************************/
 	
 	/**
@@ -174,7 +186,8 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		}
 		
 		/**
-		 * Sends hello message broadcast
+		 * Sends hello message in broadcast
+		 * 
 		 */
 		private void sendHelloMessage(){
 			IMessage helloMessage = MessageBuilder.getInstance().getMessage(
@@ -196,7 +209,8 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	}
 	
 	/**
-	 * Thread used to eventually forward an ALERT message
+	 * Thread used to eventually forward an ALERT message. This thread waits on his queue for an incoming Alert
+	 * Message, and when arrives it decides weather to forward or not.
 	 * 
 	 * @author Moreno Ambrosin
 	 *
@@ -204,12 +218,15 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	private class MessageForwarder extends Thread {
 		
 		/*********************************** DECLARATIONS *************************************/
+		
 		private ArrayBlockingQueue<IMessage> messageQueue = new ArrayBlockingQueue<IMessage>(30);
 		private Random randomGenerator = new Random();
 		private Object synchPoint = new Object();
 		private boolean keepRunning = true;
 		private DebugLogger logger = new DebugLogger(MessageForwarder.class);
+		
 		/************************************* METHODS ****************************************/
+		
 		/**
 		 * Method used to send a message to the message forwarder
 		 * 
@@ -317,6 +334,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 						
 						logger.d("MESSAGE FORWARDED!!");
 						
+						// Force location update
 						EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
 					}else{
 						LogPrinter.getInstance().writeTimedLine("alert already brodcasted by someone else, discarded. Size "+messageQueue.size());
@@ -337,6 +355,11 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	
 	/************************************************** METHODS ***********************************************/
 	
+	/**
+	 * Method used to set helloMessageArrived variable.
+	 * 
+	 * @param arrived
+	 */
 	protected synchronized void setHelloMessageArrived(boolean arrived){
 		this.helloMessageArrived = arrived;
 	}
@@ -458,20 +481,18 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		}
 	}
 	
-	private static FastBroadcastService instance = null;
-	
-	
-	public static FastBroadcastService getInstance() {
-		if(instance == null)
-			instance = new FastBroadcastService();
-		return instance;
-	}
-
+	/**
+	 * Default constructor. It creates and starts message forwarder, and adds a filter for the distance
+	 * 
+	 */
 	public FastBroadcastService() {
 		logger.d("Estimator Service is Up");
 		// Start message forwarder
-		if(messageForwarder == null) messageForwarder = new MessageForwarder();
+		if(messageForwarder == null) {
+			messageForwarder = new MessageForwarder();
+		}
 		messageForwarder.start();
+		
 		filters.add(new DistanceFilter(){
 			@Override
 			public boolean filter(IMessage message) {
@@ -491,8 +512,12 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		register();
 	}
 	
-	
-	private void handleMessage(final IMessage message){
+	/**
+	 * Handles an incoming Alert Message in a separate Thread
+	 * 
+	 * @param message
+	 */
+	private void handleAlertMessage(final IMessage message){
 		// Using a new thread to prevent main thread interruption
 		new Thread(){
 			@Override
@@ -506,8 +531,6 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		}.start();
 	}
 	
-	private Location currentLocation;
-
 	
 	@Override
 	public double getEstimatedTrasmissionRange() {
@@ -534,7 +557,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 
 	@Override
 	public void handle(IEvent event) {
-		if(event.getClass().equals(EstimationPhaseStartEvent.class)){
+		if(event.getClass().equals(SimulationStartEvent.class)){
 			logger.d("Inizializzo HelloMessageSender");
 			helloMessageSender = new HelloMessageSender();
 			helloMessageSender.start();
@@ -543,13 +566,12 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		if(event.getClass().equals(HelloMessageArrivedEvent.class)){
 			HelloMessageArrivedEvent ev = (HelloMessageArrivedEvent) event;
 			this.setHelloMessageArrived(true);
-			hanldeHelloMessage(ev.message);
+			this.hanldeHelloMessage(ev.message);
 			return;
 		}
 		if(event.getClass().equals(AlertMessageArrivedEvent.class)){
 			AlertMessageArrivedEvent ev = (AlertMessageArrivedEvent) event;
-			this.setHelloMessageArrived(true);
-			handleMessage(ev.alertMessage);
+			this.handleAlertMessage(ev.alertMessage);
 			return;
 		}
 		if(event.getClass().equals(LocationChangedEvent.class)){
@@ -567,7 +589,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	@Override
 	public void register() {
 		List<Class<? extends IEvent>> events = new ArrayList<Class<? extends IEvent>>();
-		events.add(EstimationPhaseStartEvent.class);
+		events.add(SimulationStartEvent.class);
 		events.add(HelloMessageArrivedEvent.class);
 		events.add(LocationChangedEvent.class);
 		events.add(AlertMessageArrivedEvent.class);
