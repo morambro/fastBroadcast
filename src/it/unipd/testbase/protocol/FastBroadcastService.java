@@ -630,7 +630,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 			return;
 		}
 		if(event.getClass().equals(StopSimulationEvent.class)){
-			// stopExecuting();
+			stopExecuting();
 			EventDispatcher.getInstance().triggerEvent(new ShowSimulationResultsEvent());
 			return;
 		}
