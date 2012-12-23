@@ -6,6 +6,7 @@ import it.unipd.testbase.eventdispatcher.event.IEvent;
 import it.unipd.testbase.eventdispatcher.event.location.LocationChangedEvent;
 import it.unipd.testbase.eventdispatcher.event.location.UpdateLocationEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.NewMessageArrivedEvent;
+import it.unipd.testbase.eventdispatcher.event.protocol.SendAlertMessageEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.SendBroadcastMessageEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.ShowSimulationResultsEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.SimulationStartEvent;
@@ -34,9 +35,20 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	
 	protected static final String TAG = "it.unipd.testbase";
 	
+	/**
+	 * Alert message for debugging purposes
+	 */
+	public static final int ALERT_MESSAGE_TYPE = 2;
+	
+	/**
+	 * Identifies Hello messages, used to perform range estimation
+	 */
+	public static final int HELLO_MESSAGE_TYPE = 3;
+	
 	private DebugLogger logger = new DebugLogger(FastBroadcastService.class);
 	
 	private static FastBroadcastService instance = null;
+	
 	
 	
 	public static FastBroadcastService getInstance() {
@@ -190,7 +202,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		 */
 		private void sendHelloMessage(){
 			IMessage helloMessage = MessageBuilder.getInstance().getMessage(
-					IMessage.HELLO_MESSAGE_TYPE,
+					HELLO_MESSAGE_TYPE,
 					IPaketSender.BROADCAST_ADDRESS);
 			
 			helloMessage.addContent(IMessage.SENDER_LATITUDE_KEY,currentLocation.getLatitude()+"");
@@ -316,25 +328,26 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 					logger.d("BroadcastPhase: waking up");
 					if(!messageQueue.contains(message)){
 						// No message arrived while I was asleep
-						IMessage newMessage = MessageBuilder.getInstance().getMessage(
-								message.getType(),
-								IPaketSender.BROADCAST_ADDRESS,
-								AppController.MAC_ADDRESS);
-						
-						newMessage.addContent(IMessage.SENDER_LATITUDE_KEY,currentLocation.getLatitude()+"");
-						newMessage.addContent(IMessage.SENDER_LONGITUDE_KEY,currentLocation.getLongitude()+"");
-						newMessage.addContent(IMessage.SENDER_RANGE_KEY,Math.max(lmbr,cmbr)+"");
-						newMessage.addContent(IMessage.SENDER_DIRECTION_KEY,currentLocation.getBearing()+"");
-						newMessage.addContent(IMessage.MESSAGE_HOP_KEY, ""+hopCount);
-						newMessage.prepare();
-						LogPrinter.getInstance().writeTimedLine("ALERT MESSAGE FROWARDED. HOPS "+hopCount+".SIZE "+messageQueue.size());
-						// Send broadcast the message
-						EventDispatcher.getInstance().triggerEvent(new SendBroadcastMessageEvent(newMessage));
-						
-						logger.d("MESSAGE FORWARDED!!");
-						
-						// Force location update
-						EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
+//						IMessage newMessage = MessageBuilder.getInstance().getMessage(
+//								message.getType(),
+//								IPaketSender.BROADCAST_ADDRESS,
+//								AppController.MAC_ADDRESS);
+//						
+//						newMessage.addContent(IMessage.SENDER_LATITUDE_KEY,currentLocation.getLatitude()+"");
+//						newMessage.addContent(IMessage.SENDER_LONGITUDE_KEY,currentLocation.getLongitude()+"");
+//						newMessage.addContent(IMessage.SENDER_RANGE_KEY,Math.max(lmbr,cmbr)+"");
+//						newMessage.addContent(IMessage.SENDER_DIRECTION_KEY,currentLocation.getBearing()+"");
+//						newMessage.addContent(IMessage.MESSAGE_HOP_KEY, ""+hopCount);
+//						newMessage.prepare();
+//						LogPrinter.getInstance().writeTimedLine("ALERT MESSAGE FROWARDED. HOPS "+hopCount+".SIZE "+messageQueue.size());
+//						// Send broadcast the message
+//						EventDispatcher.getInstance().triggerEvent(new SendBroadcastMessageEvent(newMessage));
+//						
+//						logger.d("MESSAGE FORWARDED!!");
+//						
+//						// Force location update
+//						EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
+						sendAlert(hopCount);
 					}else{
 						LogPrinter.getInstance().writeTimedLine("alert already brodcasted by someone else, discarded. Size "+messageQueue.size());
 						logger.d("Double Alert, message discarded");
@@ -553,6 +566,31 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 				results);
 		return results[0];
 	}
+	
+	private void sendAlert(int hops) {
+		
+		IMessage message = MessageBuilder.getInstance().getMessage(
+				ALERT_MESSAGE_TYPE, 
+				IPaketSender.BROADCAST_ADDRESS,
+				AppController.MAC_ADDRESS
+		);
+		message.addContent(IMessage.SENDER_LATITUDE_KEY, ""+currentLocation.getLatitude());
+		message.addContent(IMessage.SENDER_LONGITUDE_KEY, ""+currentLocation.getLongitude());
+		message.addContent(IMessage.SENDER_RANGE_KEY, ""+getEstimatedTrasmissionRange());
+		message.addContent(IMessage.SENDER_DIRECTION_KEY, ""+currentLocation.getBearing());
+		message.addContent(IMessage.MESSAGE_HOP_KEY, ""+hops);
+		message.prepare();
+		
+		EventDispatcher.getInstance().triggerEvent(new SendBroadcastMessageEvent(message));
+		
+		if(hops == 0){
+			LogPrinter.getInstance().writeTimedLine("ALERT message SENT, #HOPS = "+hops);
+		}else{
+			LogPrinter.getInstance().writeTimedLine("ALERT message FROWARDED. #HOPS = "+hops);
+		}
+		
+		EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
+	}
 
 	@Override
 	public void handle(IEvent event) {
@@ -571,14 +609,14 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		if(event.getClass().equals(NewMessageArrivedEvent.class)){
 			NewMessageArrivedEvent ev = (NewMessageArrivedEvent) event;
 			
-			if(ev.message.getType() == IMessage.ALERT_MESSAGE_TYPE){
+			if(ev.message.getType() == ALERT_MESSAGE_TYPE){
 				LogPrinter.getInstance().writeLine("\n");
 				LogPrinter.getInstance().writeTimedLine(
 						"ALERT RECEIVED FROM "+ev.senderID+". " +
 						"#HOPS = "+ev.message.getContent().get(IMessage.MESSAGE_HOP_KEY));
 				this.handleAlertMessage(ev.message);
 				return;
-			}else if(ev.message.getType() == IMessage.HELLO_MESSAGE_TYPE){
+			}else if(ev.message.getType() == HELLO_MESSAGE_TYPE){
 				this.setHelloMessageArrived(true);
 				this.hanldeHelloMessage(ev.message);
 				return;
@@ -596,6 +634,11 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 			EventDispatcher.getInstance().triggerEvent(new ShowSimulationResultsEvent());
 			return;
 		}
+		if(event.getClass().equals(SendAlertMessageEvent.class)){
+			SendAlertMessageEvent ev = (SendAlertMessageEvent) event;
+			sendAlert(ev.hops);
+			return;
+		}
 	}
 
 	@Override
@@ -606,6 +649,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		events.add(LocationChangedEvent.class);
 		events.add(NewMessageArrivedEvent.class);
 		events.add(StopSimulationEvent.class);
+		events.add(SendAlertMessageEvent.class);
 		EventDispatcher.getInstance().registerComponent(this, events);
 	}
 }

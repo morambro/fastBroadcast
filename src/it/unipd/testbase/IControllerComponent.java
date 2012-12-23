@@ -40,7 +40,7 @@ public interface IControllerComponent extends IComponent {
 	/**
 	 * broadcasts an alert message
 	 */
-	void sendAlert();
+//	void sendAlert();
 	
 	/**
 	 * Disconnects the current peer

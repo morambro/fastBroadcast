@@ -31,16 +31,6 @@ abstract public class IMessage {
 	public static final int CLIENT_MAP_MESSAGE_TYPE = 1;
 
 	/**
-	 * Alert message for debugging purposes
-	 */
-	public static final int ALERT_MESSAGE_TYPE = 2;
-	
-	/**
-	 * Identifies Hello messages, used to perform range estimation
-	 */
-	public static final int HELLO_MESSAGE_TYPE = 3;
-	
-	/**
 	 * keys used in getContext of PING_MESSAGE_TYPE messages to address the sender position field  
 	 */
 	public static final String SENDER_LATITUDE_KEY  = "latitude";

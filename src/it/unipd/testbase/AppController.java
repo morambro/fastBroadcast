@@ -4,19 +4,15 @@ import it.unipd.testbase.eventdispatcher.EventDispatcher;
 import it.unipd.testbase.eventdispatcher.event.IEvent;
 import it.unipd.testbase.eventdispatcher.event.connectioninfo.WiFiInfoCollectedEvent;
 import it.unipd.testbase.eventdispatcher.event.deviceconnector.ProceedWithNextEvent;
-import it.unipd.testbase.eventdispatcher.event.location.LocationChangedEvent;
 import it.unipd.testbase.eventdispatcher.event.location.PositionsTerminatedEvent;
 import it.unipd.testbase.eventdispatcher.event.location.SetupProviderEvent;
 import it.unipd.testbase.eventdispatcher.event.location.UpdateLocationEvent;
 import it.unipd.testbase.eventdispatcher.event.message.MessageReceivedEvent;
 import it.unipd.testbase.eventdispatcher.event.message.SendUnicastMessageEvent;
-import it.unipd.testbase.eventdispatcher.event.protocol.SimulationStartEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.SendBroadcastMessageEvent;
+import it.unipd.testbase.eventdispatcher.event.protocol.SimulationStartEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.StopSimulationEvent;
 import it.unipd.testbase.helper.DebugLogger;
-import it.unipd.testbase.helper.LogPrinter;
-import it.unipd.testbase.protocol.FastBroadcastService;
-import it.unipd.testbase.protocol.IFastBroadcastComponent;
 import it.unipd.testbase.wificonnection.connectioninfomanager.ConnectionManagerFactory;
 import it.unipd.testbase.wificonnection.connectioninfomanager.IConnectionInfoManager;
 import it.unipd.testbase.wificonnection.message.IMessage;
@@ -37,7 +33,6 @@ import java.util.Map;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
-import android.location.Location;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
@@ -60,7 +55,7 @@ public class AppController implements IControllerComponent {
 	public static String MAC_ADDRESS = null;
 
 	private Handler guiHandler;
-	private Location currentLocation;
+//	private Location currentLocation;
 	private IDataCollectionHandler collectionHandler = new CollectionHandler();
 	private WifiP2pManager manager;
 	private Channel channel;
@@ -77,7 +72,7 @@ public class AppController implements IControllerComponent {
 	private boolean isGroupOwner = false;
 	private boolean keepUpdatingPeers = true;
 
-	private IFastBroadcastComponent fastBroadcastService;
+//	private IFastBroadcastComponent fastBroadcastService;
 
 	/************************************************* INTERFACES/CLASSES ********************************************/
 	
@@ -304,7 +299,7 @@ public class AppController implements IControllerComponent {
 			if(!mapSent && peerIdIpMap.keySet().size() >= peers.size()){
 				//size()+1 because group owner is not included in this map (so the returned size() equals (device_number-1)
 				
-				fastBroadcastService = (IFastBroadcastComponent)EventDispatcher.getInstance().requestComponent(FastBroadcastService.class);
+//				fastBroadcastService = (IFastBroadcastComponent)EventDispatcher.getInstance().requestComponent(FastBroadcastService.class);
 				
 				EventDispatcher.getInstance().triggerEvent(new SetupProviderEvent(0, peerIdIpMap.size()+1));
 				//MockLocationProvider.__set_static_couter(0, peerIdIpMap.size()+1);
@@ -320,7 +315,7 @@ public class AppController implements IControllerComponent {
 			}
 		} else {
 			// If I'm not the group owner and I'm here, I received the map. So I can start estimation phase
-			fastBroadcastService = (IFastBroadcastComponent)EventDispatcher.getInstance().requestComponent(FastBroadcastService.class);
+//			fastBroadcastService = (IFastBroadcastComponent)EventDispatcher.getInstance().requestComponent(FastBroadcastService.class);
 			EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
 			//__mock_provider.updateLocation();
 			EventDispatcher.getInstance().triggerEvent(new SimulationStartEvent());
@@ -416,25 +411,6 @@ public class AppController implements IControllerComponent {
 		guiHandler.sendMessage(msg);
 	}
 	
-	@Override
-	public void sendAlert() {
-		IMessage message = MessageBuilder.getInstance().getMessage(
-				IMessage.ALERT_MESSAGE_TYPE, 
-				IPaketSender.BROADCAST_ADDRESS,
-				MAC_ADDRESS
-		);
-		message.addContent(IMessage.SENDER_LATITUDE_KEY, ""+currentLocation.getLatitude());
-		message.addContent(IMessage.SENDER_LONGITUDE_KEY, ""+currentLocation.getLongitude());
-		message.addContent(IMessage.SENDER_RANGE_KEY, ""+fastBroadcastService.getEstimatedTrasmissionRange());
-		message.addContent(IMessage.SENDER_DIRECTION_KEY, ""+currentLocation.getBearing());
-		message.addContent(IMessage.MESSAGE_HOP_KEY, "0");
-		message.prepare();
-		sendBroadcast(message);
-		
-		LogPrinter.getInstance().writeTimedLine("ALERT message sent, #HOPS = 0");
-		
-		EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
-	}
 
 	private void sendBroadcast(IMessage message) {
 		TransmissionManager.getInstance().sendBroadcast(
@@ -464,7 +440,7 @@ public class AppController implements IControllerComponent {
 	@Override
 	public void register() {
 		List<Class<? extends IEvent>> events = new ArrayList<Class<? extends IEvent>>();
-		events.add(LocationChangedEvent.class);
+//		events.add(LocationChangedEvent.class);
 		events.add(MessageReceivedEvent.class);
 		events.add(WiFiInfoCollectedEvent.class);
 		events.add(SendBroadcastMessageEvent.class);
@@ -476,11 +452,11 @@ public class AppController implements IControllerComponent {
 	@Override
 	public void handle(IEvent event) {
 		
-		if(event instanceof LocationChangedEvent){
-			LocationChangedEvent ev = (LocationChangedEvent) event;
-			this.currentLocation = ev.location;
-			return;
-		}
+//		if(event instanceof LocationChangedEvent){
+//			LocationChangedEvent ev = (LocationChangedEvent) event;
+//			this.currentLocation = ev.location;
+//			return;
+//		}
 		if(event instanceof MessageReceivedEvent){
 			MessageReceivedEvent ev = (MessageReceivedEvent) event;
 			collectionHandler.onDataCollected(ev.message, ev.senderID);

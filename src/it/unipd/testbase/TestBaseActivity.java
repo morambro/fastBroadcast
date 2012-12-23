@@ -4,6 +4,7 @@ import it.unipd.testbase.AppController.SynchronizedDevicesList;
 import it.unipd.testbase.eventdispatcher.EventDispatcher;
 import it.unipd.testbase.eventdispatcher.IComponent;
 import it.unipd.testbase.eventdispatcher.event.IEvent;
+import it.unipd.testbase.eventdispatcher.event.protocol.SendAlertMessageEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.ShowSimulationResultsEvent;
 import it.unipd.testbase.helper.DebugLogger;
 import it.unipd.testbase.location.MockLocationService;
@@ -287,7 +288,8 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 		sendToAllButton.setOnClickListener(new OnClickListener() {
 
 			public void onClick(View v) {
-				controller.sendAlert();
+//				controller.sendAlert();
+				EventDispatcher.getInstance().triggerEvent(new SendAlertMessageEvent(0));
 			}
 		});
 
