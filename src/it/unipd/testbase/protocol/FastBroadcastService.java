@@ -1,27 +1,29 @@
 package it.unipd.testbase.protocol;
 
+import it.unipd.testbase.AppController;
 import it.unipd.testbase.eventdispatcher.EventDispatcher;
 import it.unipd.testbase.eventdispatcher.event.IEvent;
+import it.unipd.testbase.eventdispatcher.event.ShutdownEvent;
+import it.unipd.testbase.eventdispatcher.event.gui.UpdateGuiEvent;
 import it.unipd.testbase.eventdispatcher.event.location.LocationChangedEvent;
 import it.unipd.testbase.eventdispatcher.event.location.UpdateLocationEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.AlertMessageArrivedEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.EstimationPhaseStartEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.HelloMessageArrivedEvent;
+import it.unipd.testbase.eventdispatcher.event.protocol.SendAlertMessageEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.SendBroadcastMessageEvent;
+import it.unipd.testbase.eventdispatcher.event.protocol.StopSimulationEvent;
+import it.unipd.testbase.helper.Log;
 import it.unipd.testbase.helper.LogPrinter;
+import it.unipd.testbase.location.Location;
 import it.unipd.testbase.wificonnection.message.IMessage;
 import it.unipd.testbase.wificonnection.message.MessageBuilder;
-import it.unipd.testbase.wificonnection.transmissionmanager.ITranmissionManager;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ArrayBlockingQueue;
-
-import android.location.Location;
-import android.os.Binder;
-import android.util.Log;
 
 /**
  * An implementation of fast broadcast estimation phase.
@@ -31,29 +33,24 @@ import android.util.Log;
  */
 public class FastBroadcastService implements IFastBroadcastComponent{
 	
-	private String TAG = "it.unipd.testbase";
+	private String TAG = "it.unipd.testbase";		
 	
-	/**
-	 * Binder to get service interface
-	 * 
-	 * @author Moreno Ambrosin
-	 *
-	 */
-	public class FastBroadcastServiceBinder extends Binder {
-		
-		public IFastBroadcastComponent getService() {
-			return FastBroadcastService.this;
-		}
+	private static FastBroadcastService instance = null;
+	
+	public static FastBroadcastService getInstance() {
+		if(instance == null)
+			instance = new FastBroadcastService();
+		return instance;
 	}
 	
 	/**
 	 * Current-turn Maximum Front Range
 	 */
-	private double cmfr = 100;
+	private double cmfr = 300;
 	/**
 	 * Current-turn Maximum Back Range
 	 */
-	private double cmbr = 100;
+	private double cmbr = 300;
 	/**
 	 * Last-turn Maximum Front Range
 	 */
@@ -89,17 +86,17 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	 * Static field which indicates the simulated actual range of each device
 	 * This value is used to filter messages received from a "distance" > ACTUAL_MAX_RANGE
 	 */
-	private static final int ACTUAL_MAX_RANGE = 600;
+	private static final int ACTUAL_MAX_RANGE = 900;
 	
 	/**
 	 * Slot size in milliseconds
 	 */
-	private static final int SLOT_SIZE = 100;
+	private static final int SLOT_SIZE = 10;
 	
 	/**
 	 * Turn duration in milliseconds
 	 */
-	public static final int TURN_DURATION = 20000;
+	public static final int TURN_DURATION = 2000;
 	
 	/**
 	 * Contention window bouds
@@ -143,7 +140,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 				try {
 					Thread.sleep(TURN_DURATION);
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+//					logger.e(e);
 				}
 				int randomTime = 0;
 				// Store previous current range into last current range
@@ -154,22 +151,22 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 					helloMessageArrived = false;
 					randomTime = randomGenerator.nextInt(TURN_DURATION);
 					try{
-						Log.d(TAG, "Going to sleep for "+randomTime+" ms");
+//						logger.d("Going to sleep for "+randomTime+" ms");
 						Thread.sleep(randomTime);
 					}catch(InterruptedException ex){
+//						logger.e(ex);
 						stopExecuting();
-						ex.printStackTrace();
 					}
 				}
 				// After waiting a random time check whether another hello message arrived, and if not, sends an hello message
 				if(!helloMessageArrived){
 					this.sendHelloMessage();
-					Log.d(TAG,this.getClass().getSimpleName()+" : Sent Hello message to all after " +
-							""+(TURN_DURATION+randomTime)+" msec");
+//					logger.d("Sent Hello message to all after " +(TURN_DURATION+randomTime)+"ms");
 				}else{
-					Log.d(TAG,this.getClass().getSimpleName()+" : Hello Message was already sent!!");
+//					logger.d("Hello Message was already sent!!");
 				}
 			}
+//			logger.d("Tearing down Hello Message Sender");
 		}
 		
 		/**
@@ -184,9 +181,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		 * Sends hello message broadcast
 		 */
 		private void sendHelloMessage(){
-			IMessage helloMessage = MessageBuilder.getInstance().getMessage(
-					IMessage.HELLO_MESSAGE_TYPE,
-					ITranmissionManager.BROADCAST_ADDRESS);
+			IMessage helloMessage = MessageBuilder.getInstance().getMessage(IMessage.HELLO_MESSAGE_TYPE, ""+AppController.getApplicatonRunID());
 			
 			helloMessage.addContent(IMessage.SENDER_LATITUDE_KEY,currentLocation.getLatitude()+"");
 			helloMessage.addContent(IMessage.SENDER_LONGITUDE_KEY,currentLocation.getLongitude()+"");
@@ -247,47 +242,49 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 					message = messageQueue.take();
 					Map<String,String> content = message.getContent();
 					int hopCount = Integer.valueOf(content.get(IMessage.MESSAGE_HOP_KEY));
-					LogPrinter.getInstance().writeTimedLine("alert message taken from queue. Hop number: "+hopCount+". Size "+messageQueue.size());
+					LogPrinter.getInstance().writeTimedLine("ALET TAKEN FROM QUEUE (SIZE = "+messageQueue.size()+")");
+					LogPrinter.getInstance().writeTimedLine("" +
+							"CURRENT POSITION = ("+currentLocation.getLatitude()+","+currentLocation.getLongitude()+") " +
+									"#HOPS = "+hopCount);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
-					Thread.currentThread().interrupt();
+					return;
 				}
 
-				if(message == null) return;
 				boolean arrived = true;
 				for(Filter filter : filters){
 					arrived = arrived & (filter.filter(message));
 				}
+				
 				if(!arrived){
 					LogPrinter.getInstance().writeTimedLine("message discarded from queue, sender was too far away. Size "+messageQueue.size());
-					Log.e(TAG,"MESSAGE SHOULDN'T HAVE BEEN ARRIVED SHIT!!");
+					Log.e(TAG,"!!!!!!!!!!!!!!!!!!!!!!!!!!Message shouldn't have been arrived");
+					EventDispatcher.getInstance().triggerEvent(new UpdateGuiEvent(UpdateGuiEvent.GUI_UPDATE_NEW_MESSAGE, "Previous Alert message discarded"));
 				}else{
-					Log.e(TAG,"ALERT MESSAGE ARRIVED!!");
 					// now I am sure message != null
 					Map<String,String> content = message.getContent();
 					double latitude 	= Double.parseDouble(content.get(IMessage.SENDER_LATITUDE_KEY));
 					double longitude 	= Double.parseDouble(content.get(IMessage.SENDER_LONGITUDE_KEY));
 					double maxRange 	= Double.valueOf(content.get(IMessage.SENDER_RANGE_KEY));
 					float direction 	= Float.valueOf(content.get(IMessage.SENDER_DIRECTION_KEY));
-					int hopCount = Integer.valueOf(content.get(IMessage.MESSAGE_HOP_KEY))+1;
+					int hopCount 		= Integer.valueOf(content.get(IMessage.MESSAGE_HOP_KEY));
+					hopCount ++;
+					Log.e(TAG,"ALERT MESSAGE HOP "+hopCount+" ARRIVED!!");
 					float distance = getDistance(latitude, longitude);
-					
-					Log.d(TAG,"Distance = "+distance);
-					Log.d(TAG,"MaxRange = "+maxRange);
 					
 					int contentionWindow = CwMin;
 					if(maxRange - distance > 0){
 						// If the difference is negative, the device will use minimum contention window.
 						contentionWindow = (int)Math.floor((((maxRange-distance)/maxRange) * (CwMax-CwMin))+CwMin); 
 					}
-	
-					Log.d(TAG,"Contention Window = "+contentionWindow);
 					
-					// wait for a random time... 
+					// wait for a random time...
+					Log.e(TAG,"getting lock..");
 					synchronized (synchPoint) {
 						try {
 							long rnd = randomGenerator.nextInt(contentionWindow*SLOT_SIZE);
-							Log.e(TAG,"BroadcastPhase: sleeping for "+rnd+" ms");
+							EventDispatcher.getInstance().triggerEvent(new UpdateGuiEvent(UpdateGuiEvent.GUI_UPDATE_CONT_WINDOW_START, new Integer[]{(int) rnd, CwMax}));
+							Log.e(TAG,"Sleeping for max "+rnd);
 							//Thread.sleep(rnd);
 							// Waiting until:
 							//    1) A message arrives, so stop waiting and change position
@@ -295,38 +292,38 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 							synchPoint.wait(rnd);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
-							Thread.currentThread().interrupt();
+							return;
 						}
 					}
-					Log.e(TAG,"BroadcastPhase: waking up");
 					if(!messageQueue.contains(message)){
 						// No message arrived while I was asleep
-						IMessage newMessage = MessageBuilder.getInstance().getMessage(
-								message.getType(),
-								ITranmissionManager.BROADCAST_ADDRESS);
-						newMessage.addContent(IMessage.SENDER_LATITUDE_KEY,currentLocation.getLatitude()+"");
-						newMessage.addContent(IMessage.SENDER_LONGITUDE_KEY,currentLocation.getLongitude()+"");
-						newMessage.addContent(IMessage.SENDER_RANGE_KEY,Math.max(lmbr,cmbr)+"");
-						newMessage.addContent(IMessage.SENDER_DIRECTION_KEY,currentLocation.getBearing()+"");
-						newMessage.addContent(IMessage.MESSAGE_HOP_KEY, ""+hopCount);
-						newMessage.prepare();
-						LogPrinter.getInstance().writeTimedLine("no messages arrived while sleeping. Forwarding message \n\tHop numbers: "+hopCount+".\n\t Size "+messageQueue.size());
-						// Send broadcast the message
-						EventDispatcher.getInstance().triggerEvent(new SendBroadcastMessageEvent(newMessage));
-						
-						Log.e(TAG,"MESSAGE FORWARDED!!");
-						
-						EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
+//						IMessage newMessage = MessageBuilder.getInstance().getMessage(message.getType(), ""+AppController.getApplicatonRunID());
+//						newMessage.addContent(IMessage.SENDER_LATITUDE_KEY,currentLocation.getLatitude()+"");
+//						newMessage.addContent(IMessage.SENDER_LONGITUDE_KEY,currentLocation.getLongitude()+"");
+//						newMessage.addContent(IMessage.SENDER_RANGE_KEY,Math.max(lmbr,cmbr)+"");
+//						newMessage.addContent(IMessage.SENDER_DIRECTION_KEY,currentLocation.getBearing()+"");
+//						newMessage.addContent(IMessage.MESSAGE_HOP_KEY, ""+hopCount);
+//						newMessage.prepare();
+//						LogPrinter.getInstance().writeTimedLine("no messages arrived while sleeping. Forwarding message \n\tHop numbers: "+hopCount+".\n\t Size "+messageQueue.size());
+//						EventDispatcher.getInstance().triggerEvent(new UpdateGuiEvent(UpdateGuiEvent.GUI_UPDATE_NEW_MESSAGE, "Message "+(hopCount-1)+"forwarded"));
+//						// Send broadcast the message
+//						EventDispatcher.getInstance().triggerEvent(new SendBroadcastMessageEvent(newMessage));
+//						EventDispatcher.getInstance().triggerEvent(new UpdateGuiEvent(UpdateGuiEvent.GUI_UPDATE_MESSAGE_FORWARDED, null));
+//						Log.e(TAG,"MESSAGE FORWARDED!!");
+//						
+//						EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
+						sendAlert(hopCount);
 					}else{
+						EventDispatcher.getInstance().triggerEvent(new UpdateGuiEvent(UpdateGuiEvent.GUI_UPDATE_MESSAGE_NOT_FORWARDED, null));
 						LogPrinter.getInstance().writeTimedLine("alert already brodcasted by someone else, discarded. Size "+messageQueue.size());
-						Log.e(TAG,"Double Alert, message discarded");
+						EventDispatcher.getInstance().triggerEvent(new UpdateGuiEvent(UpdateGuiEvent.GUI_UPDATE_NEW_MESSAGE, "Message "+(hopCount-1)+"not forwarded"));
+						Log.e(TAG,"ALERT "+hopCount+" ALREADY FORWARDED BY SOMEONE ELSE");
 						// At least another message arrived
 						if(receivedFromBack(direction, latitude, longitude)){
 							// Someone else forwarded it already
 							Log.e(TAG,"MESSAGE RECEIVED FROM BACK!!");
 							EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
 						}
-						Log.e(TAG,"MESSAGE NOT FORWARDED!!");
 					}
 				}
 			}
@@ -367,16 +364,16 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 					if(receivedFromBack(direction,latitude,longitude)){
 						// Received from back
 						cmbr = Math.max(cmbr, Math.max(results[0], max_range));
-						Log.d(TAG,"Distance = "+results[0]+"   cmbr = "+cmbr);
-						Log.d(TAG,this.getClass().getSimpleName()+" : Sono davanti, aggiorno cmbr a = "+cmbr);
+						//Log.d(TAG,"Distance = "+results[0]+"   cmbr = "+cmbr);
+						//Log.d(TAG,this.getClass().getSimpleName()+" : Sono davanti, aggiorno cmbr a = "+cmbr);
 					}else{
 						// Received from front
 						cmfr = Math.max(cmfr, Math.max(results[0],max_range));
-						Log.d(TAG,this.getClass().getSimpleName()+" : Sono dietro, aggiorno cmfr a = "+cmfr);
+//						Log.d(TAG,this.getClass().getSimpleName()+" : Sono dietro, aggiorno cmfr a = "+cmfr);
 					}
 				}else{
 					// Different directions, ignore the message
-					Log.d(TAG,this.getClass().getSimpleName()+" : Messaggio proveniente da direzione diversa, lo ignoro");
+//					Log.d(TAG,this.getClass().getSimpleName()+" : Messaggio proveniente da direzione diversa, lo ignoro");
 				}
 			}
 		}.start();
@@ -436,7 +433,6 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 			}else{
 				// 3° quadrante
 				if(senderLatitude > currentLocation.getLatitude()){
-					Log.e(TAG, "FastBroadcastService: terzo quadrante");
 					// Sono davanti
 					return true;
 				}
@@ -446,7 +442,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	}
 	
 	@Override
-	public void stopExecuting(){
+	public void terminate(){
 		// Stop hello message sender and message forwarder
 		if(helloMessageSender != null){
 			helloMessageSender.stopExecuting();
@@ -454,22 +450,17 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		if(messageForwarder != null){
 			messageForwarder.stopExecuting();
 		}
-	}
-	
-	private static FastBroadcastService instance = null;
-	
-	
-	public static FastBroadcastService getInstance() {
-		if(instance == null)
-			instance = new FastBroadcastService();
-		return instance;
+		Log.e(TAG, "FastBroadcastService: service terminated");
 	}
 
 	public FastBroadcastService() {
 		Log.d(TAG,this.getClass().getSimpleName()+" : Estimator Service is Up");
 		// Start message forwarder
-		if(messageForwarder == null) messageForwarder = new MessageForwarder();
+		if(messageForwarder == null) {
+			messageForwarder = new MessageForwarder();
+		}
 		messageForwarder.start();
+		
 		filters.add(new Filter(){
 			@Override
 			public boolean filter(IMessage message) {
@@ -478,6 +469,10 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 				double longitude 	= Double.parseDouble(content.get(IMessage.SENDER_LONGITUDE_KEY));
 				float distance = getDistance(latitude, longitude);
 				// If distance is > actual maximum range, message shouldn't be heard...
+				
+				Log.d(TAG, "Filter: ACTUAL RANGE = "+ACTUAL_MAX_RANGE);
+				Log.d(TAG, "Filter: ESTIMATED RANGE = "+distance);
+				
 				if(distance > ACTUAL_MAX_RANGE) return false;
 				return true;
 			}
@@ -485,7 +480,11 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		register();
 	}
 	
-	
+	/**
+	 * Handles an incoming Alert Message in a separate Thread
+	 * 
+	 * @param message
+	 */
 	private void handleMessage(final IMessage message){
 		// Using a new thread to prevent main thread interruption
 		new Thread(){
@@ -525,7 +524,30 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 				results);
 		return results[0];
 	}
-
+	
+private void sendAlert(int hops) {
+		
+		IMessage message = MessageBuilder.getInstance().getMessage(IMessage.ALERT_MESSAGE_TYPE, ""+AppController.getApplicatonRunID());
+		message.addContent(IMessage.SENDER_LATITUDE_KEY, ""+currentLocation.getLatitude());
+		message.addContent(IMessage.SENDER_LONGITUDE_KEY, ""+currentLocation.getLongitude());
+		message.addContent(IMessage.SENDER_RANGE_KEY, ""+getEstimatedTrasmissionRange());
+		message.addContent(IMessage.SENDER_DIRECTION_KEY, ""+currentLocation.getBearing());
+		message.addContent(IMessage.MESSAGE_HOP_KEY, ""+hops);
+		message.prepare();
+		Log.e(TAG,"MESSAGE "+hops+" FORWARDED!!");
+		EventDispatcher.getInstance().triggerEvent(new SendBroadcastMessageEvent(message));
+		EventDispatcher.getInstance().triggerEvent(new UpdateGuiEvent(UpdateGuiEvent.GUI_UPDATE_NEW_MESSAGE, "Message "+(hops-1)+"forwarded"));
+		EventDispatcher.getInstance().triggerEvent(new UpdateGuiEvent(UpdateGuiEvent.GUI_UPDATE_MESSAGE_FORWARDED, null));
+		
+		if(hops == 0){
+			LogPrinter.getInstance().writeTimedLine("ALERT message SENT, #HOPS = "+hops);
+		}else{
+			LogPrinter.getInstance().writeTimedLine("ALERT message FROWARDED. #HOPS = "+hops);
+		}
+		
+		EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
+	}
+	
 	@Override
 	public void handle(IEvent event) {
 		if(event.getClass().equals(EstimationPhaseStartEvent.class)){
@@ -542,13 +564,25 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		}
 		if(event.getClass().equals(AlertMessageArrivedEvent.class)){
 			AlertMessageArrivedEvent ev = (AlertMessageArrivedEvent) event;
-			this.setHelloMessageArrived(true);
 			handleMessage(ev.alertMessage);
 			return;
 		}
 		if(event.getClass().equals(LocationChangedEvent.class)){
 			LocationChangedEvent ev = (LocationChangedEvent) event;
 			this.currentLocation = ev.location;
+			return;
+		}
+		if(event.getClass().equals(SendAlertMessageEvent.class)){
+			SendAlertMessageEvent ev = (SendAlertMessageEvent) event;
+			sendAlert(ev.hops);
+			return;
+		}
+		if(event.getClass().equals(StopSimulationEvent.class)){
+			terminate();
+			return;
+		}
+		if(event instanceof ShutdownEvent) {
+			terminate();
 			return;
 		}
 	}
@@ -560,6 +594,9 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		events.add(HelloMessageArrivedEvent.class);
 		events.add(LocationChangedEvent.class);
 		events.add(AlertMessageArrivedEvent.class);
+		events.add(StopSimulationEvent.class);
+		events.add(ShutdownEvent.class);
+		events.add(SendAlertMessageEvent.class);
 		EventDispatcher.getInstance().registerComponent(this, events);
 	}
 }

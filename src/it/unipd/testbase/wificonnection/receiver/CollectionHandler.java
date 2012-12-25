@@ -1,84 +1,80 @@
 package it.unipd.testbase.wificonnection.receiver;
 
 import it.unipd.testbase.AppController;
-import it.unipd.testbase.IControllerComponent;
 import it.unipd.testbase.AppController.IDataCollectionHandler;
 import it.unipd.testbase.eventdispatcher.EventDispatcher;
-import it.unipd.testbase.eventdispatcher.event.location.SetupProviderEvent;
+import it.unipd.testbase.eventdispatcher.event.gui.UpdateGuiEvent;
+import it.unipd.testbase.eventdispatcher.event.message.BeginSetupEvent;
+import it.unipd.testbase.eventdispatcher.event.message.CompleteFileIndexReceivedEvent;
+import it.unipd.testbase.eventdispatcher.event.message.PartialFileIndexReceivedEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.AlertMessageArrivedEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.HelloMessageArrivedEvent;
+import it.unipd.testbase.helper.Log;
 import it.unipd.testbase.helper.LogPrinter;
 import it.unipd.testbase.wificonnection.message.IMessage;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import android.util.Log;
-
 public class CollectionHandler implements IDataCollectionHandler {
 	private static final String TAG = "it.unipd.testbase";
-	
-	private IControllerComponent controller = null;
 
 	@Override
 	public void onDataCollected(IMessage message, String hostIp) {
-		
+
 		int messageType = message.getType();
-		
-		Log.d(TAG, this.getClass().getSimpleName()+": Message received, of type = "+messageType);
-		
+		int appID = message.getAppID();
+
+		if(appID == AppController.getApplicatonRunID()) {
+			Log.e(TAG, this.getClass().getSimpleName()+": Message of type "+messageType+" from same source "+appID+", discarded");
+			return;
+		}
+
 		switch(messageType){
-			// In case of Hello message 
-			case IMessage.PING_MESSAGE_TYPE : 
-				Log.d(TAG, this.getClass().getSimpleName()+": Ricevuto  PING: \n"+message);
-				Map<String,String> peerData = new HashMap<String, String>();
-				String client_id_address = message.getContent().get(IMessage.PING_MESSAGE_ID_KEY);
-				peerData.put(client_id_address,hostIp);
-				controller.setPeersIdIPmap(peerData);
-				break;
-	
-				// In case of message MAP, for client addresses distribution
-			case IMessage.CLIENT_MAP_MESSAGE_TYPE :
-				Log.d(TAG, this.getClass().getSimpleName()+": Ricevuto MAP \n: "+message);
-				Map<String,String> allPeerData = new HashMap<String, String>();
-				Map<String, String> content = message.getContent();
-				for (String key : content.keySet()) {
-					String msgContent = content.get(key);
-					if(key.equals(controller.getDeviceId()))
-						EventDispatcher.getInstance().triggerEvent(new SetupProviderEvent(Integer.parseInt
-								(IMessage.splitContent(msgContent)[IMessage.FILE_COUNTER_INDEX]), content.size()));
-						//MockLocationProvider.__set_static_couter(Integer.parseInt(IMessage.splitContent(msgContent)[IMessage.FILE_COUNTER_INDEX]), content.size());
-					allPeerData.put(key, IMessage.splitContent(msgContent)[0]);
-				}
-				Log.d(TAG, this.getClass().getSimpleName()+": Ricevuta lista");
-				controller.setPeersIdIPmap(allPeerData);
-				break;
-	
-			case IMessage.ALERT_MESSAGE_TYPE :
-				LogPrinter.getInstance().writeTimedLine("alert message received from "+hostIp+". Hop number: "+message.getContent().get(IMessage.MESSAGE_HOP_KEY));
-				Log.d(TAG, this.getClass().getSimpleName()+": Ricevuto ALERT : \n"+message);
-				EventDispatcher.getInstance().triggerEvent(new AlertMessageArrivedEvent(message));
-				break;
-				
+		case IMessage.PING_MESSAGE_TYPE :
+			//TODO: map devices to position file
+			break;
+
+		case IMessage.ALERT_MESSAGE_TYPE :
+			LogPrinter.getInstance().writeTimedLine("alert message received from "+hostIp+". Hop number: "+message.getContent().get(IMessage.MESSAGE_HOP_KEY));
+			Log.d(TAG, this.getClass().getSimpleName()+": Ricevuto ALERT : \n"+message);
+			EventDispatcher.getInstance().triggerEvent(new UpdateGuiEvent(UpdateGuiEvent.GUI_UPDATE_NEW_MESSAGE, processMessageForEvent(message)));
+			EventDispatcher.getInstance().triggerEvent(new AlertMessageArrivedEvent(message));
+			break;
+
 			// case of fast broadcast hello message
-			case IMessage.HELLO_MESSAGE_TYPE :
-				Log.d(TAG, this.getClass().getSimpleName()+": Ricevuto  HELLO : \n"+message);
-				EventDispatcher.getInstance().triggerEvent(new HelloMessageArrivedEvent(message));
-				break;
-				
+		case IMessage.HELLO_MESSAGE_TYPE :
+			Log.d(TAG, this.getClass().getSimpleName()+": Ricevuto  HELLO: \n");
+			EventDispatcher.getInstance().triggerEvent(new HelloMessageArrivedEvent(message));
+			break;
+
+		case IMessage.BEGIN_SETUP_FASE:
+			Log.d(TAG, this.getClass().getSimpleName()+": Ricevuto  BEGIN_SETUP: \n"+message);
+			//int id = Integer.valueOf(message.getContent().get(IMessage.FILE_INDEX_KEY));
+			//if(id!=AppController.getApplicatonRunID())
+			EventDispatcher.getInstance().triggerEvent(new BeginSetupEvent());
+			//else
+			//	Log.d(TAG, this.getClass().getSimpleName()+": Same app id, message discarded");
+			break;
+
+		case IMessage.PARTIAL_FILE_COUNTER_INDEX:
+			Log.d(TAG, this.getClass().getSimpleName()+": Ricevuto  PARTIAL_FILE_COUNTER_INDEX: \n"+message);
+			PartialFileIndexReceivedEvent ev = new PartialFileIndexReceivedEvent(Integer.valueOf(message.getAppID()));
+			EventDispatcher.getInstance().triggerEvent(ev);
+			break;
+
+		case IMessage.COMPLETE_FILE_COUNTER_INDEX:
+			Log.d(TAG, this.getClass().getSimpleName()+": Ricevuto  COMPLETE_FILE_COUNTER_INDEX: \n"+message);
+			CompleteFileIndexReceivedEvent ev1 = new CompleteFileIndexReceivedEvent(message.getContent());
+			EventDispatcher.getInstance().triggerEvent(ev1);
+			break;
+
 			// Ignoring unknown messages
-			default : 
-				Log.d(TAG, this.getClass().getSimpleName()+": Unknown message type "+messageType+", discarded.");
+		default : 
+			Log.d(TAG, this.getClass().getSimpleName()+": Unknown message type "+messageType+", discarded.");
 		}
 	}
 
-	@Override
-	public void onError(String error) {
-		Log.d(TAG, this.getClass().getSimpleName()+": "+error);
-	}
-
-	@Override
-	public void setWiFiController(AppController controller) {
-		this.controller = controller;
+	private String processMessageForEvent(IMessage message)
+	{
+		String result = "ALERT - time: "+System.currentTimeMillis()+", hops: "+message.getContent().get(IMessage.MESSAGE_HOP_KEY);
+		return result;
 	}
 }

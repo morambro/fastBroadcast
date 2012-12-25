@@ -1,25 +1,51 @@
 package it.unipd.testbase.wificonnection.transmissionmanager;
 
+import it.unipd.testbase.eventdispatcher.EventDispatcher;
+import it.unipd.testbase.eventdispatcher.IComponent;
+import it.unipd.testbase.eventdispatcher.event.IEvent;
+import it.unipd.testbase.eventdispatcher.event.ShutdownEvent;
+import it.unipd.testbase.helper.Log;
 
-public class TransmissionManagerFactory {
-	
-	public static final int RELIABLE_TRANSPORT 		= 0;
-	
-	public static final int UNRELIABLE_TRANSPORT 	= 1;
-	
-	private static final TransmissionManagerFactory singleton = new TransmissionManagerFactory();
-	
-	private TransmissionManagerFactory() {}
-	
+import java.util.ArrayList;
+import java.util.List;
+
+
+public class TransmissionManagerFactory implements IComponent {
+	protected static final String TAG = "it.unipd.testbase";
+
+	private static TransmissionManagerFactory singleton = null;
+	private static ITranmissionManager tr = null;
+
+	private TransmissionManagerFactory() {
+		register();
+	}
+
 	public static TransmissionManagerFactory getInstance() {
+		if(singleton == null)
+			singleton = new TransmissionManagerFactory();
 		return singleton;
 	}
-	
-	public ITranmissionManager getTransmissionManager(int transportTypes) {
-		switch(transportTypes){
-			case RELIABLE_TRANSPORT 	: return new TCPTransmissionManager();
-			case UNRELIABLE_TRANSPORT 	: return new UDPTransmissionManager();
+
+	public ITranmissionManager getTransmissionManager() {
+		if(tr == null)
+			tr = new RawTransmissionManager();
+		return tr;
+	}
+
+	@Override
+	public void handle(IEvent event) {
+		if(event instanceof ShutdownEvent) {
+			Log.d(TAG, this.getClass().getSimpleName()+": shutdown");
+			if(tr!=null)
+				tr.release();
 		}
-		return null;
+		return;
+	}
+
+	@Override
+	public void register() {
+		List<Class<? extends IEvent>> events = new ArrayList<Class<? extends IEvent>>();
+		events.add(ShutdownEvent.class);
+		EventDispatcher.getInstance().registerComponent(this, events);
 	}
 }

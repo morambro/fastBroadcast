@@ -2,79 +2,48 @@ package it.unipd.testbase;
 
 import it.unipd.testbase.eventdispatcher.EventDispatcher;
 import it.unipd.testbase.eventdispatcher.event.IEvent;
-import it.unipd.testbase.eventdispatcher.event.connectioninfo.WiFiInfoCollectedEvent;
-import it.unipd.testbase.eventdispatcher.event.deviceconnector.ProceedWithNextEvent;
+import it.unipd.testbase.eventdispatcher.event.gui.UpdateGuiEvent;
 import it.unipd.testbase.eventdispatcher.event.location.LocationChangedEvent;
 import it.unipd.testbase.eventdispatcher.event.location.SetupProviderEvent;
 import it.unipd.testbase.eventdispatcher.event.location.UpdateLocationEvent;
+import it.unipd.testbase.eventdispatcher.event.message.BeginSetupEvent;
+import it.unipd.testbase.eventdispatcher.event.message.CompleteFileIndexReceivedEvent;
+import it.unipd.testbase.eventdispatcher.event.message.PartialFileIndexReceivedEvent;
 import it.unipd.testbase.eventdispatcher.event.message.MessageReceivedEvent;
-import it.unipd.testbase.eventdispatcher.event.message.SendUnicastMessageEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.EstimationPhaseStartEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.SendBroadcastMessageEvent;
-import it.unipd.testbase.protocol.FastBroadcastService;
+import it.unipd.testbase.helper.Log;
+import it.unipd.testbase.location.Location;
 import it.unipd.testbase.protocol.IFastBroadcastComponent;
-import it.unipd.testbase.wificonnection.connectionmanager.ConnectionManagerFactory;
-import it.unipd.testbase.wificonnection.connectionmanager.IConnectionInfoManager;
 import it.unipd.testbase.wificonnection.message.IMessage;
 import it.unipd.testbase.wificonnection.message.MessageBuilder;
 import it.unipd.testbase.wificonnection.receiver.CollectionHandler;
-import it.unipd.testbase.wificonnection.receiver.WifiBroadcastReceiver;
 import it.unipd.testbase.wificonnection.transmissionmanager.ITranmissionManager;
 import it.unipd.testbase.wificonnection.transmissionmanager.TransmissionManagerFactory;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.IntentFilter;
-import android.location.Location;
-import android.net.wifi.WifiManager;
-import android.net.wifi.WpsInfo;
-import android.net.wifi.p2p.WifiP2pConfig;
-import android.net.wifi.p2p.WifiP2pDevice;
-import android.net.wifi.p2p.WifiP2pDeviceList;
-import android.net.wifi.p2p.WifiP2pManager;
-import android.net.wifi.p2p.WifiP2pManager.ActionListener;
-import android.net.wifi.p2p.WifiP2pManager.Channel;
-import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
-import android.os.Handler;
-import android.os.Message;
-import android.util.Log;
+import java.util.Random;
 
 public class AppController implements IControllerComponent {
 
 	/********************************************** DECLARATIONS *************************************************/
 
 	protected final String TAG = "it.unipd.testbase";
-	public static String MAC_ADDRESS = null;
 
-	private Handler guiHandler;
+	private static final int APPLICATION_RUN_ID = new Random(System.currentTimeMillis()).nextInt(Integer.MAX_VALUE);
+	private static final int APPLICATION_SETUP_MAX = 5000;
+	private static final int APPLICATION_SETUP_PAD = 1000;
+	private static final int SETUP_SLEEP_TIME = new Random(System.currentTimeMillis()).nextInt(APPLICATION_SETUP_MAX);
+	private static boolean master = false;
+	private SetupConfigurator configurator = null;
+
 	private Location currentLocation;
 	private IDataCollectionHandler collectionHandler = new CollectionHandler();
-	private WifiP2pManager manager;
-	private Channel channel;
-	private BroadcastReceiver receiver;
-	
-	private SynchronizedDevicesList peers = new SynchronizedDevicesList();
-	
-	private Map<String,String> peerIdIpMap;
-	private Context context;
-	private IntentFilter broadcastReceiverIntentFilter;
-	private boolean mapSent = false;
-
-	private String groupOwnerAddress;
-	private boolean isGroupOwner = false;
-	private boolean keepUpdatingPeers = true;
-
-//	private DeviceConnector deviceConnector;
-	
 	private IFastBroadcastComponent fastBroadcastService;
 
 	/************************************************* INTERFACES/CLASSES ********************************************/
-	
+
 	/**
 	 * Interface used to specify operation to do on data collected or when an error occurs
 	 * 
@@ -82,387 +51,104 @@ public class AppController implements IControllerComponent {
 	 *
 	 */
 	public static interface IDataCollectionHandler {
-		public void setWiFiController(AppController controller);
 		public void onDataCollected(IMessage message,String sender);
-		public void onError(String error);
 	}
-	
-	/**
-	 * PeerListListener implementation
-	 * 
-	 */
-	private PeerListListener peerListener = new PeerListListener() {
 
-		public void onPeersAvailable(WifiP2pDeviceList peers_list) {
-			if(!keepUpdatingPeers) {
-				Log.d(TAG, this.getClass().getSimpleName()+": Ignoring peers update");
-				return;
-			}
-			// Adds only new devices
-			for(WifiP2pDevice device : peers_list.getDeviceList()){
-				peers.add(device);
-			}
-			// remove disappeared devices
-			for(int i = 0; i < peers.size(); i++){
-				WifiP2pDevice device = peers.get(i);
-				if(!peers_list.getDeviceList().contains(device)){
-					Log.d(TAG,this.getClass().getSimpleName() + "Device not in the list, removed");
-					peers.remove(device);
+	class SetupConfigurator {
+		private boolean locked = false;
+		private List<Integer> devices = new ArrayList<Integer>();
+
+		public SetupConfigurator() {
+			Log.d(TAG, "Configurator started");
+			new Thread(new Runnable() {
+
+				@Override
+				public void run() {
+					try {
+						Thread.sleep(APPLICATION_SETUP_MAX+APPLICATION_SETUP_PAD);
+						locked = true;
+						master = false;
+						IMessage m = MessageBuilder.getInstance().getMessage(IMessage.COMPLETE_FILE_COUNTER_INDEX, ""+APPLICATION_RUN_ID);
+						for(int i=0; i<devices.size(); ++i)
+							//use i+1 because 0 is reserved for master
+							m.addContent(""+devices.get(i), ""+(i+1));
+						m.prepare();
+						EventDispatcher.getInstance().triggerEvent(new SendBroadcastMessageEvent(m));
+						EventDispatcher.getInstance().triggerEvent(new SetupProviderEvent(0, devices.size()+1));
+						EventDispatcher.getInstance().triggerEvent(new UpdateGuiEvent(UpdateGuiEvent.GUI_UPDATE_UNLOCK, null));
+						EventDispatcher.getInstance().triggerEvent(new EstimationPhaseStartEvent());
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
 				}
+			}).start();
+		}
+
+		public synchronized void addDevice(int device) {
+			if(!devices.contains(device) && !locked) {
+				devices.add(device);
+				EventDispatcher.getInstance().triggerEvent(new UpdateGuiEvent(UpdateGuiEvent.GUI_UPDATE_ADD_PEER, null));
 			}
-
-			Message msg = new Message();
-			msg.obj = peers;
-			msg.what = GuiHandlerInterface.UPDATE_PEERS;
-			guiHandler.sendMessage(msg);
-
-			Log.d(TAG, this.getClass().getSimpleName()+": Peers Added to the List");
-		}
-
-	};
-
-	/**
-	 * Listener defined to receive and handle connection info events.
-	 */
-	private IConnectionInfoManager connectionInfoListener = ConnectionManagerFactory.getInstance().getConnectionManager();
-
-	/**
-	 * Wrapper class used to access list via synchronized methods
-	 * 
-	 * @author Fabio De Gaspari
-	 *
-	 */
-	public class SynchronizedDevicesList {
-		
-		private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
-		
-		synchronized boolean remove(WifiP2pDevice device){
-			return peers.remove(device);
-		}
-		
-		synchronized int size() {
-			return peers.size();
-		}
-
-		synchronized void add(WifiP2pDevice device){
-			if(!peers.contains(device)){
-				Log.d(TAG,this.getClass().getSimpleName() + "Aggiunto device");
-				peers.add(device);
-			}else{
-				Log.d(TAG,this.getClass().getSimpleName() + "Device already in the list");
-			}
-		}
-		
-		synchronized WifiP2pDevice get(int index){
-			return peers.get(index);
 		}
 
 	}
-	
+
 	/******************************************************* METHODS ************************************************/
 
-	/**
-	 * Constructor
-	 * 
-	 * @param context
-	 */
-	public AppController(Context context, GuiHandlerInterface guiHandlerInterface) {
-		this.context = context;
-		this.guiHandler = guiHandlerInterface.getGuiHandler();
-		collectionHandler.setWiFiController(this);
-		// manager and channel initialization
-		manager = (WifiP2pManager) context.getSystemService(Context.WIFI_P2P_SERVICE);
-		channel = manager.initialize(context, context.getMainLooper(), null);
-		// Register intent filter to receive specific intents
-		broadcastReceiverIntentFilter = new IntentFilter();
-		broadcastReceiverIntentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
-		broadcastReceiverIntentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
-		broadcastReceiverIntentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-		broadcastReceiverIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
-		// Setting static field which contains device MAC address
-		MAC_ADDRESS = getDeviceMacAddress();
-		Log.d(TAG, this.getClass().getSimpleName()+": il MAC address del dispositivo è = "+MAC_ADDRESS);
-		
+	public static int getApplicatonRunID() {
+		return APPLICATION_RUN_ID;
+	}
+
+	public static int getApplicatonSetupMax() {
+		return APPLICATION_SETUP_MAX;
+	}			
+
+	public static void setMaster() {
+		master = true;
+	}
+
+	public boolean isMaster() {
+		return master;
+	}
+
+	public AppController() {
+		fastBroadcastService = (IFastBroadcastComponent) EventDispatcher.getInstance().requestComponent(IFastBroadcastComponent.class);
 		register();
 	}
 
-	/**
-	 * Method used to get device's mac address
-	 * 
-	 * @return
-	 */
-	protected String getDeviceMacAddress(){
-		WifiManager wifiMan = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-		android.net.wifi.WifiInfo wifiInf = wifiMan.getConnectionInfo();
-		return wifiInf.getMacAddress();
-	}
-
-
-	/**
-	 * Manages connection to the given device
-	 * 
-	 * @param device
-	 */
-	public void connect(WifiP2pDevice device){
-		WifiP2pConfig config = new WifiP2pConfig();
-		config.deviceAddress = device.deviceAddress;
-		config.wps.setup = WpsInfo.PBC;
-		config.groupOwnerIntent = 15;
-		manager.connect(channel,config, new ActionListener() {
-
-			public void onSuccess() {
-				showToast("Richiesta di connessione effettuata");
-			}
-
-			public void onFailure(int reason) {
-				showToast("Impossibil Connettersi reason = "+reason);
-			}
-		});
-
-
-	}
-
-	@Override
-	public void setFastBroadCastReceiverRegistered(boolean registered){
-		if(registered) {
-			receiver = new WifiBroadcastReceiver(manager, channel,peerListener,connectionInfoListener);
-			context.registerReceiver(receiver, broadcastReceiverIntentFilter);
-		}else{
-			context.unregisterReceiver(receiver);
-		}
-	}
-
-	/**
-	 * Registers BroadcastReceiver and requests DataReceiverService
-	 */
-	public void aquireResources() {
-		receiver = new WifiBroadcastReceiver(manager, channel,peerListener,this.connectionInfoListener);
-		context.registerReceiver(receiver, broadcastReceiverIntentFilter);
-	}
-
-	/**
-	 * Unregisters BroadcastReceiver and releases DataReceiverService
-	 */
-	public void releaseResources() {
-		context.unregisterReceiver(receiver);
-	}
-
-	/**
-	 * Setter method for the map. If current device is the GroupOwner, it sends back to
-	 * all the devices requestConnectionSent to his group the complete map of all the peers
-	 * 
-	 * @param map
-	 */
-	public synchronized void setPeersIdIPmap(Map<String,String> map){
-
-		if(peerIdIpMap == null){
-			peerIdIpMap = map;
-		}else{
-			peerIdIpMap.putAll(map);
-		}
-		if(peerIdIpMap.containsKey(MAC_ADDRESS))
-			peerIdIpMap.remove(MAC_ADDRESS);
-		// If I'm the group owner and I haven't sent the map to all yet and the map is complete (all peers sent me their ID)
-		// Broadcast the map to all, after adding my <ID,IP> to it!
-		Map<String,String> mapToBroadcast = null;
-		if(isGroupOwner){
-			if(!mapSent && peerIdIpMap.keySet().size() >= peers.size()){
-				//size()+1 because group owner is not included in this map (so the returned size() equals (device_number-1)
-				
-				fastBroadcastService = (IFastBroadcastComponent)EventDispatcher.getInstance().requestComponent(FastBroadcastService.class);
-				
-				EventDispatcher.getInstance().triggerEvent(new SetupProviderEvent(0, peerIdIpMap.size()+1));
-				//MockLocationProvider.__set_static_couter(0, peerIdIpMap.size()+1);
-				EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
-				mapToBroadcast = new HashMap<String, String>(peerIdIpMap);
-				mapToBroadcast.put(MAC_ADDRESS,groupOwnerAddress);
-				IMessage message = createMapMessage(mapToBroadcast, ITranmissionManager.BROADCAST_ADDRESS);
-				Log.d(TAG,this.getClass().getCanonicalName()+": Invio la mappa a tutti : \n");
-				sendBroadcast(message);
-				mapSent = true;
-				// Now start fast broadcast service Estimation Phase
-				EventDispatcher.getInstance().triggerEvent(new EstimationPhaseStartEvent());
-			}
-		} else {
-			// If I'm not the group owner and I'm here, I received the map. So I can start estimation phase
-			fastBroadcastService = (IFastBroadcastComponent)EventDispatcher.getInstance().requestComponent(FastBroadcastService.class);
-			EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
-			//__mock_provider.updateLocation();
-			EventDispatcher.getInstance().triggerEvent(new EstimationPhaseStartEvent());
-		}
-
-		if(mapToBroadcast == null)
-			mapToBroadcast = peerIdIpMap;
-		String s = "Map updated! \n";
-		for(String k : mapToBroadcast.keySet()){
-			s += k + "  " + mapToBroadcast.get(k)+"\n";
-		}
-		EventDispatcher.getInstance().triggerEvent(new ProceedWithNextEvent());
-		Log.d(TAG, this.getClass().getSimpleName()+": Message received\n"+s);
-	}
-
-	/**
-	 * Creates Map message for all the peers
-	 * 
-	 * @param map
-	 * @param recipient
-	 * @return
-	 */
-	private IMessage createMapMessage(Map<String,String> map, String recipient){
-		IMessage message = MessageBuilder.getInstance().getMessage(IMessage.CLIENT_MAP_MESSAGE_TYPE,recipient);
-		int i = 1;
-		for(String k : map.keySet()){
-			if(k.equals(MAC_ADDRESS))
-				message.addContent(k, IMessage.concatContent(map.get(k), ""+0));
-			else
-			{
-				message.addContent(k, IMessage.concatContent(map.get(k), ""+i));
-				i++;
-			}
-		}
-		message.prepare();
-		return message;
-	}
-
-	/**
-	 * Getter
-	 * 
-	 * @return
-	 */
-	public Map<String,String> getPeersMap(){
-		return peerIdIpMap;
-	}
-
-	/**
-	 * Starts peers discovering
-	 * 
-	 */
-	public void discoverPeers(){
-		manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
-			public void onSuccess() {
-				Log.d(TAG, this.getClass().getSimpleName()+": Discover Peers onSuccess called");
-			}
-
-			public void onFailure(int reasonCode) {
-				Log.d(TAG, this.getClass().getSimpleName()+": Discover Peers ERROR: "+reasonCode);
-			}
-		});
-	}
-
-	@Override
-	public void disconnect() {
-		manager.removeGroup(channel, new ActionListener(){
-			public void onSuccess() {
-				Log.d(TAG, this.getClass().getSimpleName()+": Group removed");
-			}
-			public void onFailure(int reason) {
-				Log.d(TAG, this.getClass().getSimpleName()+": Failed to remove group, reason = "+reason);
-			}
-		});
-	}
-
-	@Override
-	public void connectToAll() {
-		for(int i = 0; i < peers.size(); i++){
-			connect(peers.get(i));
-		}
-//		keepUpdatingPeers = false;
-//		deviceConnector = new DeviceConnector(peers,manager,channel,this);
-//		EventDispatcher.getInstance().triggerEvent(new ProceedWithNextEvent());
-	}
-
-	/**
-	 * Utility function used to post string messages
-	 * @param string
-	 */
-	private void showToast(String string) {
-		Message msg = new Message();
-		msg.obj = string;
-		msg.what = GuiHandlerInterface.SHOW_TOAST_MSG;
-		guiHandler.sendMessage(msg);
-	}
-	
 	@Override
 	public void sendAlert() {
-		IMessage message = MessageBuilder.getInstance().getMessage(
-				IMessage.ALERT_MESSAGE_TYPE, 
-				ITranmissionManager.BROADCAST_ADDRESS
-		);
+		IMessage message = MessageBuilder.getInstance().getMessage(IMessage.ALERT_MESSAGE_TYPE, ""+APPLICATION_RUN_ID);
 		message.addContent(IMessage.SENDER_LATITUDE_KEY, ""+currentLocation.getLatitude());
 		message.addContent(IMessage.SENDER_LONGITUDE_KEY, ""+currentLocation.getLongitude());
 		message.addContent(IMessage.SENDER_RANGE_KEY, ""+fastBroadcastService.getEstimatedTrasmissionRange());
 		message.addContent(IMessage.SENDER_DIRECTION_KEY, ""+currentLocation.getBearing());
 		message.addContent(IMessage.MESSAGE_HOP_KEY, "1");
 		message.prepare();
+		EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
 		sendBroadcast(message);
 	}
 
 	@Override
 	public void sendBroadcast(IMessage message) {
-		
-		if(peerIdIpMap != null){
-			int transportType = TransmissionManagerFactory.RELIABLE_TRANSPORT;
-			switch(message.getType()){
-				case IMessage.ALERT_MESSAGE_TYPE : 
-					transportType = TransmissionManagerFactory.UNRELIABLE_TRANSPORT;
-					break;
-				case IMessage.HELLO_MESSAGE_TYPE :
-					transportType = TransmissionManagerFactory.UNRELIABLE_TRANSPORT;
-					break;
-			}
-			TransmissionManagerFactory.getInstance().getTransmissionManager(transportType).send(
-				new ArrayList<String>(peerIdIpMap.values()),
-				message
-			);
-		}
-	}
-	
-	private void sendUnicast(String recipient, IMessage message) {
-		int transportType = TransmissionManagerFactory.RELIABLE_TRANSPORT;
-		switch(message.getType()){
-			case IMessage.ALERT_MESSAGE_TYPE : 
-				transportType = TransmissionManagerFactory.UNRELIABLE_TRANSPORT;
-				break;
-			case IMessage.HELLO_MESSAGE_TYPE :
-				transportType = TransmissionManagerFactory.UNRELIABLE_TRANSPORT;
-				break;
-		}
-		TransmissionManagerFactory.getInstance().getTransmissionManager(transportType).send(
-			recipient,
-			message
-		);
+		TransmissionManagerFactory.getInstance().getTransmissionManager().send(ITranmissionManager.BROADCAST_ADDRESS ,message);
 	}
 
-	@Override
-	public boolean isGroupOwner() {
-		return isGroupOwner;
-	}
-
-	@Override
-	public String getGroupOwnerAddress() {
-		return groupOwnerAddress;
-	}
-
-	@Override
-	public String getDeviceId() {
-		return MAC_ADDRESS;
-	}
-	
 	@Override
 	public void register() {
 		List<Class<? extends IEvent>> events = new ArrayList<Class<? extends IEvent>>();
 		events.add(LocationChangedEvent.class);
 		events.add(MessageReceivedEvent.class);
-		events.add(WiFiInfoCollectedEvent.class);
+		events.add(BeginSetupEvent.class);
 		events.add(SendBroadcastMessageEvent.class);
-		events.add(SendUnicastMessageEvent.class);
+		events.add(PartialFileIndexReceivedEvent.class);
+		events.add(CompleteFileIndexReceivedEvent.class);
 		EventDispatcher.getInstance().registerComponent(this, events);
 	}
 
 	@Override
 	public void handle(IEvent event) {
-		
 		if(event instanceof LocationChangedEvent){
 			LocationChangedEvent ev = (LocationChangedEvent) event;
 			this.currentLocation = ev.location;
@@ -478,16 +164,45 @@ public class AppController implements IControllerComponent {
 			sendBroadcast(ev.message);
 			return;
 		}
-		if(event instanceof SendUnicastMessageEvent){
-			SendUnicastMessageEvent ev = (SendUnicastMessageEvent) event;
-			sendUnicast(ev.recipient,ev.message);
+		if(event instanceof BeginSetupEvent){
+			if(isMaster())
+				configurator = new SetupConfigurator();
+			else
+				new Thread(new Runnable() {
+
+					@Override
+					public void run() {
+						try {
+							Thread.sleep(SETUP_SLEEP_TIME);
+							IMessage message = MessageBuilder.getInstance().getMessage(IMessage.PARTIAL_FILE_COUNTER_INDEX, ""+APPLICATION_RUN_ID);
+							message.prepare();
+							EventDispatcher.getInstance().triggerEvent(new SendBroadcastMessageEvent(message));
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					}
+				}).start();
 			return;
 		}
-		if(event instanceof WiFiInfoCollectedEvent){
-			WiFiInfoCollectedEvent ev = (WiFiInfoCollectedEvent) event;
-			groupOwnerAddress 	= ev.wifiConnectionInfo.groupOwnerAddress.getCanonicalHostName();
-			isGroupOwner 		= ev.wifiConnectionInfo.isGroupOwner;
-			return;
+		if(event instanceof PartialFileIndexReceivedEvent) {
+			if(isMaster()) {
+				PartialFileIndexReceivedEvent ev = (PartialFileIndexReceivedEvent) event;
+				configurator.addDevice(ev.deviceID);
+			}
+		}
+		if(event instanceof CompleteFileIndexReceivedEvent) {
+			CompleteFileIndexReceivedEvent ev = (CompleteFileIndexReceivedEvent) event;
+			String i = ev.map.get(""+APPLICATION_RUN_ID);
+			if(i==null) {
+				Log.e(TAG, this.getClass().getSimpleName()+": Device not present in map!!");
+				return;
+			}
+			int deviceNum = ev.map.size()+1;
+			int index = Integer.valueOf(i);
+			EventDispatcher.getInstance().triggerEvent(new SetupProviderEvent(index, deviceNum));
+			EventDispatcher.getInstance().triggerEvent(new EstimationPhaseStartEvent());
+			EventDispatcher.getInstance().triggerEvent(new UpdateGuiEvent(UpdateGuiEvent.GUI_UPDATE_UNLOCK, null));
+			EventDispatcher.getInstance().triggerEvent(new UpdateGuiEvent(UpdateGuiEvent.GUI_UPDATE_ADD_PEER, new Integer(deviceNum)));
 		}
 	}
 

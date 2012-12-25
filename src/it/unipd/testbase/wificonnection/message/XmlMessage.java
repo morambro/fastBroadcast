@@ -11,31 +11,40 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import android.util.Log;
-
 public class XmlMessage extends IMessage{
 	private static final String TAG = "it.unipd.testbase";
 	private static final String MSG_TAG = "message";
 	private static final String TYPE_ATTRIBUTE = "type";
-	private static final String RECIPIENT_ID_TAG = "recipient_id";
 	private static final String CONTENT_BLOCK_TAG = "content_block";
 	private static final String CONTENT_TAG = "content";
 	private static final String KEY_TAG = "key";
-	private static final String SENDER_IP_ATTRIBUTE = "sender_ip";
-	
+	private static final String APP_ID_ATTRIBUTE = "application_id";
+
 	private int type = -1;
 	private String message = "";
 	private Map<String, String> messageContent = null;
-	
+
+	@Override
+	public void __debug_set_message(String message)
+	{
+		this.message = message;
+	}
+
+	@Override
+	public String __debug_get_message() {
+		return message;
+	}
+
+
 	public XmlMessage(int type, String recipientID,String senderIP) {
 		this.type = type;
-		message += "<"+MSG_TAG+" "+TYPE_ATTRIBUTE+"='"+type+"' "+RECIPIENT_ID_TAG+"='"+recipientID+"' "+SENDER_IP_ADDR+"='"+senderIP+"'>";
+		message += "<"+MSG_TAG+" "+TYPE_ATTRIBUTE+"='"+type+"' "+APP_ID_ATTRIBUTE+"='"+recipientID+"'>";
 	}
-	
+
 	public XmlMessage(String message) {
 		this.message = message;
 	}
-	
+
 	@Override
 	public void addContent(String contentKey, String content) {
 		if(messageContent==null)
@@ -43,12 +52,12 @@ public class XmlMessage extends IMessage{
 		if(messageContent == null) messageContent = new HashMap<String, String>();
 		messageContent.put(contentKey, content);
 	}
-	
+
 	@Override
 	public Map<String, String> getContent() {
 		return MessageParser.getContent(message);
 	}
-	
+
 	@Override
 	public byte[] getMessage() {
 		try {
@@ -60,6 +69,11 @@ public class XmlMessage extends IMessage{
 	}
 
 	@Override
+	public String getMessageString() {
+		return message;
+	}
+
+	@Override
 	public int getType() {
 		if(type==-1)
 			type = Integer.valueOf(MessageParser.getType(message));
@@ -67,64 +81,53 @@ public class XmlMessage extends IMessage{
 	}
 
 	@Override
-	public String getSenderID() {
-		return MessageParser.getSenderId(message);
+	public int getAppID() {
+		String s = MessageParser.getAttribute(message, APP_ID_ATTRIBUTE);
+		if(s.equals(""))
+			return -1;
+		else
+			return Integer.valueOf(s);
 	}
 
-	@Override
-	public String getRecipientAddress() {
-		return MessageParser.getRecipientId(message);
-	}
-	
-	@Override
-	public void setRecipientAddress(String recipientAddress) {
-		String substr = RECIPIENT_ID_TAG+"='";
-		int startIndex = message.indexOf(substr)+substr.length()-1;
-		int stopIndex = message.substring(startIndex).indexOf("'");
-		message = message.substring(0, startIndex)+recipientAddress+message.substring(stopIndex);
-		Log.d(TAG, this.getClass().getSimpleName()+": Recipient replaced; "+message);
-	}
 
 	@Override
 	public void prepare() {
-		for (String key : messageContent.keySet()) {
-			message +=	"<"+CONTENT_BLOCK_TAG+">" +
+		if(messageContent!=null)
+			for (String key : messageContent.keySet()) {
+				message +=	"<"+CONTENT_BLOCK_TAG+">" +
 						"<"+KEY_TAG+">"+key+"</"+KEY_TAG+">  "+
 						"<"+CONTENT_TAG+">"+messageContent.get(key)+"</"+CONTENT_TAG+">" +
 						"</"+CONTENT_BLOCK_TAG+">\n";
-		}
+			}
 		message += "</"+MSG_TAG+">";
 	}
-	
+
 	@Override
 	public String toString(){
 		return message;
 	}
-	
+
 	private static class MessageParser {
 		private MessageParser(){}
-		
+
 		public static String getType(String xml) {
 			return XMLParser.estractTagAttributeFromXMLDoc(xml, MSG_TAG, TYPE_ATTRIBUTE);
 		}
-		
-		public static String getRecipientId(String xml) {
-			return XMLParser.estractTagAttributeFromXMLDoc(xml, MSG_TAG, RECIPIENT_ID_TAG);
+
+		public static String getAttribute(String xml, String attribute) {
+			return XMLParser.estractTagAttributeFromXMLDoc(xml, MSG_TAG, attribute);
 		}
-		
-		public static String getSenderId(String xml) {
-			return XMLParser.estractTagAttributeFromXMLDoc(xml, MSG_TAG, SENDER_IP_ATTRIBUTE);
-		}
-		
+
+
 		public static Map<String,String> getContent(String xml) {
 			Document doc;
-			
+
 			try{
 				doc = XMLParser.xmlToDocument(xml);
 			}catch(Exception e){
 				return null;
 			}
-			
+
 			NodeList devices = doc.getElementsByTagName(CONTENT_BLOCK_TAG);
 			Map<String,String> res = new HashMap<String, String>();
 			for(int i = 0; i < devices.getLength(); i++){
@@ -149,5 +152,4 @@ public class XmlMessage extends IMessage{
 			return false;
 		return true;
 	}
-	
 }

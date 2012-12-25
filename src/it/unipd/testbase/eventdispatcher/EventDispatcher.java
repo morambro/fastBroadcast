@@ -1,12 +1,11 @@
 package it.unipd.testbase.eventdispatcher;
 
 import it.unipd.testbase.eventdispatcher.event.IEvent;
+import it.unipd.testbase.helper.Log;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import android.util.Log;
 
 /**
  * This class implements an Event Bus, at which classes implementing IComponent can register
@@ -66,7 +65,7 @@ public class EventDispatcher {
 	 */
 	public synchronized boolean triggerEvent(IEvent event) {
 		boolean flag = false;
-		Log.d(TAG,this.getClass().getSimpleName()+" : Triggered event "+event.getClass().getSimpleName());
+		//Log.d(TAG,this.getClass().getSimpleName()+" : Triggered event "+event.getClass().getSimpleName());
 		for(IComponent comp : components.keySet()) {
 			if(components.get(comp) != null && components.get(comp).contains(event.getClass())) {
 				flag = true;

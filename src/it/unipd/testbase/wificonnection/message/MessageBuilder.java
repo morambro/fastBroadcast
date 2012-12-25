@@ -20,10 +20,6 @@ public class MessageBuilder {
 		return createMessage(type, recipientID,"");
 	}
 	
-	public IMessage getMessage(int type, String recipientID,String senderID) {
-		return createMessage(type, recipientID,senderID);
-	}
-	
 	public IMessage getMessage(int type, String recipientID, String contentKey, String content) {
 		IMessage temp = getMessage(type, recipientID);
 		temp.addContent(contentKey, content);

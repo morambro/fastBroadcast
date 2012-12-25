@@ -20,7 +20,7 @@ public interface IFastBroadcastComponent extends IComponent{
 	/**
 	 * Stops the execution
 	 */
-	public void stopExecuting();
+	public void terminate();
 	
 	
 }

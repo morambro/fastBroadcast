@@ -1,55 +1,55 @@
 package it.unipd.testbase.helper;
 
-import java.io.File;
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 
-import android.os.Environment;
-import android.util.Log;
-
 public class LogPrinter {
-	
+
 	private static final String fileName = "fast_broadcast_log.txt";
 	private static LogPrinter log = null;
-	private File file;
-	private FileOutputStream outStream;
-	
+	private FileWriter file;
+	private BufferedWriter writer;
+
 	public static LogPrinter getInstance() {
 		if(log == null)
 			log = new LogPrinter();
 		return log;
 	}
-	
+
 	protected LogPrinter() {
-		file = new File(Environment.getExternalStorageDirectory(), fileName);
 		try {
-			outStream = new FileOutputStream(file);
+			file = new FileWriter(fileName);
+			writer = new BufferedWriter(file);
 		} catch (FileNotFoundException e) {
 			Log.e("LogPrinter", e.getMessage());
 			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
-	
+
 	public void writeLine(String line) {
 		try {
 			line = line.concat("\n");
-			outStream.write(line.getBytes());
-			outStream.flush();
+			writer.write(line);
+			writer.flush();
 		} catch (IOException e) {
 			Log.e("LogPrinter", e.getMessage());
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void writeTimedLine(String line) {
 		line = (new String("Time "+System.currentTimeMillis()+": ").concat(line));
 		writeLine(line);
 	}
-	
+
 	public void release() {
 		try {
-			outStream.close();
+			writer.close();
 		} catch (IOException e) {
 			Log.e("LogPrinter", e.getMessage());
 			e.printStackTrace();
