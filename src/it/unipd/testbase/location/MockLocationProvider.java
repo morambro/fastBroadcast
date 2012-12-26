@@ -36,6 +36,8 @@ public class MockLocationProvider {
 	
 	private List<String> lines;
 	int currentIndex = 1;
+	
+	private Context context;
 
 	/**
 	 * Positions file
@@ -54,8 +56,10 @@ public class MockLocationProvider {
 		manager.addTestProvider(name, requiresNetwork, requiresSatellite, requiresCell, hasMonetaryCost, 
 				supportsAltitude, supportsSpeed, supportsBearing, powerRequirement, accuracy);
 		manager.setTestProviderEnabled(name, true);
-		
-		
+		this.context = context;
+	}
+	
+	private void firstRead(){
 		try {
 			file = new BufferedReader(new InputStreamReader(context.getAssets().open("mock_positions.txt")));
 			lines = new ArrayList<String>();
@@ -80,6 +84,7 @@ public class MockLocationProvider {
 
 	public void updateLocation() {
 			if(firstExec){
+				firstRead();
 				currentIndex = currentIndex + counter;
 				firstExec = false;
 			} else {
@@ -90,6 +95,9 @@ public class MockLocationProvider {
 				logger.d("End of file reached");
 				// Trigger an event to communicate the end of positions
 				EventDispatcher.getInstance().triggerEvent(new PositionsTerminatedEvent());
+				
+				currentIndex = 1;
+				firstExec = true;
 				return;
 			}
 			logger.d("Current position found in line "+(currentIndex+1)+": "+lines.get(currentIndex));

@@ -35,6 +35,9 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	
 	protected static final String TAG = "it.unipd.testbase";
 	
+	
+	public static final int DEFAULT_RANGE = 300;
+	
 	/**
 	 * Alert message for debugging purposes
 	 */
@@ -60,19 +63,19 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	/**
 	 * Current-turn Maximum Front Range
 	 */
-	private double cmfr = 300;
+	private double cmfr = DEFAULT_RANGE;
 	/**
 	 * Current-turn Maximum Back Range
 	 */
-	private double cmbr = 300;
+	private double cmbr = DEFAULT_RANGE;
 	/**
 	 * Last-turn Maximum Front Range
 	 */
-	private double lmfr = 300;
+	private double lmfr = DEFAULT_RANGE;
 	/**
 	 * Last-turn Maximum Back Range
 	 */
-	private double lmbr = 300;
+	private double lmbr = DEFAULT_RANGE;
 	
 	/**
 	 * Error used to determine if two devices are moving on the same direction
@@ -105,12 +108,12 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	/**
 	 * Slot size in milliseconds
 	 */
-	private static final int SLOT_SIZE = 100;
+	private static final int SLOT_SIZE = 10;
 	
 	/**
 	 * Turn duration in milliseconds
 	 */
-	public static final int TURN_DURATION = 2000;
+	public static final int TURN_DURATION = 1000;
 	
 	/**
 	 * Contention window bounds
@@ -203,7 +206,8 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		private void sendHelloMessage(){
 			IMessage helloMessage = MessageBuilder.getInstance().getMessage(
 					HELLO_MESSAGE_TYPE,
-					IPaketSender.BROADCAST_ADDRESS);
+					IPaketSender.BROADCAST_ADDRESS,
+					AppController.MAC_ADDRESS);
 			
 			helloMessage.addContent(IMessage.SENDER_LATITUDE_KEY,currentLocation.getLatitude()+"");
 			helloMessage.addContent(IMessage.SENDER_LONGITUDE_KEY,currentLocation.getLongitude()+"");
@@ -610,6 +614,10 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		if(event.getClass().equals(StopSimulationEvent.class)){
 			stopExecuting();
 			EventDispatcher.getInstance().triggerEvent(new ShowSimulationResultsEvent());
+			
+			// Reset default range
+			lmbr = cmbr = cmfr = lmfr = DEFAULT_RANGE;
+			
 			return;
 		}
 		if(event.getClass().equals(SendAlertMessageEvent.class)){
@@ -623,7 +631,6 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	public void register() {
 		List<Class<? extends IEvent>> events = new ArrayList<Class<? extends IEvent>>();
 		events.add(SimulationStartEvent.class);
-//		events.add(HelloMessageArrivedEvent.class);
 		events.add(LocationChangedEvent.class);
 		events.add(NewMessageArrivedEvent.class);
 		events.add(StopSimulationEvent.class);

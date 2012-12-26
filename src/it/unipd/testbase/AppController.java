@@ -13,6 +13,7 @@ import it.unipd.testbase.eventdispatcher.event.protocol.SendBroadcastMessageEven
 import it.unipd.testbase.eventdispatcher.event.protocol.SimulationStartEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.StopSimulationEvent;
 import it.unipd.testbase.helper.DebugLogger;
+import it.unipd.testbase.protocol.FastBroadcastService;
 import it.unipd.testbase.wificonnection.connectioninfomanager.ConnectionManagerFactory;
 import it.unipd.testbase.wificonnection.connectioninfomanager.IConnectionInfoManager;
 import it.unipd.testbase.wificonnection.message.IMessage;
@@ -205,9 +206,10 @@ public class AppController implements IControllerComponent {
 			new TransportSelectorFilter() {
 				@Override
 				public int getTransportForMessage(IMessage message) {
-//					if(message.getType() == IMessage.ALERT_MESSAGE_TYPE || message.getType() == IMessage.HELLO_MESSAGE_TYPE){
-//						return PacketSenderFactory.UNRELIABLE_TRANSPORT;
-//					}
+					if(/*message.getType() == FastBroadcastService.ALERT_MESSAGE_TYPE || */
+							message.getType() == FastBroadcastService.HELLO_MESSAGE_TYPE){
+						return PacketSenderFactory.UNRELIABLE_TRANSPORT;
+					}
 					return PacketSenderFactory.RELIABLE_TRANSPORT;
 				}
 			}
@@ -451,12 +453,6 @@ public class AppController implements IControllerComponent {
 
 	@Override
 	public void handle(IEvent event) {
-		
-//		if(event instanceof LocationChangedEvent){
-//			LocationChangedEvent ev = (LocationChangedEvent) event;
-//			this.currentLocation = ev.location;
-//			return;
-//		}
 		if(event instanceof MessageReceivedEvent){
 			MessageReceivedEvent ev = (MessageReceivedEvent) event;
 			collectionHandler.onDataCollected(ev.message, ev.senderID);
