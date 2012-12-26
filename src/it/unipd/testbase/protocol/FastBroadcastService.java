@@ -105,7 +105,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	/**
 	 * Slot size in milliseconds
 	 */
-	private static final int SLOT_SIZE = 10;
+	private static final int SLOT_SIZE = 100;
 	
 	/**
 	 * Turn duration in milliseconds
@@ -278,87 +278,59 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 					logger.e(e);
 					return;
 				}
-
-				boolean arrived = true;
-				for(DistanceFilter filter : filters){
-					arrived = arrived & (filter.filter(message));
-				}
 				
-				if(!arrived){
-					LogPrinter.getInstance().writeTimedLine("ALERT DISCARDED: TOO FAR AWAY. QUEUE SIZE "+messageQueue.size());
-					logger.d("MESSAGE SHOULDN'T HAVE BEEN ARRIVED");
+				// If I'm here, an Alert message Arrived
+				logger.d("ALERT MESSAGE ARRIVED!!");
+				// now I am sure message != null
+				Map<String,String> content = message.getContent();
+				double latitude 	= Double.parseDouble(content.get(IMessage.SENDER_LATITUDE_KEY));
+				double longitude 	= Double.parseDouble(content.get(IMessage.SENDER_LONGITUDE_KEY));
+				double maxRange 	= Double.valueOf(content.get(IMessage.SENDER_RANGE_KEY));
+				float direction 	= Float.valueOf(content.get(IMessage.SENDER_DIRECTION_KEY));
+				int hopCount 		= Integer.valueOf(content.get(IMessage.MESSAGE_HOP_KEY));
+				hopCount ++;
+				float distance = getDistance(latitude, longitude);
+				
+				logger.d("Distance = "+distance);
+				logger.d("MaxRange = "+maxRange);
+				
+				int contentionWindow = CwMin;
+				if(maxRange - distance > 0){
+					// If the difference is negative, the device will use minimum contention window.
+					contentionWindow = (int)Math.floor((((maxRange-distance)/maxRange) * (CwMax-CwMin))+CwMin); 
+				}
+
+				logger.d("Contention Window = "+contentionWindow);
+				
+				// wait for a random time... 
+				synchronized (synchPoint) {
+					try {
+						long rnd = randomGenerator.nextInt(contentionWindow*SLOT_SIZE);
+						LogPrinter.getInstance().writeTimedLine("CONTENTION WINDOW = "+contentionWindow+" WAITING "+rnd+"ms");
+						logger.d("BroadcastPhase: sleeping for "+rnd+" ms");
+						// Waiting until:
+						//    1) A message arrives, so stop waiting and change position
+						//    2) Time expired, and so forward the message
+						synchPoint.wait(rnd);
+					} catch (InterruptedException e) {
+						logger.e(e);
+						return;
+					}
+				}
+				logger.d("BroadcastPhase: waking up");
+				if(!messageQueue.contains(message)){
+					// No message arrived while I was asleep
+					sendAlert(hopCount);
 				}else{
-					logger.d("ALERT MESSAGE ARRIVED!!");
-					// now I am sure message != null
-					Map<String,String> content = message.getContent();
-					double latitude 	= Double.parseDouble(content.get(IMessage.SENDER_LATITUDE_KEY));
-					double longitude 	= Double.parseDouble(content.get(IMessage.SENDER_LONGITUDE_KEY));
-					double maxRange 	= Double.valueOf(content.get(IMessage.SENDER_RANGE_KEY));
-					float direction 	= Float.valueOf(content.get(IMessage.SENDER_DIRECTION_KEY));
-					int hopCount 		= Integer.valueOf(content.get(IMessage.MESSAGE_HOP_KEY));
-					hopCount ++;
-					float distance = getDistance(latitude, longitude);
-					
-					logger.d("Distance = "+distance);
-					logger.d("MaxRange = "+maxRange);
-					
-					int contentionWindow = CwMin;
-					if(maxRange - distance > 0){
-						// If the difference is negative, the device will use minimum contention window.
-						contentionWindow = (int)Math.floor((((maxRange-distance)/maxRange) * (CwMax-CwMin))+CwMin); 
+					LogPrinter.getInstance().writeTimedLine("alert already brodcasted by someone else, discarded. Size "+messageQueue.size());
+					logger.d("Double Alert, message discarded");
+					// At least another message arrived
+					if(receivedFromBack(direction, latitude, longitude)){
+						// Someone else forwarded it already
+						logger.d("MESSAGE RECEIVED FROM BACK!!");
+						EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
 					}
-	
-					logger.d("Contention Window = "+contentionWindow);
-					
-					// wait for a random time... 
-					synchronized (synchPoint) {
-						try {
-							long rnd = randomGenerator.nextInt(contentionWindow*SLOT_SIZE);
-							LogPrinter.getInstance().writeTimedLine("CONTENTION WINDOW = "+contentionWindow+" WAITING "+rnd+"ms");
-							logger.d("BroadcastPhase: sleeping for "+rnd+" ms");
-							// Waiting until:
-							//    1) A message arrives, so stop waiting and change position
-							//    2) Time expired, and so forward the message
-							synchPoint.wait(rnd);
-						} catch (InterruptedException e) {
-							logger.e(e);
-							return;
-						}
-					}
-					logger.d("BroadcastPhase: waking up");
-					if(!messageQueue.contains(message)){
-						// No message arrived while I was asleep
-//						IMessage newMessage = MessageBuilder.getInstance().getMessage(
-//								message.getType(),
-//								IPaketSender.BROADCAST_ADDRESS,
-//								AppController.MAC_ADDRESS);
-//						
-//						newMessage.addContent(IMessage.SENDER_LATITUDE_KEY,currentLocation.getLatitude()+"");
-//						newMessage.addContent(IMessage.SENDER_LONGITUDE_KEY,currentLocation.getLongitude()+"");
-//						newMessage.addContent(IMessage.SENDER_RANGE_KEY,Math.max(lmbr,cmbr)+"");
-//						newMessage.addContent(IMessage.SENDER_DIRECTION_KEY,currentLocation.getBearing()+"");
-//						newMessage.addContent(IMessage.MESSAGE_HOP_KEY, ""+hopCount);
-//						newMessage.prepare();
-//						LogPrinter.getInstance().writeTimedLine("ALERT MESSAGE FROWARDED. HOPS "+hopCount+".SIZE "+messageQueue.size());
-//						// Send broadcast the message
-//						EventDispatcher.getInstance().triggerEvent(new SendBroadcastMessageEvent(newMessage));
-//						
-//						logger.d("MESSAGE FORWARDED!!");
-//						
-//						// Force location update
-//						EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
-						sendAlert(hopCount);
-					}else{
-						LogPrinter.getInstance().writeTimedLine("alert already brodcasted by someone else, discarded. Size "+messageQueue.size());
-						logger.d("Double Alert, message discarded");
-						// At least another message arrived
-						if(receivedFromBack(direction, latitude, longitude)){
-							// Someone else forwarded it already
-							logger.d("MESSAGE RECEIVED FROM BACK!!");
-							EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
-						}
-						logger.d("MESSAGE NOT FORWARDED!!");
-					}
+					logger.d("MESSAGE NOT FORWARDED!!");
 				}
 			}
 			logger.d("Tearing down Message Forwarder");
@@ -600,29 +572,35 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 			helloMessageSender.start();
 			return;
 		}
-//		if(event.getClass().equals(HelloMessageArrivedEvent.class)){
-//			HelloMessageArrivedEvent ev = (HelloMessageArrivedEvent) event;
-//			this.setHelloMessageArrived(true);
-//			this.hanldeHelloMessage(ev.message);
-//			return;
-//		}
 		if(event.getClass().equals(NewMessageArrivedEvent.class)){
 			NewMessageArrivedEvent ev = (NewMessageArrivedEvent) event;
 			
+			// Filtering the message by distance
+			boolean arrived = true;
+			for(DistanceFilter filter : filters){
+				arrived = arrived & (filter.filter(ev.message));
+			}
+			
+			if(!arrived){
+				if(ev.message.getType() == ALERT_MESSAGE_TYPE){
+					LogPrinter.getInstance().writeTimedLine(
+						"ALERT DISCARDED: TOO FAR AWAY");
+				}
+				logger.d("MESSAGE SHOULDN'T HAVE BEEN ARRIVED");
+				return;
+			}
+			// If we reach this code, the message shoul have been arrived!
 			if(ev.message.getType() == ALERT_MESSAGE_TYPE){
 				LogPrinter.getInstance().writeLine("\n");
 				LogPrinter.getInstance().writeTimedLine(
 						"ALERT RECEIVED FROM "+ev.senderID+". " +
 						"#HOPS = "+ev.message.getContent().get(IMessage.MESSAGE_HOP_KEY));
 				this.handleAlertMessage(ev.message);
-				return;
 			}else if(ev.message.getType() == HELLO_MESSAGE_TYPE){
 				this.setHelloMessageArrived(true);
 				this.hanldeHelloMessage(ev.message);
-				return;
 			}
-			// All other kind of messages will be discarded
-			
+			return;
 		}
 		if(event.getClass().equals(LocationChangedEvent.class)){
 			LocationChangedEvent ev = (LocationChangedEvent) event;
