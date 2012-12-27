@@ -4,6 +4,7 @@ import it.unipd.testbase.AppController;
 import it.unipd.testbase.eventdispatcher.EventDispatcher;
 import it.unipd.testbase.eventdispatcher.event.connectioninfo.WiFiInfoCollectedEvent;
 import it.unipd.testbase.eventdispatcher.event.message.SendUnicastMessageEvent;
+import it.unipd.testbase.eventdispatcher.event.message.UpdateStatusEvent;
 import it.unipd.testbase.helper.DebugLogger;
 import it.unipd.testbase.wificonnection.message.IMessage;
 import it.unipd.testbase.wificonnection.message.MessageBuilder;
@@ -44,11 +45,12 @@ public class ConnectionInfoManager implements IConnectionInfoManager{
 					if(info.isGroupOwner){
 						// Do nothing, simply waits for other devices to send Hello messages
 						logger.d("I'am the group owner");
+						EventDispatcher.getInstance().triggerEvent(new UpdateStatusEvent("I am the Group Owner"));
 
 					}else{
 						// Not group Owner, so send an Hello Message to the GroupOwner
 						logger.d("Sending info!!");
-
+						EventDispatcher.getInstance().triggerEvent(new UpdateStatusEvent("I am NOT the Group Owner"));
 						if(__ping_sent == false){
 							new Thread(){
 								public void run() {

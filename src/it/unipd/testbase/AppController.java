@@ -2,13 +2,14 @@ package it.unipd.testbase;
 
 import it.unipd.testbase.eventdispatcher.EventDispatcher;
 import it.unipd.testbase.eventdispatcher.event.IEvent;
+import it.unipd.testbase.eventdispatcher.event.SetupComletedEvent;
 import it.unipd.testbase.eventdispatcher.event.connectioninfo.WiFiInfoCollectedEvent;
-import it.unipd.testbase.eventdispatcher.event.deviceconnector.ProceedWithNextEvent;
 import it.unipd.testbase.eventdispatcher.event.location.PositionsTerminatedEvent;
 import it.unipd.testbase.eventdispatcher.event.location.SetupProviderEvent;
 import it.unipd.testbase.eventdispatcher.event.location.UpdateLocationEvent;
 import it.unipd.testbase.eventdispatcher.event.message.MessageReceivedEvent;
 import it.unipd.testbase.eventdispatcher.event.message.SendUnicastMessageEvent;
+import it.unipd.testbase.eventdispatcher.event.message.UpdateStatusEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.SendBroadcastMessageEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.SimulationStartEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.StopSimulationEvent;
@@ -72,6 +73,8 @@ public class AppController implements IControllerComponent {
 	private String groupOwnerAddress;
 	private boolean isGroupOwner = false;
 	private boolean keepUpdatingPeers = true;
+	
+	private boolean setupCompleted = false;
 
 //	private IFastBroadcastComponent fastBroadcastService;
 
@@ -102,26 +105,20 @@ public class AppController implements IControllerComponent {
 				for(int i = 0 ; i < peers.size(); i++){
 					if(devs.contains(peers.get(i))){
 						for(WifiP2pDevice d : devs){
-							peers.set(i,d);
-
+							// Update peers in the list
+							if(d.deviceAddress == peers.get(i).deviceAddress){
+								peers.set(i,d);
+							}
 						}
 					}
 				}
 			}else{
 				peers = new SynchronizedDevicesList();
-				// Adds only new devices
+				// Adds all found devices
 				for(WifiP2pDevice device : peers_list.getDeviceList()){
 					peers.add(device);
 				}
 			}
-//			// remove disappeared devices
-//			for(int i = 0; i < peers.size(); i++){
-//				WifiP2pDevice device = peers.get(i);
-//				if(!peers_list.getDeviceList().contains(device)){
-//					logger.d("Device no longer in the list, removed");
-//					peers.remove(device);
-//				}
-//			}
 
 			Message msg = new Message();
 			msg.obj = peers;
@@ -247,7 +244,7 @@ public class AppController implements IControllerComponent {
 			}
 
 			public void onFailure(int reason) {
-				showToast("Impossibil Connettersi reason = "+reason);
+				showToast("Impossibile Connettersi reason = "+reason);
 			}
 		});
 
@@ -287,6 +284,9 @@ public class AppController implements IControllerComponent {
 	 */
 	public synchronized void setPeersIdIPmap(Map<String,String> map){
 
+		// If setup was already completed, just do nothing
+		if (setupCompleted) return;
+		
 		if(peerIdIpMap == null){
 			peerIdIpMap = map;
 		}else{
@@ -299,12 +299,9 @@ public class AppController implements IControllerComponent {
 		Map<String,String> mapToBroadcast = null;
 		if(isGroupOwner){
 			if(!mapSent && peerIdIpMap.keySet().size() >= peers.size()){
-				//size()+1 because group owner is not included in this map (so the returned size() equals (device_number-1)
 				
-//				fastBroadcastService = (IFastBroadcastComponent)EventDispatcher.getInstance().requestComponent(FastBroadcastService.class);
-				
+				setupCompleted = true;
 				EventDispatcher.getInstance().triggerEvent(new SetupProviderEvent(0, peerIdIpMap.size()+1));
-				//MockLocationProvider.__set_static_couter(0, peerIdIpMap.size()+1);
 				EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
 				mapToBroadcast = new HashMap<String, String>(peerIdIpMap);
 				mapToBroadcast.put(MAC_ADDRESS,groupOwnerAddress);
@@ -312,15 +309,20 @@ public class AppController implements IControllerComponent {
 				logger.d("Invio la mappa a tutti : ");
 				sendBroadcast(message);
 				mapSent = true;
-				// Now start fast broadcast service Estimation Phase
+				// Now start simulation
 				EventDispatcher.getInstance().triggerEvent(new SimulationStartEvent());
+				EventDispatcher.getInstance().triggerEvent(new SetupComletedEvent());
+				EventDispatcher.getInstance().triggerEvent(new UpdateStatusEvent("Group owner setup completed"));
+				
 			}
 		} else {
-			// If I'm not the group owner and I'm here, I received the map. So I can start estimation phase
-//			fastBroadcastService = (IFastBroadcastComponent)EventDispatcher.getInstance().requestComponent(FastBroadcastService.class);
+			// If I'm not the group owner and I'm here, I received the map, 
+			// so I can start simulation
+			setupCompleted = true;
 			EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
-			//__mock_provider.updateLocation();
 			EventDispatcher.getInstance().triggerEvent(new SimulationStartEvent());
+			EventDispatcher.getInstance().triggerEvent(new SetupComletedEvent());
+			EventDispatcher.getInstance().triggerEvent(new UpdateStatusEvent("Peer Setup completed"));
 		}
 
 		if(mapToBroadcast == null)
@@ -329,7 +331,7 @@ public class AppController implements IControllerComponent {
 		for(String k : mapToBroadcast.keySet()){
 			s += k + "  " + mapToBroadcast.get(k)+"\n";
 		}
-		EventDispatcher.getInstance().triggerEvent(new ProceedWithNextEvent());
+//		EventDispatcher.getInstance().triggerEvent(new ProceedWithNextEvent());
 		logger.d("Message received\n"+s);
 	}
 
@@ -409,7 +411,7 @@ public class AppController implements IControllerComponent {
 	private void showToast(String string) {
 		Message msg = new Message();
 		msg.obj = string;
-		msg.what = GuiHandlerInterface.SHOW_TOAST_MSG;
+		msg.what = GuiHandlerInterface.SHOW_TOAST_MESSAGE;
 		guiHandler.sendMessage(msg);
 	}
 	
@@ -442,12 +444,12 @@ public class AppController implements IControllerComponent {
 	@Override
 	public void register() {
 		List<Class<? extends IEvent>> events = new ArrayList<Class<? extends IEvent>>();
-//		events.add(LocationChangedEvent.class);
 		events.add(MessageReceivedEvent.class);
 		events.add(WiFiInfoCollectedEvent.class);
 		events.add(SendBroadcastMessageEvent.class);
 		events.add(SendUnicastMessageEvent.class);
 		events.add(PositionsTerminatedEvent.class);
+		events.add(UpdateStatusEvent.class);
 		EventDispatcher.getInstance().registerComponent(this, events);
 	}
 
@@ -475,7 +477,15 @@ public class AppController implements IControllerComponent {
 			return;
 		}
 		if(event instanceof PositionsTerminatedEvent){
-			EventDispatcher.getInstance().triggerEvent(new StopSimulationEvent());
+			EventDispatcher.getInstance().triggerEvent(new StopSimulationEvent(true));
+			return;
+		}
+		if(event instanceof UpdateStatusEvent){
+			UpdateStatusEvent ev = (UpdateStatusEvent) event;
+			Message message = new Message();
+			message.what 	= GuiHandlerInterface.PROGRESS_MESSAGE;
+			message.obj 	= ev.status;
+			guiHandler.sendMessage(message);
 			return;
 		}
 	}

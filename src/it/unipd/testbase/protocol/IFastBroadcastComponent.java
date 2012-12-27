@@ -10,17 +10,4 @@ import it.unipd.testbase.eventdispatcher.IComponent;
  */
 public interface IFastBroadcastComponent extends IComponent{
 	
-	/**
-	 * Provides an estimation of Transmission Range
-	 * 
-	 * @return
-	 */
-	public double getEstimatedTrasmissionRange();
-	
-	/**
-	 * Stops the execution
-	 */
-	public void stopExecuting();
-	
-	
 }

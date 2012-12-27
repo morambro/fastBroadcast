@@ -5,6 +5,7 @@ import it.unipd.testbase.eventdispatcher.EventDispatcher;
 import it.unipd.testbase.eventdispatcher.event.IEvent;
 import it.unipd.testbase.eventdispatcher.event.location.LocationChangedEvent;
 import it.unipd.testbase.eventdispatcher.event.location.UpdateLocationEvent;
+import it.unipd.testbase.eventdispatcher.event.message.UpdateStatusEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.NewMessageArrivedEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.SendAlertMessageEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.SendBroadcastMessageEvent;
@@ -108,7 +109,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	/**
 	 * Slot size in milliseconds
 	 */
-	private static final int SLOT_SIZE = 10;
+	private static final int SLOT_SIZE = 100;
 	
 	/**
 	 * Turn duration in milliseconds
@@ -118,8 +119,8 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	/**
 	 * Contention window bounds
 	 */
-	private static int CwMax = 1024;
-	private static int CwMin = 32;
+	private static int CwMax = 10;
+	private static int CwMin = 5;
 	
 	private Location currentLocation;
 	
@@ -295,6 +296,8 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 				hopCount ++;
 				float distance = getDistance(latitude, longitude);
 				
+				EventDispatcher.getInstance().triggerEvent(new UpdateStatusEvent("Alert Message arrived from "+message.getSenderID()));
+				
 				logger.d("Distance = "+distance);
 				logger.d("MaxRange = "+maxRange);
 				
@@ -309,13 +312,13 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 				// wait for a random time... 
 				synchronized (synchPoint) {
 					try {
-						long rnd = randomGenerator.nextInt(contentionWindow*SLOT_SIZE);
-						LogPrinter.getInstance().writeTimedLine("CONTENTION WINDOW = "+contentionWindow+" WAITING "+rnd+"ms");
-						logger.d("BroadcastPhase: sleeping for "+rnd+" ms");
+						long rnd = randomGenerator.nextInt(contentionWindow);
+						LogPrinter.getInstance().writeTimedLine("CONTENTION WINDOW = "+contentionWindow+" WAITING "+(rnd*SLOT_SIZE)+"ms");
+						logger.d("BroadcastPhase: sleeping for "+(rnd*SLOT_SIZE)+" ms");
 						// Waiting until:
 						//    1) A message arrives, so stop waiting and change position
 						//    2) Time expired, and so forward the message
-						synchPoint.wait(rnd);
+						synchPoint.wait(rnd*SLOT_SIZE);
 					} catch (InterruptedException e) {
 						logger.e(e);
 						return;
@@ -325,7 +328,9 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 				if(!messageQueue.contains(message)){
 					// No message arrived while I was asleep
 					sendAlert(hopCount);
+					EventDispatcher.getInstance().triggerEvent(new UpdateStatusEvent("Alert Message FORWARDED"));
 				}else{
+					EventDispatcher.getInstance().triggerEvent(new UpdateStatusEvent("Alert Message NOT FORWARDED"));
 					LogPrinter.getInstance().writeTimedLine("alert already brodcasted by someone else, discarded. Size "+messageQueue.size());
 					logger.d("Double Alert, message discarded");
 					// At least another message arrived
@@ -456,8 +461,12 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		return false;
 	}
 	
-	@Override
-	public void stopExecuting(){
+
+	/**
+	 * Stops the simulation
+	 * 
+	 */
+	private void stopSimulation(){
 		// Stop hello message sender and message forwarder
 		if(helloMessageSender != null){
 			logger.d("STOPPING HELLO MESSAGE SENDER");
@@ -470,17 +479,13 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	}
 	
 	/**
-	 * Default constructor. It creates and starts message forwarder, and adds a filter for the distance
+	 * Default constructor. It adds a filter for the distance and registers this instance as
+	 * a component to Event Bus
 	 * 
 	 */
 	public FastBroadcastService() {
 		logger.d("Estimator Service is Up");
-		// Start message forwarder
-		if(messageForwarder == null) {
-			messageForwarder = new MessageForwarder();
-		}
-		messageForwarder.start();
-		
+
 		filters.add(new DistanceFilter(){
 			@Override
 			public boolean filter(IMessage message) {
@@ -490,8 +495,8 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 				float distance = getDistance(latitude, longitude);
 				// If distance is > actual maximum range, message shouldn't be heard...
 				
-				logger.d("ACTUAL RANGE = "+ACTUAL_MAX_RANGE);
-				logger.d("ESTIMATED RANGE = "+distance);
+				LogPrinter.getInstance().writeTimedLine("ACTUAL RANGE = "+ACTUAL_MAX_RANGE);
+				LogPrinter.getInstance().writeTimedLine("ESTIMATED RANGE = "+distance);
 				
 				if(distance > ACTUAL_MAX_RANGE) return false;
 				return true;
@@ -520,8 +525,12 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	}
 	
 	
-	@Override
-	public double getEstimatedTrasmissionRange() {
+	/**
+	 * Returns estimated transmission range
+	 * 
+	 * @return
+	 */
+	private double getEstimatedTrasmissionRange() {
 		return Math.max(cmbr,lmbr);
 	}
 	
@@ -543,6 +552,11 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		return results[0];
 	}
 	
+	/**
+	 * Sends an alert message in broadcast, and register that on LogPrinter
+	 * 
+	 * @param hops: current hops number
+	 */
 	private void sendAlert(int hops) {
 		
 		IMessage message = MessageBuilder.getInstance().getMessage(
@@ -568,12 +582,28 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
 	}
 
+	private boolean started = false;
+	
 	@Override
 	public void handle(IEvent event) {
 		if(event.getClass().equals(SimulationStartEvent.class)){
-			logger.d("Inizializzo HelloMessageSender");
-			helloMessageSender = new HelloMessageSender();
-			helloMessageSender.start();
+			if(!started){
+				logger.d("Inizializzo HelloMessageSender");
+			
+				if(helloMessageSender == null ) {
+					helloMessageSender = new HelloMessageSender();
+				}
+				if(!helloMessageSender.isAlive()){
+					helloMessageSender.start();
+				}
+				if(messageForwarder == null) {
+					messageForwarder = new MessageForwarder();
+				}
+				if(!messageForwarder.isAlive()){
+					messageForwarder.start();
+				}
+				started = true;
+			}
 			return;
 		}
 		if(event.getClass().equals(NewMessageArrivedEvent.class)){
@@ -612,12 +642,14 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 			return;
 		}
 		if(event.getClass().equals(StopSimulationEvent.class)){
-			stopExecuting();
-			EventDispatcher.getInstance().triggerEvent(new ShowSimulationResultsEvent());
-			
+			stopSimulation();
+			StopSimulationEvent ev = (StopSimulationEvent) event;
+			if(ev.showResults){
+				EventDispatcher.getInstance().triggerEvent(new ShowSimulationResultsEvent());
+			}
 			// Reset default range
 			lmbr = cmbr = cmfr = lmfr = DEFAULT_RANGE;
-			
+			started = false;
 			return;
 		}
 		if(event.getClass().equals(SendAlertMessageEvent.class)){

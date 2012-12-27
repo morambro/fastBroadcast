@@ -5,6 +5,7 @@ import it.unipd.testbase.AppController.IDataCollectionHandler;
 import it.unipd.testbase.IControllerComponent;
 import it.unipd.testbase.eventdispatcher.EventDispatcher;
 import it.unipd.testbase.eventdispatcher.event.location.SetupProviderEvent;
+import it.unipd.testbase.eventdispatcher.event.message.UpdateStatusEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.NewMessageArrivedEvent;
 import it.unipd.testbase.helper.DebugLogger;
 import it.unipd.testbase.wificonnection.message.IMessage;
@@ -32,6 +33,9 @@ public class CollectionHandler implements IDataCollectionHandler {
 			// In case of Hello message 
 			case IMessage.PING_MESSAGE_TYPE : 
 				logger.d("Ricevuto  PING: \n"+message);
+				
+				EventDispatcher.getInstance().triggerEvent(new UpdateStatusEvent("PING message from "+message.getSenderID()));
+				
 				Map<String,String> peerData = new HashMap<String, String>();
 				String client_id_address = message.getContent().get(IMessage.PING_MESSAGE_ID_KEY);
 				peerData.put(client_id_address,hostIp);
@@ -41,6 +45,9 @@ public class CollectionHandler implements IDataCollectionHandler {
 				// In case of message MAP, for client addresses distribution
 			case IMessage.CLIENT_MAP_MESSAGE_TYPE :
 				logger.d("Ricevuto MAP \n: "+message);
+				
+				EventDispatcher.getInstance().triggerEvent(new UpdateStatusEvent("Received MAP message"));
+				
 				Map<String,String> allPeerData = new HashMap<String, String>();
 				Map<String, String> content = message.getContent();
 				for (String key : content.keySet()) {

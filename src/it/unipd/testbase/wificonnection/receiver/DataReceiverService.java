@@ -24,8 +24,9 @@ public class DataReceiverService implements IDataReceiverComponent{
 	private static DataReceiverService instance = null;
 	
 	public static DataReceiverService getInstance() {
-		if(instance == null)
+		if(instance == null){
 			instance = new DataReceiverService();
+		}
 		return instance;
 	}
 	
@@ -34,7 +35,8 @@ public class DataReceiverService implements IDataReceiverComponent{
 		tcpPacketReceiver.terminate();
 	}
 
-	protected DataReceiverService() {
+	public DataReceiverService() {
+		logger.d("CREATED DATASERVICEDIOCANE");
 		logger.d("Servizio creato");
 		udpPacketReceiver = new UDPPacketReceiver();
 		tcpPacketReceiver = new TCPPacketReceiver();

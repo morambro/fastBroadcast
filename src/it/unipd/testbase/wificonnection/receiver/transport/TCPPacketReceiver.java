@@ -92,5 +92,6 @@ public class TCPPacketReceiver extends AbstractPacketReceiver{
 	@Override
 	public void terminate() {
 		this.terminated = true;
+		disconnectSocket();
 	}
 }
