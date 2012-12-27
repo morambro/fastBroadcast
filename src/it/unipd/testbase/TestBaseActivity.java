@@ -7,9 +7,9 @@ import it.unipd.testbase.eventdispatcher.event.IEvent;
 import it.unipd.testbase.eventdispatcher.event.SetupCompletedEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.SendAlertMessageEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.ShowSimulationResultsEvent;
-import it.unipd.testbase.eventdispatcher.event.protocol.SimulationStartEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.StopSimulationEvent;
 import it.unipd.testbase.helper.DebugLogger;
+import it.unipd.testbase.helper.LogPrinter;
 import it.unipd.testbase.location.MockLocationService;
 import it.unipd.testbase.protocol.FastBroadcastService;
 import it.unipd.testbase.wificonnection.receiver.DataReceiverService;
@@ -239,7 +239,7 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 			@Override
 			public void onClick(View v) {
 				sendToAllButton.setEnabled(true);
-//				EventDispatcher.getInstance().triggerEvent(new SimulationStartEvent());
+				LogPrinter.getInstance().reset();
 			}
 		});
 		

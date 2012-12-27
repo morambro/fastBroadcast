@@ -85,4 +85,15 @@ public class LogPrinter {
 		}
 		return results.toString();
 	}
+	
+	public void reset(){
+		init = true;
+		file = new File(Environment.getExternalStorageDirectory(), fileName);
+		try {
+			outStream = new FileOutputStream(file);
+		} catch (FileNotFoundException e) {
+			Log.e("LogPrinter", e.getMessage());
+			e.printStackTrace();
+		}
+	}
 }

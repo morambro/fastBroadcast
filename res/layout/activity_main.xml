@@ -13,30 +13,24 @@
         android:layout_marginTop="10dp"
         android:orientation="vertical" >
 
-        <LinearLayout
+        <Button
+            android:id="@+id/connect_to_all_button"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" >
-
-            <Button
-                android:id="@+id/connect_to_all_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1.50"
-                android:text="Connect To All" />
-
-            <Button
-                android:id="@+id/debugSendUDP"
-                android:layout_width="154dp"
-                android:layout_height="wrap_content"
-                android:text="DEBUG" />
-        </LinearLayout>
+            android:layout_height="wrap_content"
+            android:text="Connect To All" />
 
         <Button
             android:id="@+id/send_button"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="0.57"
             android:text="Send ALERT" />
+    
+    	<Button
+    	    android:id="@+id/debugSendUDP"
+    	    android:layout_width="match_parent"
+    	    android:layout_height="wrap_content"
+    	    android:text="Reset Simulation" />
+
     </LinearLayout>
 
     <TextView
@@ -52,7 +46,7 @@
     <ScrollView
         android:id="@+id/scrollView1"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="183dp" >
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -61,7 +55,7 @@
             <ListView
                 android:id="@+id/devices_list_view"
                 android:layout_width="wrap_content"
-                android:layout_height="212dp"
+                android:layout_height="170dp"
                 android:layout_marginLeft="10dp"
                 android:layout_marginRight="10dp"
                 android:layout_marginTop="5dp"
@@ -78,5 +72,27 @@
         android:layout_marginRight="10dp"
         android:layout_marginTop="10dp"
         android:background="#696969" />
+
+    <ScrollView
+        android:id="@+id/ProgressScroll"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="5dp" >
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:id="@+id/ProgressInfo"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.94" />
+        </LinearLayout>
+
+    </ScrollView>
 
 </LinearLayout>
