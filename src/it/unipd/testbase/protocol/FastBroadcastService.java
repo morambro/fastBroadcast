@@ -126,6 +126,9 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	
 	private HelloMessageSender helloMessageSender;
 	
+	private List<Integer> __timeWaited	= new ArrayList<Integer>();
+	private List<Integer> __cwndSize	= new ArrayList<Integer>();
+	
 	/****************************************************** DECLARATIONS ***************************************************/
 	
 	/**
@@ -174,7 +177,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 					randomTime = randomGenerator.nextInt(TURN_DURATION);
 					try{
 						logger.d("Going to sleep for "+randomTime+" ms");
-						Thread.sleep(randomTime);
+						this.wait(randomTime);
 					}catch(InterruptedException ex){
 						logger.e(ex);
 						stopExecuting();
@@ -195,9 +198,11 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		 * Stops Hello Message Sender Execution
 		 * 
 		 */
-		public void stopExecuting(){
+		public synchronized void stopExecuting(){
 			keepRunning = false;
-			logger.d("KeepRunning = "+keepRunning);
+			// In case thread was waiting
+			this.notify();
+			logger.d("Hello Message Handler asked to Stop");
 		}
 		
 		/**
@@ -235,7 +240,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		
 		/*********************************** DECLARATIONS *************************************/
 		
-		private ArrayBlockingQueue<IMessage> messageQueue = new ArrayBlockingQueue<IMessage>(30);
+		private ArrayBlockingQueue<IMessage> messageQueue = new ArrayBlockingQueue<IMessage>(2);
 		private Random randomGenerator = new Random();
 		private Object synchPoint = new Object();
 		private boolean keepRunning = true;
@@ -310,15 +315,17 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 				logger.d("Contention Window = "+contentionWindow);
 				
 				// wait for a random time... 
+				int timeToWait = 0;
 				synchronized (synchPoint) {
 					try {
-						long rnd = randomGenerator.nextInt(contentionWindow);
-						LogPrinter.getInstance().writeTimedLine("CONTENTION WINDOW = "+contentionWindow+" WAITING "+(rnd*SLOT_SIZE)+"ms");
-						logger.d("BroadcastPhase: sleeping for "+(rnd*SLOT_SIZE)+" ms");
+						int rnd = randomGenerator.nextInt(contentionWindow-1)+1;
+						timeToWait = rnd * SLOT_SIZE;
+						LogPrinter.getInstance().writeTimedLine("CONTENTION WINDOW = "+contentionWindow+" WAITING "+rnd+" SLOTS");
+						logger.d("BroadcastPhase: sleeping for "+rnd+" slots");
 						// Waiting until:
 						//    1) A message arrives, so stop waiting and change position
 						//    2) Time expired, and so forward the message
-						synchPoint.wait(rnd*SLOT_SIZE);
+						synchPoint.wait(timeToWait);
 					} catch (InterruptedException e) {
 						logger.e(e);
 						return;
@@ -327,6 +334,10 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 				logger.d("BroadcastPhase: waking up");
 				if(!messageQueue.contains(message)){
 					// No message arrived while I was asleep
+					
+					__cwndSize.add(contentionWindow);
+					__timeWaited.add(timeToWait);
+					
 					sendAlert(hopCount);
 					EventDispatcher.getInstance().triggerEvent(new UpdateStatusEvent("Alert Message FORWARDED"));
 				}else{
@@ -358,7 +369,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	}
 	
 	/**
-	 * Performs updates necessary when a message arrives
+	 * Performs updates necessary when a message arrives, on a separate Thread
 	 * 
 	 * @param message
 	 */
@@ -370,25 +381,19 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 				double longitude 	= Double.parseDouble(content.get(IMessage.SENDER_LONGITUDE_KEY));
 				double max_range  	= Double.parseDouble(content.get(IMessage.SENDER_RANGE_KEY));
 				// Retrieve the sender bearing
-				float direction 		= Float.valueOf(content.get(IMessage.SENDER_DIRECTION_KEY));
-				
-				float[] results = new float[3];
-				
-				Location.distanceBetween(
-						latitude, longitude, 
-						currentLocation.getLatitude(), currentLocation.getLongitude(), 
-						results);
+				float direction 	= Float.valueOf(content.get(IMessage.SENDER_DIRECTION_KEY));
+				float distance 		= getDistance(latitude, longitude);
 				
 				// If I'm in the same direction, check whether I'm in front of him or not
 				if(areEquals(currentLocation.getBearing(),direction,ERROR)){
 					if(receivedFromBack(direction,latitude,longitude)){
 						// Received from back
-						cmbr = Math.max(cmbr, Math.max(results[0], max_range));
-						logger.d("Distance = "+results[0]+"   cmbr = "+cmbr);
+						cmbr = Math.max(cmbr, Math.max(distance, max_range));
+						logger.d("Distance = "+distance+"   cmbr = "+cmbr);
 						logger.d("Sono davanti, aggiorno cmbr a = "+cmbr);
 					}else{
 						// Received from front
-						cmfr = Math.max(cmfr, Math.max(results[0],max_range));
+						cmfr = Math.max(cmfr, Math.max(distance,max_range));
 						logger.d("Sono dietro, aggiorno cmfr a = "+cmfr);
 					}
 				}else{
@@ -438,7 +443,6 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 					return true;
 				}
 			}
-			
 		} else {
 			if(direction == 270){
 				if(senderLongitude > currentLocation.getLongitude()){
@@ -463,19 +467,21 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	
 
 	/**
-	 * Stops the simulation
+	 * Stops the simulation. If quit == true, it quits the simulation.
 	 * 
+	 * @param quit
 	 */
-	private void stopSimulation(){
+	private void stopSimulation(boolean quit){
 		// Stop hello message sender and message forwarder
-		if(helloMessageSender != null){
+		if(quit && helloMessageSender != null){
 			logger.d("STOPPING HELLO MESSAGE SENDER");
 			helloMessageSender.stopExecuting();
 		}
-		if(messageForwarder != null){
+		if(quit && messageForwarder != null){
 			logger.d("STOPPING MESSAGE FORWARDER");
 			messageForwarder.stopExecuting();
 		}
+		
 	}
 	
 	/**
@@ -642,14 +648,39 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 			return;
 		}
 		if(event.getClass().equals(StopSimulationEvent.class)){
-			stopSimulation();
 			StopSimulationEvent ev = (StopSimulationEvent) event;
+			
+			stopSimulation(ev.quitSimulation);
+			
+			LogPrinter.getInstance().writeLine("\n");
+			
+			int avgTime = 0;
+			for(Integer t : __timeWaited){
+				LogPrinter.getInstance().writeLine("time = "+t);
+				avgTime = avgTime + t;
+			}
+			if(__timeWaited.size() > 0){
+				avgTime = avgTime / __timeWaited.size();
+			}
+			
+			int cwnd = 0;
+			for(Integer s : __cwndSize){
+				LogPrinter.getInstance().writeLine("Size = "+s);
+				cwnd = cwnd + s;
+			}
+			if(__cwndSize.size() > 0){
+				cwnd 	= cwnd / __cwndSize.size();
+			}
+			
+			LogPrinter.getInstance().writeTimedLine("AVG TIME\t\t= "+avgTime+"ms");
+			LogPrinter.getInstance().writeTimedLine("AVG CWND SIZE\t= "+cwnd);
+			
 			if(ev.showResults){
 				EventDispatcher.getInstance().triggerEvent(new ShowSimulationResultsEvent());
 			}
 			// Reset default range
 			lmbr = cmbr = cmfr = lmfr = DEFAULT_RANGE;
-			started = false;
+//			started = false;
 			return;
 		}
 		if(event.getClass().equals(SendAlertMessageEvent.class)){

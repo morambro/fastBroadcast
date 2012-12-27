@@ -3,6 +3,7 @@ package it.unipd.testbase.location;
 import it.unipd.testbase.eventdispatcher.EventDispatcher;
 import it.unipd.testbase.eventdispatcher.event.location.PositionsTerminatedEvent;
 import it.unipd.testbase.helper.DebugLogger;
+import it.unipd.testbase.helper.LogPrinter;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -101,6 +102,10 @@ public class MockLocationProvider {
 				return;
 			}
 			logger.d("Current position found in line "+(currentIndex+1)+": "+lines.get(currentIndex));
+			LogPrinter.getInstance().writeTimedLine(
+					"CURRENT POSITION IN FILE = "+(currentIndex+1));
+			
+			
 			String[] positions = lines.get(currentIndex).split(",");
 			Location location = new Location(name);
 			location.setLatitude(Double.valueOf(positions[0]));

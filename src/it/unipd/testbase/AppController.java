@@ -2,7 +2,7 @@ package it.unipd.testbase;
 
 import it.unipd.testbase.eventdispatcher.EventDispatcher;
 import it.unipd.testbase.eventdispatcher.event.IEvent;
-import it.unipd.testbase.eventdispatcher.event.SetupComletedEvent;
+import it.unipd.testbase.eventdispatcher.event.SetupCompletedEvent;
 import it.unipd.testbase.eventdispatcher.event.connectioninfo.WiFiInfoCollectedEvent;
 import it.unipd.testbase.eventdispatcher.event.location.PositionsTerminatedEvent;
 import it.unipd.testbase.eventdispatcher.event.location.SetupProviderEvent;
@@ -57,7 +57,6 @@ public class AppController implements IControllerComponent {
 	public static String MAC_ADDRESS = null;
 
 	private Handler guiHandler;
-//	private Location currentLocation;
 	private IDataCollectionHandler collectionHandler = new CollectionHandler();
 	private WifiP2pManager manager;
 	private Channel channel;
@@ -75,8 +74,6 @@ public class AppController implements IControllerComponent {
 	private boolean keepUpdatingPeers = true;
 	
 	private boolean setupCompleted = false;
-
-//	private IFastBroadcastComponent fastBroadcastService;
 
 	/************************************************* INTERFACES/CLASSES ********************************************/
 	
@@ -311,8 +308,10 @@ public class AppController implements IControllerComponent {
 				mapSent = true;
 				// Now start simulation
 				EventDispatcher.getInstance().triggerEvent(new SimulationStartEvent());
-				EventDispatcher.getInstance().triggerEvent(new SetupComletedEvent());
-				EventDispatcher.getInstance().triggerEvent(new UpdateStatusEvent("Group owner setup completed"));
+				EventDispatcher.getInstance().triggerEvent(new SetupCompletedEvent());
+				EventDispatcher.getInstance().triggerEvent(
+						new UpdateStatusEvent("Group owner setup completed")
+				);
 				
 			}
 		} else {
@@ -321,17 +320,16 @@ public class AppController implements IControllerComponent {
 			setupCompleted = true;
 			EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
 			EventDispatcher.getInstance().triggerEvent(new SimulationStartEvent());
-			EventDispatcher.getInstance().triggerEvent(new SetupComletedEvent());
+			EventDispatcher.getInstance().triggerEvent(new SetupCompletedEvent());
 			EventDispatcher.getInstance().triggerEvent(new UpdateStatusEvent("Peer Setup completed"));
 		}
 
 		if(mapToBroadcast == null)
 			mapToBroadcast = peerIdIpMap;
-		String s = "Map updated! \n";
+		String s = "Current MAP:\n";
 		for(String k : mapToBroadcast.keySet()){
 			s += k + "  " + mapToBroadcast.get(k)+"\n";
 		}
-//		EventDispatcher.getInstance().triggerEvent(new ProceedWithNextEvent());
 		logger.d("Message received\n"+s);
 	}
 
@@ -346,10 +344,9 @@ public class AppController implements IControllerComponent {
 		IMessage message = MessageBuilder.getInstance().getMessage(IMessage.CLIENT_MAP_MESSAGE_TYPE,recipient);
 		int i = 1;
 		for(String k : map.keySet()){
-			if(k.equals(MAC_ADDRESS))
+			if(k.equals(MAC_ADDRESS)){
 				message.addContent(k, IMessage.concatContent(map.get(k), ""+0));
-			else
-			{
+			}else{
 				message.addContent(k, IMessage.concatContent(map.get(k), ""+i));
 				i++;
 			}
@@ -400,8 +397,6 @@ public class AppController implements IControllerComponent {
 			connect(peers.get(i));
 		}
 		keepUpdatingPeers = false;
-//		deviceConnector = new DeviceConnector(peers,manager,channel,this);
-//		EventDispatcher.getInstance().triggerEvent(new ProceedWithNextEvent());
 	}
 
 	/**
@@ -477,7 +472,7 @@ public class AppController implements IControllerComponent {
 			return;
 		}
 		if(event instanceof PositionsTerminatedEvent){
-			EventDispatcher.getInstance().triggerEvent(new StopSimulationEvent(true));
+			EventDispatcher.getInstance().triggerEvent(new StopSimulationEvent(true,false));
 			return;
 		}
 		if(event instanceof UpdateStatusEvent){

@@ -1,5 +1,6 @@
 \subsection{Devices connection}
 
+\subsubsection{Android application}
 For Android application, we used an initial connection setup phase between devices.
 Due to the last two \direct features described in the previous section, devices cannot create and destroy connection opportunistically, so for our simulation we had to manually create a \direct \textit{group} and also to provide devices a complete address map, in order to  let them communicate with each devices.
 
@@ -19,7 +20,7 @@ Connection setup consists of the following operations:
 		\item After collecting all the pairs composed by \begin{center}\tt{<MAC address,IP address>}\end{center} from all the devices in the group, \textit{group owner} creates a map, and sends it broadcast, to let devices communicate directly.
 	\end{itemize}
 
-Once that all these operations have been done, all the devices are connected and can communicate each other directly via TCP Sockets. An example of a created network is visible in figure \ref{fig:device_network}.
+Once that all these operations have been done, all the devices are connected and can communicate each other directly via TCP/UDP Sockets. An example of a created network is visible in figure \ref{fig:device_network}.
 
 \begin{figure}[!htbp]
 \centering
@@ -28,4 +29,5 @@ Once that all these operations have been done, all the devices are connected and
 \label{fig:device_network}
 \end{figure}
 
+\subsubsection{Desktop application}
 For what concerns Desktop Application ...

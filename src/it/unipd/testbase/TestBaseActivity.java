@@ -4,7 +4,7 @@ import it.unipd.testbase.AppController.SynchronizedDevicesList;
 import it.unipd.testbase.eventdispatcher.EventDispatcher;
 import it.unipd.testbase.eventdispatcher.IComponent;
 import it.unipd.testbase.eventdispatcher.event.IEvent;
-import it.unipd.testbase.eventdispatcher.event.SetupComletedEvent;
+import it.unipd.testbase.eventdispatcher.event.SetupCompletedEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.SendAlertMessageEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.ShowSimulationResultsEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.SimulationStartEvent;
@@ -63,7 +63,6 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 
 	private DataReceiverService dataReceiver;
 	
-	//GuiHandler Implementation
 	@Override
 	public Handler getGuiHandler() {
 		return activityHandler;
@@ -89,69 +88,17 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 		}
 
 	}
-
-//	/**
-//	 * Connection class for Fast Broadcast Service
-//	 * 
-//	 * @author Moreno Ambrosin
-//	 *
-//	 */
-//	private class FastBroadcastServiceConnection implements ServiceConnection{
-//		@Override
-//		public void onServiceConnected(ComponentName name, IBinder binder) {
-//			serviceCreated();
-//			Log.d(TAG, FastBroadcastServiceConnection.class.getSimpleName()+": Fast Broadcast Service requestConnectionSent");
-//		}
-//
-//		@Override
-//		public void onServiceDisconnected(ComponentName name) {
-//			Log.d(TAG, FastBroadcastServiceConnection.class.getSimpleName()+": Fast Broadcast Service lost");
-//		}
-//	}
-//
-//	/**
-//	 * Connection class for Data Receiver Service
-//	 * 
-//	 * @author Moreno Ambrosin
-//	 *
-//	 */
-//	private class DataServiceConnection implements ServiceConnection {
-//
-//		@Override
-//		public void onServiceConnected(ComponentName arg0, IBinder binder) {
-//			serviceCreated();
-//			Log.d(TAG, this.getClass().getSimpleName()+": DataReceiverService binded");
-//		}
-//
-//		@Override
-//		public void onServiceDisconnected(ComponentName arg0) {
-//			Log.d(TAG, this.getClass().getSimpleName()+": Service lost");
-//		}
-//
-//	}
-
-
-//	private void startFastBroadcastService() {
-//		Log.d(TAG, this.getClass().getSimpleName()+": Bindo il servizio di Range Estimation");
-//		Intent estimationService = new Intent(this, FastBroadcastService.class);
-//		this.startService(estimationService);
-//		this.bindService(estimationService, fastBroadcastServiceConnection, Context.BIND_AUTO_CREATE);
-//	}
-
+	
+	/**
+	 * Starts the Location Service
+	 * 
+	 */
 	private void startLocationService(){
 		Intent locService = new Intent(this, MockLocationService.class);
 		locationServiceConn = new LocServiceConnection();
 		boolean temp = this.bindService(locService, locationServiceConn, Context.BIND_AUTO_CREATE);
 		logger.d("Location Service binding statusTextView : "+temp);
 	}
-
-//	private void startDataReceiverService(){
-//		//Start DataReceiverService
-//		Log.d(TAG, this.getClass().getSimpleName()+": Bindo il servizio di ricezione dati");
-//		Intent dataService = new Intent(this, DataReceiverService.class);
-//		this.startService(dataService);
-//		boolean f = this.bindService(dataService, dataReceiverServiceConnection, Context.BIND_AUTO_CREATE);
-//	}
 
 	/**
 	 * Handler class to implement Interprocess communication
@@ -200,9 +147,6 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 		FastBroadcastService.getInstance();
 		dataReceiver = new DataReceiverService();
 		startLocationService();
-//		startFastBroadcastService();
-//		startDataReceiverService();
-		
 	}
 
 	@Override
@@ -259,6 +203,7 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 
 	@Override
 	protected void onDestroy() {
+		logger.d("Main Activity Desctruction");
 		if(isLocationServiceBinded) {
 			unbindService(locationServiceConn);
 			isLocationServiceBinded = false;
@@ -266,16 +211,14 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 		}
 		
 		// Stopping Simulation
-		EventDispatcher.getInstance().triggerEvent(new StopSimulationEvent(false));
-		
+		EventDispatcher.getInstance().triggerEvent(new StopSimulationEvent(false,true));
+		// Stopping data receiver
 		dataReceiver.stopExecuting();
-//		unbindService(fastBroadcastServiceConnection);
-//		unbindService(dataReceiverServiceConnection);
-		logger.d("onDestroy called");
+		// Calling disconnect 
 		controller.disconnect();
 		super.onDestroy();
 		
-		System.exit(0);
+		android.os.Process.killProcess(android.os.Process.myPid()); 
 	}
 
 	/**
@@ -296,7 +239,7 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 			@Override
 			public void onClick(View v) {
 				sendToAllButton.setEnabled(true);
-				EventDispatcher.getInstance().triggerEvent(new SimulationStartEvent());
+//				EventDispatcher.getInstance().triggerEvent(new SimulationStartEvent());
 			}
 		});
 		
@@ -318,11 +261,19 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 		});
 	}
 
+	/**
+	 * Writes the given message to status view 
+	 * 
+	 * @param message
+	 */
 	private void writeOnStatus(String message){
 		statusTextView.append(message+"\n");
 		scrollToBottom();
 	}
 	
+	/**
+	 * Scrolls progress view
+	 */
 	private void scrollToBottom() {
 	    progressScrollView.post(new Runnable() { 
 	        public void run() { 
@@ -331,6 +282,10 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 	    });
 	}
 	
+	/**
+	 * On services creation
+	 * 
+	 */
 	private synchronized void serviceCreated() {
 		bindedServices++;
 		if(bindedServices == TOTAL_SERVICES) {
@@ -354,7 +309,7 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 			}
 			return;
 		}
-		if(event.getClass().equals(SetupComletedEvent.class)){
+		if(event.getClass().equals(SetupCompletedEvent.class)){
 			runOnUiThread(new Runnable(){
 				public void run() {
 					connectToAllButton.setEnabled(false);
@@ -368,7 +323,7 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 	public void register() {
 		List<Class<? extends IEvent>> events = new ArrayList<Class<? extends IEvent>>();
 		events.add(ShowSimulationResultsEvent.class);
-		events.add(SetupComletedEvent.class);
+		events.add(SetupCompletedEvent.class);
 		EventDispatcher.getInstance().registerComponent(this,events);
 	}
 }
