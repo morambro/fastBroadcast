@@ -25,8 +25,8 @@ To develop a complete testbed application for mobile devices, different features
 This features are very easy to supply: the most of the smartphones in commerce has GPS and WI-FI devices installed, and their Operating Systems provide APIs to use them.
 Our work is exentially composed by two parts:
 \begin{itemize}
-	\item A distributed \textit{Android application}, which involves the use of a finite number of devices each running the same application. It lets users to specify fake locations for different devices with random distances between them, in order to simulate an high number of vehicles, and changes each device's virtual position when needed, or to use real GPS position in case of real tests. Our testbed application uses Android WI-FI technologies for devices communication, expecially \direct standard developed by WI-FI Alliance\textsuperscript{\texttrademark}.
-	\item A Java Desktop application for laptops running Fedora. Only fake positions can be used with it, and for what regards connectivity, C Raw Socket where implemented to provide a connection and state free message sending via WI-FI. 
+	\item A distributed \textit{Android application}, which involves the use of a finite number of devices each running the same application. It lets users to specify fake locations for different devices, in order to simulate an high number of vehicles, and modify each device's virtual position when needed, or to use real GPS position in case of real tests. Our testbed application uses Android WI-FI technologies for devices communication, expecially \direct standard developed by WI-FI Alliance\textsuperscript{\texttrademark}.
+	\item A Java Desktop application for Fedora operating system. Like Android application, it lets users to specify a list of fake positions and to use Raw Sockets to perform a much rehalistic low level message exchange. 
 \end{itemize}
 
 Both of our two products have the same architecture, that will be introduced in the next sections. To test our work, we used Fast Broadcast algorithm, which will be briefly introduced in section \ref{sec:fast_broadcast}.
