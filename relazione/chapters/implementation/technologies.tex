@@ -6,4 +6,4 @@ Basically a network created with Android \direct APIs is called \emph{group}. A 
 Via APIs provided by \direct framework, user's permission is required in order to connect to other devices.
 
 \subsubsection{Desktop application}
-Desktop application ...
+The Desktop version relies on low-level system calls to obtain a file descriptor associated with a Level 2 (Data Link) raw socket. In order to obtain real p2p connectivity without the need of an infrastructure (either physical or logical, like in the Android app) the communication must be based on MAC Addresses and the network interface must be in Monitor mode (so that all packets are forwarded to the socket for processing).
