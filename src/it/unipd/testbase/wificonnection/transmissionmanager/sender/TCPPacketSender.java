@@ -22,6 +22,7 @@ public class TCPPacketSender implements IPaketSender {
 
 		new Thread(){
 			public void run(){
+				long time = System.currentTimeMillis();
 				Socket socket = new Socket();
 				byte buf[]  = new byte[1024];
 				int len = buf.length;
@@ -39,8 +40,9 @@ public class TCPPacketSender implements IPaketSender {
 						outputStream.write(buf, 0, len);
 					}
 					outputStream.close();
+					long end = System.currentTimeMillis() - time;
 					inputStream.close();
-					logger.d("Data Sent to "+ID+" via TCP");
+					logger.d("Data Sent to "+ID+" via TCP in "+end + "ms");
 				} catch (Exception e) {
 					logger.d(e.getMessage());
 				}

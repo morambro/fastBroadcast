@@ -200,8 +200,11 @@ public class AppController implements IControllerComponent {
 			new TransportSelectorFilter() {
 				@Override
 				public int getTransportForMessage(IMessage message) {
-					if(/*message.getType() == FastBroadcastService.ALERT_MESSAGE_TYPE || */
-							message.getType() == FastBroadcastService.HELLO_MESSAGE_TYPE
+					if(
+//						message.getType() == FastBroadcastService.ALERT_MESSAGE_TYPE ||
+//						message.getType() == FastBroadcastService.ALERT_MESSAGE_TYPE 
+						message.getType() == FastBroadcastService.HELLO_MESSAGE_TYPE
+					
 							){
 						return PacketSenderFactory.UNRELIABLE_TRANSPORT;
 					}

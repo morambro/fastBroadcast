@@ -24,6 +24,8 @@ public class ConnectionInfoManager implements IConnectionInfoManager{
 	@Override
 	public void onConnectionInfoAvailable(final WifiP2pInfo info) {
 		// Create a Thread to execute potentially blocking operations.
+		if(info == null)
+			return;
 		new Thread(){
 			public void run(){
 				// group owner InetAddress from WifiP2pInfo.

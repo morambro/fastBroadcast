@@ -104,17 +104,17 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	 * Static field which indicates the simulated actual range of each device
 	 * This value is used to filter messages received from a "distance" > ACTUAL_MAX_RANGE
 	 */
-	private static final int ACTUAL_MAX_RANGE = 900;
+	private static final int ACTUAL_MAX_RANGE = 1000;
 	
 	/**
 	 * Slot size in milliseconds
 	 */
-	private static final int SLOT_SIZE = 100;
+	private static final int SLOT_SIZE = 250;
 	
 	/**
 	 * Turn duration in milliseconds
 	 */
-	public static final int TURN_DURATION = 1000;
+	public static final int TURN_DURATION = 500;
 	
 	/**
 	 * Contention window bounds
@@ -240,7 +240,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		
 		/*********************************** DECLARATIONS *************************************/
 		
-		private ArrayBlockingQueue<IMessage> messageQueue = new ArrayBlockingQueue<IMessage>(2);
+		private ArrayBlockingQueue<IMessage> messageQueue = new ArrayBlockingQueue<IMessage>(10);
 		private Random randomGenerator = new Random();
 		private Object synchPoint = new Object();
 		private boolean keepRunning = true;
@@ -332,7 +332,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 					}
 				}
 				logger.d("BroadcastPhase: waking up");
-				if(!messageQueue.contains(message)){
+				if(messageQueue.size() == 0){
 					// No message arrived while I was asleep
 					
 					__cwndSize.add(contentionWindow);
@@ -342,16 +342,28 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 					EventDispatcher.getInstance().triggerEvent(new UpdateStatusEvent("Alert Message FORWARDED"));
 				}else{
 					EventDispatcher.getInstance().triggerEvent(new UpdateStatusEvent("Alert Message NOT FORWARDED"));
-					LogPrinter.getInstance().writeTimedLine("alert already brodcasted by someone else, discarded. Size "+messageQueue.size());
+					LogPrinter.getInstance().writeTimedLine("DOUBLE ALERT, DISCARDED. " +
+							"QUEUE SIZE = "+messageQueue.size());
 					logger.d("Double Alert, message discarded");
 					// At least another message arrived
 					if(receivedFromBack(direction, latitude, longitude)){
 						// Someone else forwarded it already
-						logger.d("MESSAGE RECEIVED FROM BACK!!");
+						LogPrinter.getInstance().writeTimedLine("MESSAGE RECEIVED FROM BACK!!");
 						EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
+						
+						// Re-send the message to me to simulate message just arrived
+//						IMessage m;
+//						try {
+//							m = messageQueue.take();
+//							EventDispatcher.getInstance().triggerEvent(
+//									new NewMessageArrivedEvent(m,m.getSenderID()));
+//						} catch (InterruptedException e) {
+//							logger.e(e);
+//						}
 					}
-					logger.d("MESSAGE NOT FORWARDED!!");
+					LogPrinter.getInstance().writeTimedLine("MESSAGE NOT FORWARDED!!");
 				}
+				LogPrinter.getInstance().writeLine("\n");
 			}
 			logger.d("Tearing down Message Forwarder");
 		}
@@ -374,6 +386,13 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	 * @param message
 	 */
 	private void hanldeHelloMessage(final IMessage message){
+		// In case an hello message arrives before current location is setted first
+		// just ignore it.
+		if(currentLocation == null){
+			logger.d("Hello message arrived before location setting, ignoring it");
+			return;
+		}
+		
 		new Thread(){
 			public void run() {
 				Map<String,String> content = message.getContent();
@@ -501,8 +520,10 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 				float distance = getDistance(latitude, longitude);
 				// If distance is > actual maximum range, message shouldn't be heard...
 				
-				LogPrinter.getInstance().writeTimedLine("ACTUAL RANGE = "+ACTUAL_MAX_RANGE);
-				LogPrinter.getInstance().writeTimedLine("ESTIMATED RANGE = "+distance);
+				if(message.getType() == ALERT_MESSAGE_TYPE){
+					LogPrinter.getInstance().writeTimedLine("ACTUAL RANGE = "+ACTUAL_MAX_RANGE);
+					LogPrinter.getInstance().writeTimedLine("ESTIMATED RANGE = "+distance);
+				}
 				
 				if(distance > ACTUAL_MAX_RANGE) return false;
 				return true;
@@ -599,15 +620,11 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 				if(helloMessageSender == null ) {
 					helloMessageSender = new HelloMessageSender();
 				}
-				if(!helloMessageSender.isAlive()){
-					helloMessageSender.start();
-				}
+				helloMessageSender.start();
 				if(messageForwarder == null) {
 					messageForwarder = new MessageForwarder();
 				}
-				if(!messageForwarder.isAlive()){
-					messageForwarder.start();
-				}
+				messageForwarder.start();
 				started = true;
 			}
 			return;
@@ -624,14 +641,14 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 			if(!arrived){
 				if(ev.message.getType() == ALERT_MESSAGE_TYPE){
 					LogPrinter.getInstance().writeTimedLine(
-						"ALERT DISCARDED: TOO FAR AWAY");
+						"ALERT DISCARDED: TOO FAR AWAY " +
+						"(#HOPS = "+ev.message.getContent().get(IMessage.MESSAGE_HOP_KEY)+")");
 				}
 				logger.d("MESSAGE SHOULDN'T HAVE BEEN ARRIVED");
 				return;
 			}
 			// If we reach this code, the message shoul have been arrived!
 			if(ev.message.getType() == ALERT_MESSAGE_TYPE){
-				LogPrinter.getInstance().writeLine("\n");
 				LogPrinter.getInstance().writeTimedLine(
 						"ALERT RECEIVED FROM "+ev.senderID+". " +
 						"#HOPS = "+ev.message.getContent().get(IMessage.MESSAGE_HOP_KEY));
@@ -677,10 +694,11 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 			
 			if(ev.showResults){
 				EventDispatcher.getInstance().triggerEvent(new ShowSimulationResultsEvent());
+				__timeWaited.clear();
+				__cwndSize.clear();
 			}
 			// Reset default range
 			lmbr = cmbr = cmfr = lmfr = DEFAULT_RANGE;
-//			started = false;
 			return;
 		}
 		if(event.getClass().equals(SendAlertMessageEvent.class)){
