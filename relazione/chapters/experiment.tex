@@ -6,7 +6,7 @@
 	\label{fig:positions_experiment}
 	\end{figure}
 
-To try out our testbed applications, we implemented Fast Broadcast algorithm both for Android application and Desktop application. Simulation used a set of fake position distributed on a straight line, each at a random distance between $275$ and $325$ meters from the following. In figure \ref{fig:positions_experiment} a graphical representation can be seen. They covers approximately $8$ kilometers.
+To try out our testbed applications, we implemented Fast Broadcast algorithm both for Android application and Desktop application. Simulation was made on a set of fake positions distributed on a straight line, each at a random distance between $275$ and $325$ meters from the following, covering approximately $8$ kilometers. In figure \ref{fig:positions_experiment} a graphical representation can be seen.
 
 \subsubsection{Android application}
 To test our Android application we used three Android devices. We performed 10 executions of Fast Broadcast algorithm with the following settings:
@@ -40,18 +40,18 @@ To test our Android application we used three Android devices. We performed 10 e
 
 %We first tried an execution wothout range estimation, then with range estimation phase. In the second case, the average amount of time waitd on the contention window by each device resulted to be smaller, and so the contention window size. However, due to the overhead introduced by Hello message exchanging and processing, a solution with static range performs a much faster message propagation.
 %In both cases, the overhead introduced by TCP traffic doesn't let the algorithm beahave properly, resulting in some cases in simultaneous message forwarding by different devices.
-Slot size was choosen to be $250ms$ to be great enought to reduce simultaneous retransmission of different devices; in fact, due to TCP overhead we noticed that sometimes message did not arrive in time to avoid useless message forwarding. We tried to use UDP protocol to provide a much faster message transmission, but the packet error was too big to obtain a complete simulation. We decided to use this transport protocolo to exchange Hello message, to relieve the TCP server from the traffic generated from this messages.
+Slot size was choosen to be $250ms$ to be great enought to reduce simultaneous retransmission of different devices; in fact, due to TCP overhead we noticed that sometimes message did not arrive in time to avoid useless message forwarding. We tried to use UDP protocol to provide a much faster message transmission, but the packet error was too big to obtain a complete simulation. We decided to use this transport protocolo to exchange \textit{Hello} messages, to relieve the TCP server from the traffic generated from this messages.
 
 % UDP EXPERIMENT
 %The transport protocol we choose to send out Alert messages was UDP, this to reduce the protocol stack overhead (with TCP was estimated to be $\geq250$ms), speeding up the execution and let us set more realistic parameters values. This was achieved adding a filter to the transport manager at application startup. Hello messages were exchanged using TCP protocol, to reduce the traffic the UDP server thread had to manage.
-Execution results are shown in table \ref{tab:Android_res}. Simulation duration, Time waited on contention window and contention window size are the average of the values measured in each device. As we can see, the time needed to carry the Alert message to the last position is quite big, and this is mainly due to the size of the slot and to TCP overhead. The number of Hops in some executions, is equals to the theoretical optimum (With this settings and three devices, optimal hop number is 15). 
+Execution results are shown in table \ref{tab:Android_res}. Simulation duration, Time waited on contention window and contention window size are the average of the values measured in each device. As we can see, the time needed to carry the Alert message to the last position is quite big, and this is mainly due to slot size and TCP overhead. The number of Hops in some executions, is equals to the theoretical optimum (With this settings and three devices, optimal hop number is 15: our implementation of this algorithm simplistically assumes that when a device forwards a message, only following devices could hear it; more complex scenarious can be modeled).
 
 \begin{table}
 % increase table row spacing, adjust to taste
 %\renewcommand{\arraystretch}{1}
 % if using array.sty, it might be a good idea to tweak the value of
 %\extrarowheight as needed to properly center the text within the cells
-\caption{Fast Broadcast simulation results}
+\caption{Fast Broadcast simulation results, with Three devices}
 \label{tab:Android_res}
 \centering
 % Some packages, such as MDW tools, offer better commands for making tables
