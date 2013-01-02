@@ -29,22 +29,13 @@ To test our Android application we used three Android devices. We performed 10 e
 \end{tabular}
 \end{center}
 
-%\begin{itemize}
-%	\item \ttt{SLOT SIZE 			= 250ms}
-%	\item \ttt{CW MIN 				= 5} 
-%	\item \ttt{CW MAX 				= 10}
-%	\item \ttt{ACTUAL RANGE 		= 1000 m}
-%	\item \ttt{DEFAULT RANGE		= 300 m}
-%	\item \ttt{HELLO MESSAGE TURN	= 500 ms}
-%\end{itemize}
-
 %We first tried an execution wothout range estimation, then with range estimation phase. In the second case, the average amount of time waitd on the contention window by each device resulted to be smaller, and so the contention window size. However, due to the overhead introduced by Hello message exchanging and processing, a solution with static range performs a much faster message propagation.
 %In both cases, the overhead introduced by TCP traffic doesn't let the algorithm beahave properly, resulting in some cases in simultaneous message forwarding by different devices.
 Slot size was choosen to be $250ms$ to be great enought to reduce simultaneous retransmission of different devices; in fact, due to TCP overhead we noticed that sometimes message did not arrive in time to avoid useless message forwarding. We tried to use UDP protocol to provide a much faster message transmission, but the packet error was too big to obtain a complete simulation. We decided to use this transport protocolo to exchange \textit{Hello} messages, to relieve the TCP server from the traffic generated from this messages.
 
 % UDP EXPERIMENT
 %The transport protocol we choose to send out Alert messages was UDP, this to reduce the protocol stack overhead (with TCP was estimated to be $\geq250$ms), speeding up the execution and let us set more realistic parameters values. This was achieved adding a filter to the transport manager at application startup. Hello messages were exchanged using TCP protocol, to reduce the traffic the UDP server thread had to manage.
-Execution results are shown in table \ref{tab:Android_res}. Simulation duration, Time waited on contention window and contention window size are the average of the values measured in each device. As we can see, the time needed to carry the Alert message to the last position is quite big, and this is mainly due to slot size and TCP overhead. The number of Hops in some executions, is equals to the theoretical optimum (With this settings and three devices, optimal hop number is 15: our implementation of this algorithm simplistically assumes that when a device forwards a message, only following devices could hear it; more complex scenarious can be modeled).
+Execution results are shown in table \ref{tab:Android_res}. Execution time, waited slots on contention window and contention window size are the average of the values measured in each device. As we can see, the time needed to carry the Alert message to the last position is quite big, and this is mainly due to slot size and TCP overhead. The number of Hops in some executions, is equals to the theoretical optimum (With this settings and three devices, optimal hop number is 15: our implementation of this algorithm simplistically assumes that when a device forwards a message, only following devices could hear it; more complex scenarious can be modeled).
 
 \begin{table}
 % increase table row spacing, adjust to taste
@@ -58,27 +49,37 @@ Execution results are shown in table \ref{tab:Android_res}. Simulation duration,
 % than the plain LaTeX2e tabular which is used here.
 \begin{tabular}{|m{0.06\textwidth}|m{0.08\textwidth}|m{0.08\textwidth}|m{0.08\textwidth}|m{0.07\textwidth}|}
 \hline
-Execution & Total \newline Time (sec) & Average waited time (ms) & Average Contention Window size & Hops \newline number \\
+Execution & Total \newline Time (sec) & Average waited slots & Average Contention Window size & Hops \newline number \\
 \hline
-1 & 17,0187 & 626,667 & 5,67 & 19 \\
+%1 & 17,0187 & 626,667 & 5,67 & 19 \\ % 2.506668
+1 & 17,0187 & 2.506668 & 5,67 & 19 \\
 \hline
-2 & 15,1167 & 581	  & 5,33 & 15 \\
+%2 & 15,1167 & 581	  & 5,33 & 15 \\ % 2.324
+2 & 15,1167 & 2.324	  & 5,33 & 15 \\ % 
 \hline
-3 & 22,0833 & 585,333 & 5,33 & 15 \\
+% 3 & 22,0833 & 585,333 & 5,33 & 15 \\ 
+3 & 22,0833 & 2.341332 & 5,33 & 15 \\  
 \hline
-4 & 16,2190 & 573	  & 5,33 & 19 \\
+% 4 & 16,2190 & 573	  & 5,33 & 19 \\ % 2.292
+4 & 16,2190 & 2.292	  & 5,33 & 19 \\ % 
 \hline
-5 & 23,3897 & 644,333 & 6	 & 20 \\
+% 5 & 23,3897 & 644,333 & 6	 & 20 \\ % 2.577332
+5 & 23,3897 & 2.5773 & 6	 & 20 \\ % 2.5773
 \hline
-6 & 22,2300 & 639,667 & 5	 & 18 \\
+%6 & 22,2300 & 639,667 & 5	 & 18 \\ % 2.5587
+6 & 22,2300 & 2.5587 & 5	 & 18 \\ % 
 \hline
-7 & 15,5160 & 518	  & 5,33 & 20 \\
+% 7 & 15,5160 & 518	  & 5,33 & 20 \\ % 2.072
+7 & 15,5160 & 2,072	  & 5,33 & 20 \\ % 2.072
 \hline
-8 & 15,5780 & 747,333 & 6	 & 16 \\
+% 8 & 15,5780 & 747,333 & 6	 & 16 \\ % 2.989332
+8 & 15,5780 & 2.9893 & 6	 & 16 \\ % 2.989332
 \hline
-9 & 15,6140 & 606     & 6	 & 15 \\
+% 9 & 15,6140 & 606     & 6	 & 15 \\ % 2.424
+9 & 15,6140 & 2.424     & 6	 & 15 \\ % 2.424
 \hline
-10 & 18,997 & 745,667 & 5,67 & 17 \\
+%10 & 18,997 & 745,667 & 5,67 & 17 \\ % 2.982668
+10 & 18,997 & 2.9827 & 5,67 & 17 \\ % 2.982668
 \hline
 \end{tabular}
 \end{table}  
