@@ -1,10 +1,9 @@
 \section{Fast Broadcast Algorithm}
 \label{sec:fast_broadcast}
-Fast Broadcast Algorithm provides an easy-to-implement method to estimate vehicles' wireless range and to send Alert messages vehicle-to-vehicle covering large distances. The algorithm does not require any pre-existent network infrastructure, and is essentially divided in two phases:
+The Fast Broadcast Algorithm provides an easy-to-implement method to estimate a vehicle WI-FI range and to quickly transmit messages over large distances. The algorithm does not require any pre-existent network infrastructure, and is essentially divided in two phases:
 	\begin{itemize}
-		\item \emph{Estimation phase}: in this phase time is divided into \textit{turns}, and at each turn $T$ a vehicle (one per turn) sends an \emph{Hello message} containing information about its estimated wireless range and its position. Every vehicle continuously listens for this kind of messages, and uses the information contained in them to update its range estimation.
-		\item \emph{Broadcast phase}: 
-		once a vehicle receives an \textit{Alert Message}, it must forward it to its neighbors. To prevent network flooding, every vehicle that receives the message computes a \textit{Contention Window}: this window is used to generate a random time to wait before forwarding the message. If the vehicle then receives the same message it was about to forward, it can simply discard it, because someone else already forwarded the message.
+		\item \emph{Estimation phase}: in this phase time is divided into \textit{turns}, and at each turn $T$ a vehicle (one per turn) sends an \emph{Hello message}, containing information about its estimated wireless range and its position. All vehicles continuosly exchange \emph{Hello Messages} and use the contained information to update its estimated range.
+		\item \emph{Broadcast phase}: once a vehicle receives an \textit{Alert Message}, it needs to forward it to the following ones. To prevent network flooding and unnecessary collisions, when a vehicle receives an Alert, it computes a \textit{Contention Window} and picks a random time to wait before forwarding the message within its maximum. If while waiting the vehicle receives the same message it is meant to forward, than it simply discards it because the message was already farwarded by someone else.
 	\end{itemize} 
 	
-This brief introduction, describes roughly the algorithm idea. We will focus on our implementation in the next sections.
+This brief introduction roughly describes the algorithm idea. We will focus on our implementation in the next sections.

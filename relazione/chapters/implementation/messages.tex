@@ -1,6 +1,6 @@
 \subsection{Exchanged Messages}
 
-Devices send messages encoded as XML strings; the structure of a message is show below in the following listing:
+Exchanged messages are encoded as XML strings; the structure of a message is as follow:
 \begin{verbatim}
 <message type="..." recipient_id="...">
     <content_block>
@@ -18,9 +18,9 @@ Devices send messages encoded as XML strings; the structure of a message is show
     </content_block>
 </message>
 \end{verbatim}
-The messages we used contain data espressed as pairs \ttt{<key,content>}. All contained data can be easly converted to Hash Maps objects.
+As highlighted in the above scheme, we choose to use a \ttt{<key,content>} pair to add content to the messages, so that it can be easily converted to a Map object.
 
-In our implementation, there are four different kinds of messages:
+We used four different kinds of messages:
 	\begin{description}
 		\item[\textbf{Ping message (0)}] \hfill \\
 		Application Control Message used to send MAC address to the \textit{group owner}.

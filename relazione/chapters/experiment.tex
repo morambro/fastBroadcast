@@ -6,10 +6,10 @@
 	\label{fig:positions_experiment}
 	\end{figure}
 
-To try out our testbed applications, we implemented Fast Broadcast algorithm both for Android application and Desktop application. Simulation was made on a set of fake positions distributed on a straight line, each at a random distance between $275$ and $325$ meters from the following, covering approximately $8$ kilometers. In figure \ref{fig:positions_experiment} a graphical representation can be seen.
+To try out our testbed applications, we implemented the Fast Broadcast algorithm both for the Android and Desktop application. Simulations were made on a set of fake positions distributed on a straight line, each at a random distance between $275$ and $325$ meters from the preceding one, covering approximately $8$ kilometers. A graphical representation can be seen in figure \ref{fig:positions_experiment}.
 
 \subsubsection{Android application}
-To test our Android application we used three Android devices. We performed 10 executions of Fast Broadcast algorithm with the following settings:
+To test our Android application we used three Android devices. 10 executions of the Fast Broadcast algorithm were performed, all with the following parameters:
 
 \begin{center}
 \begin{tabular}{|m{0.22\textwidth}|m{0.12\textwidth}|}
@@ -31,12 +31,12 @@ To test our Android application we used three Android devices. We performed 10 e
 
 %We first tried an execution wothout range estimation, then with range estimation phase. In the second case, the average amount of time waitd on the contention window by each device resulted to be smaller, and so the contention window size. However, due to the overhead introduced by Hello message exchanging and processing, a solution with static range performs a much faster message propagation.
 %In both cases, the overhead introduced by TCP traffic doesn't let the algorithm beahave properly, resulting in some cases in simultaneous message forwarding by different devices.
-Slot size was choosen to be $250ms$ to be great enought to reduce simultaneous retransmission of different devices; in fact, due to TCP overhead we noticed that sometimes message did not arrive in time to avoid useless message forwarding; however, this does not increase directly the number of hops, because second alert received by a device is simply discarded. 
-During algorithm implementation, we tried to use UDP protocol to provide a much faster message transmission, but the packet error was too big to obtain a complete simulation: in some cases alert messages went lost, so the entire system stopped before reaching the last position. We decided to use UDP protocol to exchange \textit{Hello} messages to relieve the TCP server from the traffic they generate.
+Slot size was choosen to be $250ms$ to be great enought to reduce simultaneous retransmission of different devices; in fact we noticed that, due to TCP overhead, sometimes message transmission was too slow, resulting two devices forwarding the same message; Unfortunately this is unavoidable using Java and high level protocols, however this does not increase directly the number of hops, because redundant alert received are simply discarded.
+During the application testing we tried to use UDP protocol to provide a much faster message transmission, but unfortunately the PER was too high to obtain a complete simulation: in some cases alert messages were lost, so the simulation ended before reaching the last position. We decided to use UDP protocol to exchange \textit{Hello} messages to relieve the TCP server from the traffic they generate.
 
 % UDP EXPERIMENT
 %The transport protocol we choose to send out Alert messages was UDP, this to reduce the protocol stack overhead (with TCP was estimated to be $\geq250$ms), speeding up the execution and let us set more realistic parameters values. This was achieved adding a filter to the transport manager at application startup. Hello messages were exchanged using TCP protocol, to reduce the traffic the UDP server thread had to manage.
-Execution results are shown in table \ref{tab:Android_res}. Execution time, waited slots on contention window and contention window size are the average of the values measured in each device. As we can see, the time needed to carry the Alert message to the last position is quite big, and this is mainly due to slot size and TCP overhead. The number of Hops in some executions, is equals to the theoretical optimum (With this settings and three devices, optimal hop number is 15: our Fast Broadcast implementation simplistically assumes that when a device forwards a message, only (the two) following devices could hear it; more complex scenarious can be modeled).
+Execution results are shown in table \ref{tab:Android_res}. Execution time, waited slots on contention window and contention window size are the average of the values measured in each device. As can be seen, the time needed to forward the Alert message to the last position is quite big; this is mainly due to slot size and TCP overhead. The number of Hops in some executions equals to the theoretical optimum (with this settings and three devices, optimal hop number is 15: our Fast Broadcast implementation simplistically assumes that when a device forwards a message, only (the two) following devices could hear it; more complex scenarious can be modeled).
 
 \begin{table}
 % increase table row spacing, adjust to taste
@@ -87,7 +87,7 @@ Execution & Total \newline Time (sec) & Average waited slots & Average Contentio
 
 \subsubsection{Desktop Application}
 
-Execution results are shown in table \ref{tab:Desktop_res}. As we can see, execution time is much smaller than the time required to Android Application to complete the simulation. Data exchange via Raw Socket reduces transmission overhead dramatically, letting us  adopting a smaller slot size to perform a much realistic simulation. However, we used the same settings as for Android simulation, to compare the behaviour of both the testbed versions. 
+Execution results are shown in table \ref{tab:Desktop_res}. As can be seen, execution time is much smaller than the one required by the Android application. Data exchange via Raw Sockets reduces the transmission overhead dramatically, allowing for a smaller slot size and a more realistic simulation. However, we decided to use the same settings as for the Android simulation to allow direct confrontation of the results.
 
 \begin{table}
 % increase table row spacing, adjust to taste

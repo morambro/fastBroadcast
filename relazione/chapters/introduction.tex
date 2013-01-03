@@ -14,20 +14,20 @@
 % 
 % Here we have the typical use of a "T" for an initial drop letter
 % and "HIS" in caps to complete the first word.
-\IEEEPARstart{R}{esearch} on Vehicolar Networks makes large use of software simulations, this because it is unfeasible to build a vehicular network of real vehicles that can act as relays of a message that could travel long distances.
-To reduce costs, a possible solution is using common and small devices like smartphones to perform real tests carring them on vehicles, or to run simulations taking advantage of the features they offers.
-To develop a complete testbed application for mobile devices, different features must be provided:
+\IEEEPARstart{R}{esearch} on Vehicular Networks makes large use of software simulations, mainly because it is unfeasible to build a real-life vehicular network for every test project.
+In order to reduce costs, a possible approach is to use common devices, like smartphones or PCs, from whitin each vehicle to perform real tests whitout the need of dedicated hardware built-in the cars, or even better, take advantage of the features they offer and build a reusable framework to run simulations.
+A complete testbed application for mobile devices requires different features:
 \begin{itemize}
-	\item Possibility to use GPS location or fake positions.
+	\item A GPS Antenna, or enough computational power to simulate location updates.
 	\item Wireless connectivity.
 \end{itemize}
 
-This features are very easy to supply: the most of the smartphones in commerce has GPS and WI-FI devices installed, and their Operating Systems provide APIs to use them.
-Our work is exentially composed by two parts:
+Nowdays this features are very easy to find: most of the smartphones in the market already have GPS and WI-FI built-in, and the Operating Systems provides the needed APIs.
+Given this, our work is consists in two parts:
 \begin{itemize}
-	\item A distributed \textit{Android application}, which involves the use of a finite number of devices each running the same application. It lets users to specify fake locations for different devices, in order to simulate an high number of vehicles, and modify each device's virtual position when needed, or to use real GPS position in case of real tests. Our testbed application uses Android WI-FI technologies for devices communication, expecially \direct standard developed by WI-FI Alliance\textsuperscript{\texttrademark}.
-	\item A Java Desktop application for Fedora operating system. Like Android application, it lets users to specify a list of fake positions and to use Raw Sockets to perform a much rehalistic low level message exchange. 
+	\item A distributed \textit{Android application}, which involves the use of a finite number of devices each running the same application. It provides users with the ability to specify a list of locations for each device in order to simulate an high number of vehicles (each position representing a vehicle) and thus an easy way to modify virtual positions as needed, or to possibility of using real GPS positioning in case of real-life tests. Our testbed application uses Android WI-FI technologies for devices communication, specifically \direct standard developed by WI-FI Alliance\textsuperscript{\texttrademark}.
+	\item A Java Desktop application (based on linux kernel and Fedora operating system). It offers the same capabilities as the Android application (with the exclusion of GPS positioning, although it can be easily implemented with a dedicated device driver), but uses Raw Sockets to reduce system and protocol overheads to a minimum and obtain a much more realistic simulation result. Morover, it is possible to run multiple instances of the application on the same machine (tested with up to 4), thus increasing the number of simulated vehicles.
 \end{itemize}
 
-Both of our two products have the same architecture, that will be introduced in the next sections. To test our work, we used Fast Broadcast algorithm, which will be briefly introduced in section \ref{sec:fast_broadcast}.
+Both our applications share the same architecture, that will be introduced in the next sections. The obtained framework was used to implement the Fast Broadcast algorithm, which will be briefly introduced in section \ref{sec:fast_broadcast}.
 
