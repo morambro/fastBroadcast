@@ -53,8 +53,6 @@ public class Gui extends javax.swing.JFrame implements IGuiComponent {
         jPanel2 = new javax.swing.JPanel();
         setupBtn = new javax.swing.JButton();
         startSimBtn = new javax.swing.JButton();
-        sendAlertBtn = new javax.swing.JButton();
-        jButton4 = new javax.swing.JButton();
         deviceNumber = new JLabel("0");
         lowerScrlPane = new javax.swing.JScrollPane();
         receivedMsgTxt = new javax.swing.JTextArea();
@@ -85,10 +83,6 @@ public class Gui extends javax.swing.JFrame implements IGuiComponent {
                 .addComponent(setupBtn)
                 .addGap(26, 26, 26)
                 .addComponent(startSimBtn)
-                .addGap(33, 33, 33)
-                .addComponent(sendAlertBtn)
-                .addGap(36, 36, 36)
-                .addComponent(jButton4)
                 .addGap(36, 36, 36)
                 .addComponent(deviceNumber)
                 .addGap(0, 313, Short.MAX_VALUE))
@@ -100,8 +94,6 @@ public class Gui extends javax.swing.JFrame implements IGuiComponent {
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(setupBtn)
                     .addComponent(startSimBtn)
-                    .addComponent(sendAlertBtn)
-                    .addComponent(jButton4)
                     .addComponent(deviceNumber)))
         );
 
@@ -164,17 +156,11 @@ public class Gui extends javax.swing.JFrame implements IGuiComponent {
 			}
 		});
         startSimBtn.setEnabled(false);
-        sendAlertBtn.setText("jButton3");
-        sendAlertBtn.setEnabled(false);
-        jButton4.setText("jButton4");
-
 	}
 
 	// Variables declaration - do not modify//GEN-BEGIN:variables
 	private javax.swing.JButton setupBtn;
 	private javax.swing.JButton startSimBtn;
-	private javax.swing.JButton sendAlertBtn;
-	private javax.swing.JButton jButton4;
 	private JLabel deviceNumber;
 	private javax.swing.JPanel jPanel1;
 	private javax.swing.JPanel jPanel2;
@@ -191,23 +177,18 @@ public class Gui extends javax.swing.JFrame implements IGuiComponent {
 			UpdateGuiEvent ev = (UpdateGuiEvent) event;
 			switch(ev.type) {
 			case UpdateGuiEvent.GUI_UPDATE_NEW_MESSAGE:
-//				Log.d(TAG, this.getClass().getSimpleName()+": Gui update message");
 				receivedMsgTxt.append("\n"+ev.obj.toString());
 				break;
 			case UpdateGuiEvent.GUI_UPDATE_CONT_WINDOW_START:
-//				Log.d(TAG, this.getClass().getSimpleName()+": Contention window update message");
 				addCar((Integer[])ev.obj);
 				break;
 			case UpdateGuiEvent.GUI_UPDATE_MESSAGE_FORWARDED:
 				cars.get(curCar).setState(CarWidget.STATE_FORWARDED);
-//				Log.d(TAG, this.getClass().getSimpleName()+": State forwarded update message");
 				break;
 			case UpdateGuiEvent.GUI_UPDATE_MESSAGE_NOT_FORWARDED:
 				cars.get(curCar).setState(CarWidget.STATE_DEAD);
-//				Log.d(TAG, this.getClass().getSimpleName()+": State not forwarded update message");
 				break;
 			case UpdateGuiEvent.GUI_UPDATE_ADD_PEER:
-//				Log.d(TAG, this.getClass().getSimpleName()+": Peer added");
 				int old = Integer.valueOf(deviceNumber.getText());
 				if(ev.obj == null)
 					old++;

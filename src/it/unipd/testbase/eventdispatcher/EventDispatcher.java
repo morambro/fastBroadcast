@@ -42,6 +42,10 @@ public class EventDispatcher {
 		}
 		components.put(component, events);
 	}
+	
+	public synchronized void unregisterComponent(IComponent component) {
+		components.remove(component);
+	}
 
 	/**
 	 * Method used to obtain a component reference.

@@ -117,19 +117,6 @@ unsigned char* set_radiotap_hdr(unsigned char *src_mac, unsigned char *dest_mac,
 	dot80211_hdr->duration = 0x0000;
 	//toDS && fromDS == 0 -> AdHoc mode. address1 is destination, address2 is source and address3 is BSSID
 	memcpy((void*)dot80211_hdr->addr1, (void*)dest_mac, ETH_ALEN);
-	/*dot80211_hdr->addr2[0] = 0xC4;
-	dot80211_hdr->addr2[1] = 0x85;
-	dot80211_hdr->addr2[2] = 0x08;
-	dot80211_hdr->addr2[3] = 0x3B;
-	dot80211_hdr->addr2[4] = 0xF3;
-	dot80211_hdr->addr2[5] = 0x76;
-	//BSSID
-	dot80211_hdr->addr3[0] = 0xC4;
-	dot80211_hdr->addr3[1] = 0x85;
-	dot80211_hdr->addr3[2] = 0x08;
-	dot80211_hdr->addr3[3] = 0x3B;
-	dot80211_hdr->addr3[4] = 0xF3;
-	dot80211_hdr->addr3[5] = 0x76;*/
 	memcpy((void*)dot80211_hdr->addr2, (void*)src_mac, ETH_ALEN);
 	memcpy((void*)dot80211_hdr->addr3, (void*)src_mac, ETH_ALEN);
 	//sequence control is automatically set by the driver

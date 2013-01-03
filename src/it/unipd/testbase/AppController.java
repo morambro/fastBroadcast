@@ -13,6 +13,7 @@ import it.unipd.testbase.eventdispatcher.event.message.MessageReceivedEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.EstimationPhaseStartEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.SendBroadcastMessageEvent;
 import it.unipd.testbase.helper.Log;
+import it.unipd.testbase.helper.LogPrinter;
 import it.unipd.testbase.location.Location;
 import it.unipd.testbase.protocol.IFastBroadcastComponent;
 import it.unipd.testbase.wificonnection.message.IMessage;
@@ -114,6 +115,7 @@ public class AppController implements IControllerComponent {
 
 	public AppController() {
 		fastBroadcastService = (IFastBroadcastComponent) EventDispatcher.getInstance().requestComponent(IFastBroadcastComponent.class);
+		LogPrinter.setup(""+APPLICATION_RUN_ID);
 		register();
 	}
 
