@@ -128,6 +128,9 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	
 	private List<Integer> __timeWaited	= new ArrayList<Integer>();
 	private List<Integer> __cwndSize	= new ArrayList<Integer>();
+	private List<Integer> alreadyReceivedMsgs = new ArrayList<Integer>();
+	
+	private int doubleForward = 0;
 	
 	/****************************************************** DECLARATIONS ***************************************************/
 	
@@ -595,6 +598,14 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	 */
 	private void sendAlert(int hops) {
 		
+		if(alreadyReceivedMsgs.contains(hops)) {
+			++doubleForward;
+			LogPrinter.getInstance().writeTimedLine("\n\nDouble forward detected: hop"+hops);
+			EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
+			return;
+		}
+		alreadyReceivedMsgs.add(hops);
+		
 		IMessage message = MessageBuilder.getInstance().getMessage(
 				ALERT_MESSAGE_TYPE, 
 				IPaketSender.BROADCAST_ADDRESS,
@@ -649,6 +660,11 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 			
 			if(!arrived){
 				if(ev.message.getType() == ALERT_MESSAGE_TYPE){
+					int hops = Integer.valueOf(ev.message.getContent().get(IMessage.MESSAGE_HOP_KEY));
+					if(alreadyReceivedMsgs.contains(hops)) {
+						++doubleForward;
+						LogPrinter.getInstance().writeTimedLine("\n\nDouble forward detected in filtered message: hop"+hops);
+					}
 					LogPrinter.getInstance().writeTimedLine(
 						"ALERT DISCARDED: TOO FAR AWAY " +
 						"(#HOPS = "+ev.message.getContent().get(IMessage.MESSAGE_HOP_KEY)+")");
@@ -658,10 +674,20 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 			}
 			// If we reach this code, the message shoul have been arrived!
 			if(ev.message.getType() == ALERT_MESSAGE_TYPE){
+				int hops = Integer.valueOf(ev.message.getContent().get(IMessage.MESSAGE_HOP_KEY));
+				if(alreadyReceivedMsgs.contains(hops)) {
+					++doubleForward;
+					LogPrinter.getInstance().writeTimedLine("\n\nDouble forward detected in filtered message: hop"+hops);
+					return;
+				}
+				alreadyReceivedMsgs.add(hops);
+				
 				LogPrinter.getInstance().writeTimedLine(
 						"ALERT RECEIVED FROM "+ev.senderID+". " +
 						"#HOPS = "+ev.message.getContent().get(IMessage.MESSAGE_HOP_KEY));
+				
 				this.handleAlertMessage(ev.message);
+			
 			}else if(ev.message.getType() == HELLO_MESSAGE_TYPE){
 				this.setHelloMessageArrived(true);
 				this.hanldeHelloMessage(ev.message);
@@ -700,6 +726,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 			
 			LogPrinter.getInstance().writeTimedLine("AVG TIME\t\t= "+avgTime+"ms");
 			LogPrinter.getInstance().writeTimedLine("AVG CWND SIZE\t= "+cwnd);
+			LogPrinter.getInstance().writeTimedLine("Double Forwards\t= "+doubleForward);
 			
 			if(ev.showResults){
 				EventDispatcher.getInstance().triggerEvent(new ShowSimulationResultsEvent());
