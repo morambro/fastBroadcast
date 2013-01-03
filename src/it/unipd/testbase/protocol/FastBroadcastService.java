@@ -351,15 +351,24 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 						LogPrinter.getInstance().writeTimedLine("MESSAGE RECEIVED FROM BACK!!");
 						EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
 						
-						// Re-send the message to me to simulate message just arrived
-//						IMessage m;
-//						try {
-//							m = messageQueue.take();
-//							EventDispatcher.getInstance().triggerEvent(
-//									new NewMessageArrivedEvent(m,m.getSenderID()));
-//						} catch (InterruptedException e) {
-//							logger.e(e);
-//						}
+						//check to see if message should have been arrived even in new position. If not, discard it
+						boolean arrived = true;
+						message = messageQueue.peek();
+						for(DistanceFilter filter : filters){
+							arrived = arrived & (filter.filter(message));
+						}
+						if(!arrived)
+							try {
+								//shouldn't have been arrived
+								message = messageQueue.take();
+								LogPrinter.getInstance().writeTimedLine(
+									"alert "+Integer.valueOf(message.getContent().get(IMessage.MESSAGE_HOP_KEY))+
+									" from "+message.getSenderID()+" should not have been arrived at new position, discarded."+
+									" Size "+messageQueue.size());
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
 					}
 					LogPrinter.getInstance().writeTimedLine("MESSAGE NOT FORWARDED!!");
 				}
