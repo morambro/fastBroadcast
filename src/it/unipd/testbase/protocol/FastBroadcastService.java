@@ -457,7 +457,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 				}
 			}else{
 				// 4° quadrante
-				if(senderLatitude < currentLocation.getLatitude()){
+				if(senderLatitude > currentLocation.getLatitude()){
 					// Sono davanti
 					return true;
 				}
@@ -469,7 +469,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 				}
 			}else if(direction > 270){
 				// 2° quadrante
-				if(senderLatitude > currentLocation.getLatitude()){
+				if(senderLatitude < currentLocation.getLatitude()){
 					// Sono davanti
 					return true;
 				}
