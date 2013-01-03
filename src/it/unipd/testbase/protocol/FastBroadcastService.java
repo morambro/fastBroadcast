@@ -98,7 +98,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	/**
 	 * Slot size in milliseconds
 	 */
-	private static final int SLOT_SIZE = 50;
+	private static final int SLOT_SIZE = 250;
 
 	/**
 	 * Turn duration in milliseconds
@@ -108,7 +108,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	/**
 	 * Contention window bouds
 	 */
-	private static int CwMax = 15;
+	private static int CwMax = 10;
 	private static int CwMin = 5;
 
 	private HelloMessageSender helloMessageSender;
@@ -309,7 +309,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 					EventDispatcher.getInstance().triggerEvent(new UpdateGuiEvent(UpdateGuiEvent.GUI_UPDATE_NEW_MESSAGE, "Message "+(hopCount-1)+"not forwarded"));
 					Log.e(TAG,"ALERT "+hopCount+" ALREADY FORWARDED BY SOMEONE ELSE");
 					// At least another message arrived
-					if(!receivedFromBack(direction, latitude, longitude)){
+					if(receivedFromBack(direction, latitude, longitude)){
 						// Someone else forwarded it already
 						Log.e(TAG,"MESSAGE RECEIVED FROM BACK!!");
 						LogPrinter.getInstance().writeTimedLine("alert received from back");
