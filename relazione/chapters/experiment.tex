@@ -6,10 +6,10 @@
 	\label{fig:positions_experiment}
 	\end{figure}
 
-To try out our testbed applications, we implemented the Fast Broadcast algorithm both for the Android and Desktop application. Simulations were made on a set of fake positions distributed on a straight line, each at a random distance between $275$ and $325$ meters from the preceding one, covering approximately $8$ kilometers. A graphical representation can be seen in figure \ref{fig:positions_experiment}.
+To try out our frameworks, we implemented the Fast Broadcast algorithm both for Android and Desktop environments. Simulations were made on a set of fake positions distributed on a straight line, each at a random distance between $275$ and $325$ meters from the preceding one, covering approximately $8$ kilometers. A graphical representation can be seen in figure \ref{fig:positions_experiment}.
 
 \subsubsection{Android application}
-To test our Android application we used three Android devices. 10 executions of the Fast Broadcast algorithm were performed, all with the following parameters:
+To test our Android application built on top of our framework we used three Android devices. 10 executions of the Fast Broadcast algorithm were performed, all with the following parameters:
 
 \begin{center}
 \begin{tabular}{|m{0.22\textwidth}|m{0.12\textwidth}|}
@@ -36,7 +36,7 @@ During the application testing we tried to use UDP protocol to provide a much fa
 
 % UDP EXPERIMENT
 %The transport protocol we choose to send out Alert messages was UDP, this to reduce the protocol stack overhead (with TCP was estimated to be $\geq250$ms), speeding up the execution and let us set more realistic parameters values. This was achieved adding a filter to the transport manager at application startup. Hello messages were exchanged using TCP protocol, to reduce the traffic the UDP server thread had to manage.
-Execution results are shown in table \ref{tab:Android_res}. Execution time, waited slots on contention window and contention window size are the average of the values measured in each device. As can be seen, the time needed to forward the Alert message to the last position is quite big; this is mainly due to slot size and TCP overhead. The number of Hops in some executions equals to the theoretical optimum (with this settings and three devices, optimal hop number is 15: our Fast Broadcast implementation simplistically assumes that when a device forwards a message, only (the two) following devices could hear it; more complex scenarious can be modeled).
+Execution results are shown in table \ref{tab:Android_res}. Execution time, waited slots on contention window and contention window size are the average of the values measured in each device. As can be seen, the time needed to forward the Alert message to the last position is quite big; this is mainly due to slot size and TCP overhead. The number of Hops in some executions equals to the theoretical optimum (with this settings and three devices, optimal hop number is 15: our Fast Broadcast implementation simplistically assumes that when a device forwards a message, only the (two) following devices could hear it; however, more complex scenarious can be modeled).
 
 \begin{table}
 % increase table row spacing, adjust to taste
@@ -94,7 +94,7 @@ Execution results are shown in table \ref{tab:Desktop_res}. As can be seen, exec
 %\renewcommand{\arraystretch}{1}
 % if using array.sty, it might be a good idea to tweak the value of
 %\extrarowheight as needed to properly center the text within the cells
-\caption{Fast Broadcast simulation results with Desktop Application, with Three devices}
+\caption{Fast Broadcast simulation results with Desktop Application}
 \label{tab:Desktop_res}
 \centering
 % Some packages, such as MDW tools, offer better commands for making tables
