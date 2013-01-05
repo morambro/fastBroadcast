@@ -10,6 +10,9 @@ import it.unipd.testbase.eventdispatcher.event.protocol.ShowSimulationResultsEve
 import it.unipd.testbase.eventdispatcher.event.protocol.StopSimulationEvent;
 import it.unipd.testbase.helper.LogPrinter;
 import it.unipd.testbase.protocol.FastBroadcastService;
+import it.unipd.testbase.wificonnection.message.IMessage;
+import it.unipd.testbase.wificonnection.transmissionmanager.PacketSenderFactory;
+import it.unipd.testbase.wificonnection.transmissionmanager.TransmissionManager.TransportSelectorFilter;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -89,6 +92,19 @@ public class TestBaseActivity extends AbstractMainActivity implements IComponent
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+		// First operation that must be done!
+		super.setFilter(new TransportSelectorFilter() {
+				@Override
+				public int getTransportForMessage(IMessage message) {
+					if(
+						message.getType() == FastBroadcastService.HELLO_MESSAGE_TYPE
+					
+							){
+						return PacketSenderFactory.UNRELIABLE_TRANSPORT;
+					}
+					return PacketSenderFactory.RELIABLE_TRANSPORT;
+				}
+		});
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		activityHandler = new ActivityHandler(this);

@@ -39,6 +39,12 @@ public abstract class AbstractMainActivity extends FragmentActivity implements G
 	protected ServiceConnection locationServiceConn = new LocServiceConnection();
 	protected DataReceiverService dataReceiver;
 	
+	private TransportSelectorFilter filter;
+	
+	protected void setFilter(TransportSelectorFilter filter){
+		this.filter = filter;
+	}
+	
 	/**
 	 * Application Controller 
 	 */
@@ -136,18 +142,7 @@ public abstract class AbstractMainActivity extends FragmentActivity implements G
 	protected synchronized void serviceCreated() {
 		bindedServices++;
 		if(bindedServices == TOTAL_SERVICES) {
-			controller = new AppController(this, this, new TransportSelectorFilter() {
-				@Override
-				public int getTransportForMessage(IMessage message) {
-					if(
-						message.getType() == FastBroadcastService.HELLO_MESSAGE_TYPE
-					
-							){
-						return PacketSenderFactory.UNRELIABLE_TRANSPORT;
-					}
-					return PacketSenderFactory.RELIABLE_TRANSPORT;
-				}
-			});
+			controller = new AppController(this, this,filter);
 			controller.setFastBroadCastReceiverRegistered(true);
 		}
 	}
