@@ -8,26 +8,18 @@ import it.unipd.testbase.eventdispatcher.event.SetupCompletedEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.SendAlertMessageEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.ShowSimulationResultsEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.StopSimulationEvent;
-import it.unipd.testbase.helper.DebugLogger;
 import it.unipd.testbase.helper.LogPrinter;
-import it.unipd.testbase.location.MockLocationService;
 import it.unipd.testbase.protocol.FastBroadcastService;
-import it.unipd.testbase.wificonnection.receiver.DataReceiverService;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Message;
-import android.support.v4.app.FragmentActivity;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -38,67 +30,26 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class TestBaseActivity extends FragmentActivity implements GuiHandlerInterface,IComponent {
+public class TestBaseActivity extends AbstractMainActivity implements IComponent{
 	protected final String TAG = "it.unipd.testbase";
 	
-	private DebugLogger logger = new DebugLogger(TestBaseActivity.class);
-	
-	private final int TOTAL_SERVICES = 1;
-
-	private ServiceConnection locationServiceConn = new LocServiceConnection();
-	private int bindedServices = 0;
-
-	private boolean isLocationServiceBinded = false;
-
 	private Handler activityHandler;
 
 	// Wi-fi Direct fields
 	private Button sendToAllButton;
 	private Button connectToAllButton;
-	private IControllerComponent controller;
+
 	private ListView devicesListView;
 	private Button resetSimulation;
 	private TextView statusTextView;
 	private ScrollView progressScrollView;
 
-	private DataReceiverService dataReceiver;
 	
 	@Override
 	public Handler getGuiHandler() {
 		return activityHandler;
 	}
 
-
-	/**
-	 * Connection class for Location Service
-	 * 
-	 * @author Moreno Ambrosin
-	 *
-	 */
-	class LocServiceConnection implements ServiceConnection {
-
-		public void onServiceConnected(ComponentName name, IBinder binder) {
-			isLocationServiceBinded = true;
-			serviceCreated();
-			logger.d("Location Service Bound");
-		}
-
-		public void onServiceDisconnected(ComponentName name) {
-			isLocationServiceBinded = false;
-		}
-
-	}
-	
-	/**
-	 * Starts the Location Service
-	 * 
-	 */
-	private void startLocationService(){
-		Intent locService = new Intent(this, MockLocationService.class);
-		locationServiceConn = new LocServiceConnection();
-		boolean temp = this.bindService(locService, locationServiceConn, Context.BIND_AUTO_CREATE);
-		logger.d("Location Service binding statusTextView : "+temp);
-	}
 
 	/**
 	 * Handler class to implement Interprocess communication
@@ -139,14 +90,14 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
-		register();
 		setContentView(R.layout.activity_main);
 		activityHandler = new ActivityHandler(this);
 		setupGui();
+		/**
+		 * Force Fast Broadcast Service creation
+		 */
 		FastBroadcastService.getInstance();
-		dataReceiver = new DataReceiverService();
-		startLocationService();
+		register();
 	}
 
 	@Override
@@ -156,7 +107,7 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 	}
 
 	/**
-	 * Receives the devices list and updates the textView
+	 * Receives the devices list and updates the corrisponding textView
 	 * 
 	 * @param peers
 	 */
@@ -186,38 +137,9 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 	}
 
 	@Override
-	protected void onResume() {
-		super.onResume();
-		if(controller != null){
-			controller.setFastBroadCastReceiverRegistered(true);
-		}
-	}
-
-	@Override
-	protected void onPause() {
-		super.onPause();
-		if(controller != null){
-			controller.setFastBroadCastReceiverRegistered(false);
-		}
-	}
-
-	@Override
 	protected void onDestroy() {
-		logger.d("Main Activity Desctruction");
-		if(isLocationServiceBinded) {
-			unbindService(locationServiceConn);
-			isLocationServiceBinded = false;
-			logger.d("location service unbound");
-		}
-		
-		// Stopping Simulation
-		EventDispatcher.getInstance().triggerEvent(new StopSimulationEvent(false,true));
-		// Stopping data receiver
-		dataReceiver.stopExecuting();
-		// Calling disconnect 
-		controller.disconnect();
 		super.onDestroy();
-		
+		EventDispatcher.getInstance().triggerEvent(new StopSimulationEvent(false,true));
 		android.os.Process.killProcess(android.os.Process.myPid()); 
 	}
 
@@ -282,18 +204,6 @@ public class TestBaseActivity extends FragmentActivity implements GuiHandlerInte
 	    });
 	}
 	
-	/**
-	 * On services creation
-	 * 
-	 */
-	private synchronized void serviceCreated() {
-		bindedServices++;
-		if(bindedServices == TOTAL_SERVICES) {
-			controller = new AppController(this, this);
-			controller.setFastBroadCastReceiverRegistered(true);
-		}
-	}
-
 	@Override
 	public void handle(IEvent event) {
 		if(event.getClass().equals(ShowSimulationResultsEvent.class)){

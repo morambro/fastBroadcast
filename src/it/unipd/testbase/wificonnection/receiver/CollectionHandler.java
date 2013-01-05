@@ -25,7 +25,7 @@ public class CollectionHandler implements IDataCollectionHandler {
 		int messageType = message.getType();
 
 		if(message.getSenderID().equals(controller.getDeviceId())){
-			logger.d("Message Discarded");
+			logger.d("Message sent by me, discarded");
 			return;
 		}
 		

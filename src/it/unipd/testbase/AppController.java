@@ -14,14 +14,12 @@ import it.unipd.testbase.eventdispatcher.event.protocol.SendBroadcastMessageEven
 import it.unipd.testbase.eventdispatcher.event.protocol.SimulationStartEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.StopSimulationEvent;
 import it.unipd.testbase.helper.DebugLogger;
-import it.unipd.testbase.protocol.FastBroadcastService;
 import it.unipd.testbase.wificonnection.connectioninfomanager.ConnectionManagerFactory;
 import it.unipd.testbase.wificonnection.connectioninfomanager.IConnectionInfoManager;
 import it.unipd.testbase.wificonnection.message.IMessage;
 import it.unipd.testbase.wificonnection.message.MessageBuilder;
 import it.unipd.testbase.wificonnection.receiver.CollectionHandler;
 import it.unipd.testbase.wificonnection.receiver.WifiBroadcastReceiver;
-import it.unipd.testbase.wificonnection.transmissionmanager.PacketSenderFactory;
 import it.unipd.testbase.wificonnection.transmissionmanager.TransmissionManager;
 import it.unipd.testbase.wificonnection.transmissionmanager.TransmissionManager.TransportSelectorFilter;
 import it.unipd.testbase.wificonnection.transmissionmanager.sender.IPaketSender;
@@ -176,7 +174,7 @@ public class AppController implements IControllerComponent {
 	 * 
 	 * @param context
 	 */
-	public AppController(Context context, GuiHandlerInterface guiHandlerInterface) {
+	public AppController(Context context, GuiHandlerInterface guiHandlerInterface,TransportSelectorFilter filter) {
 		this.context = context;
 		this.guiHandler = guiHandlerInterface.getGuiHandler();
 		
@@ -196,22 +194,7 @@ public class AppController implements IControllerComponent {
 		logger.d("il MAC address del dispositivo è = "+MAC_ADDRESS);
 		
 		// Force creation of TransportManager
-		TransmissionManager.getInstance().setFilter(
-			new TransportSelectorFilter() {
-				@Override
-				public int getTransportForMessage(IMessage message) {
-					if(
-//						message.getType() == FastBroadcastService.ALERT_MESSAGE_TYPE ||
-//						message.getType() == FastBroadcastService.ALERT_MESSAGE_TYPE 
-						message.getType() == FastBroadcastService.HELLO_MESSAGE_TYPE
-					
-							){
-						return PacketSenderFactory.UNRELIABLE_TRANSPORT;
-					}
-					return PacketSenderFactory.RELIABLE_TRANSPORT;
-				}
-			}
-		);
+		TransmissionManager.getInstance().setFilter(filter);
 		
 		register();
 	}

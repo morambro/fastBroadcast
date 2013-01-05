@@ -2,6 +2,7 @@ package it.unipd.testbase.protocol;
 
 import it.unipd.testbase.AppController;
 import it.unipd.testbase.eventdispatcher.EventDispatcher;
+import it.unipd.testbase.eventdispatcher.IComponent;
 import it.unipd.testbase.eventdispatcher.event.IEvent;
 import it.unipd.testbase.eventdispatcher.event.location.LocationChangedEvent;
 import it.unipd.testbase.eventdispatcher.event.location.UpdateLocationEvent;
@@ -32,7 +33,7 @@ import android.location.Location;
  * @author Moreno Ambrosin
  *
  */
-public class FastBroadcastService implements IFastBroadcastComponent{
+public class FastBroadcastService implements IComponent{
 	
 	protected static final String TAG = "it.unipd.testbase";
 	
@@ -114,7 +115,7 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 	/**
 	 * Turn duration in milliseconds
 	 */
-	public static final int TURN_DURATION = 500;
+	public static final int TURN_DURATION = 500000;
 	
 	/**
 	 * Contention window bounds
@@ -651,7 +652,10 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 		}
 		if(event.getClass().equals(NewMessageArrivedEvent.class)){
 			NewMessageArrivedEvent ev = (NewMessageArrivedEvent) event;
-			
+			// If currentLocation is null, ignore the message
+			if(currentLocation == null) {
+				return;
+			}
 			// Filtering the message by distance
 			boolean arrived = true;
 			for(DistanceFilter filter : filters){
@@ -735,6 +739,8 @@ public class FastBroadcastService implements IFastBroadcastComponent{
 			}
 			// Reset default range
 			lmbr = cmbr = cmfr = lmfr = DEFAULT_RANGE;
+			// Clear received hops buffer.
+			alreadyReceivedMsgs.clear();
 			return;
 		}
 		if(event.getClass().equals(SendAlertMessageEvent.class)){

@@ -30,17 +30,13 @@ public interface IControllerComponent extends IComponent {
 	 * @return unique device id (MAC Address in this case)
 	 */
 	String getDeviceId();
+	
 	/**
 	 * Tell whether register/unregister WifiBroadcastReceiver
 	 * 
 	 * @param registered
 	 */
 	void setFastBroadCastReceiverRegistered(boolean b);
-	
-	/**
-	 * broadcasts an alert message
-	 */
-//	void sendAlert();
 	
 	/**
 	 * Disconnects the current peer
