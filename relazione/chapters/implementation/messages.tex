@@ -1,6 +1,5 @@
 \subsection{Exchanged Messages}
-
-Exchanged messages are encoded as XML strings; the structure of a message is as follow:
+Both framework versions specify an XML structure for the exchenged message, and helper methods to easily create and extract information from them. The structure of a generic message is as follow:
 \begin{verbatim}
 <message type="..." recipient_id="...">
     <content_block>
@@ -20,12 +19,15 @@ Exchanged messages are encoded as XML strings; the structure of a message is as 
 \end{verbatim}
 As highlighted in the above scheme, we choose to use a \ttt{<key,content>} pair to add content to the messages, so that it can be easily converted to a Map object.
 
-We used four different kinds of messages:
+The framework uses two different kinds of messages:
 	\begin{description}
 		\item[\textbf{Ping message (0)}] \hfill \\
-		Application Control Message used to send MAC address to the \textit{group owner}.
+		Control Message used to send MAC address to the \textit{group owner}.
 		\item[\textbf{Map message (1)}] \hfill \\
-		Application Control Message used by the group owner to send the complete \ttt{<MAC address,IP address>} pairs map to all the connected devices.
+		Control Message used by the group owner to send the complete \ttt{<MAC address,IP address>} pairs map to all the connected devices.
+	\end{description}
+To implement a Fast Broadcast testbed application we introduced also the following protocol-specific message types:
+	\begin{description}
 		\item[\textbf{Alert message (2)}] \hfill \\
 		Protocol specific Message used to send an alert to be forwarded to the other connected devices.
 		\item[\textbf{Hello message (3)}] \hfill \\

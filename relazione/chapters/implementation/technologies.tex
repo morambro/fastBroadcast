@@ -1,9 +1,9 @@
 \subsection{Technologies}
 
-\subsubsection{Android application}
-The Android application uses the \direct standard to communicate with other devices. Since revision 14, Android APIs enables the use of this technology to create small wireless networks, where one of the devices acts as an \emph{Access Point}. The \direct specification is only available for purchase from WI-FI Alliance\textsuperscript{\texttrademark} website\cite{wifi_direct}.
+\subsubsection{Android framework}
+The Android framework uses the \direct standard to communicate with other devices. Since revision 14, Android APIs enables the use of this technology to create small wireless networks, where one of the devices acts as an \emph{Access Point}. The \direct specification is only available for purchase from WI-FI Alliance\textsuperscript{\texttrademark} website\cite{wifi_direct}.
 Basically, a network created with Android \direct APIs is called \emph{group}. A \emph{group} has an owner (the access point), and one or more devices connected to it. Within the network, the only available IP address is the group owner's. 
 User's permission is required in order to connect to other devices.
 
-\subsubsection{Desktop application}
-The Desktop version relies on low-level system calls to obtain a file descriptor associated with a Level 2 (Data Link) raw socket. In order to obtain real p2p connectivity without the need of an infrastructure (either physical or logical, like the one in the Android application) the communication must be based on MAC Addresses and the network interface must be in Monitor mode (so that all packets are forwarded to the socket for processing).
+\subsubsection{Desktop framework}
+The Desktop version relies on low-level system calls to obtain a file descriptor associated with a Level 2 (Data Link) raw socket. In order to obtain real p2p connectivity without the need of an infrastructure (either physical or logical, like the one in the Android version) the communication must be based on MAC Addresses and the network interface must be in Monitor mode (so that all packets are forwarded to the socket for processing).
