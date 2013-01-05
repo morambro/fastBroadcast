@@ -22,7 +22,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name=".TestBaseActivity"
+            android:name="it.unipd.fastbroadcast.TestBaseActivity"
             android:configChanges="orientation|keyboardHidden"
             android:label="@string/title_activity_main"
             android:screenOrientation="portrait"
@@ -35,11 +35,11 @@
         </activity>
         <activity 
             android:label="@string/app_name" 
-            android:name=".SimulationResultsActivity"
+    		android:name="it.unipd.fastbroadcast.SimulationResultsActivity"
             android:screenOrientation="portrait"
             android:theme="@android:style/Theme.Holo" />
-	<service android:name=".location.LocationService"/>
-    <service android:name=".location.MockLocationService"/>
+	<service android:name="it.unipd.vanets.framework.location.LocationService"/>
+    <service android:name="it.unipd.vanets.framework.location.MockLocationService"/>
     </application>
 
 </manifest>
