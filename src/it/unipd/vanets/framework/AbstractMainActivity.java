@@ -1,5 +1,6 @@
 package it.unipd.vanets.framework;
 
+import it.unipd.testbase.R;
 import it.unipd.vanets.framework.helper.DebugLogger;
 import it.unipd.vanets.framework.location.MockLocationService;
 import it.unipd.vanets.framework.wificonnection.receiver.DataReceiverService;
@@ -11,6 +12,7 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.FragmentActivity;
+import android.view.Menu;
 
 /**
  * Abstract class to be subclassed to realize an Activity for a testbed application.
@@ -90,6 +92,8 @@ public abstract class AbstractMainActivity extends FragmentActivity implements G
 	}
 	
 	
+	/**************************** ACTIVITY METHODS *************************************/
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -99,6 +103,7 @@ public abstract class AbstractMainActivity extends FragmentActivity implements G
 		
 		// Starting Location Service
 		startLocationService();
+		implementationOnCreate();
 	}	
 	
 	@Override
@@ -114,7 +119,9 @@ public abstract class AbstractMainActivity extends FragmentActivity implements G
 		dataReceiver.stopExecuting();
 		// Calling disconnect 
 		controller.disconnect();
+		implementationOnDestroy();
 	}
+	
 
 	@Override
 	protected void onResume() {
@@ -122,6 +129,7 @@ public abstract class AbstractMainActivity extends FragmentActivity implements G
 		if(controller != null){
 			controller.setFastBroadCastReceiverRegistered(true);
 		}
+		implementationOnResume();
 	}
 	
 	@Override
@@ -130,7 +138,26 @@ public abstract class AbstractMainActivity extends FragmentActivity implements G
 		if(controller != null){
 			controller.setFastBroadCastReceiverRegistered(false);
 		}
+		implementationOnPause();
 	}
+	
+	/**
+	 * Methods to define to perform graphical initializations and other
+	 * implementation specific operations
+	 */
+	abstract protected void implementationOnCreate();
+	abstract protected void implementationOnDestroy();
+	abstract protected void implementationOnResume();
+	abstract protected void implementationOnPause();
+	
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.activity_main, menu);
+		return true;
+	}
+	
+	/***********************************************************************++
 	
 	/**
 	 * On services creation

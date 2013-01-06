@@ -21,10 +21,8 @@ import java.util.List;
 
 import android.content.Intent;
 import android.net.wifi.p2p.WifiP2pDevice;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
@@ -90,9 +88,10 @@ public class TestBaseActivity extends AbstractMainActivity implements IComponent
 		}
 	}
 	
+	/********************************* IMPLEMENTATION SPECIFIC OVERRIDED METHODS ***********************/
 
 	@Override
-	public void onCreate(Bundle savedInstanceState) {
+	public void implementationOnCreate() {
 		// First operation that must be done!
 		super.setFilter(new TransportSelectorFilter() {
 				@Override
@@ -106,7 +105,6 @@ public class TestBaseActivity extends AbstractMainActivity implements IComponent
 					return PacketSenderFactory.RELIABLE_TRANSPORT;
 				}
 		});
-		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		activityHandler = new ActivityHandler(this);
 		setupGui();
@@ -118,17 +116,31 @@ public class TestBaseActivity extends AbstractMainActivity implements IComponent
 	}
 
 	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		getMenuInflater().inflate(R.menu.activity_main, menu);
-		return true;
+	protected void implementationOnDestroy() {
+		super.onDestroy();
+		EventDispatcher.getInstance().triggerEvent(new StopSimulationEvent(false,true));
+		android.os.Process.killProcess(android.os.Process.myPid()); 
 	}
 
+	@Override
+	protected void implementationOnPause() {
+		// Do nothing implementation specific on pause
+	}
+	
+	
+	@Override
+	protected void implementationOnResume() {
+		// Do nothing implementation specific on resume
+	}
+	
+	/*******************************************************************************************/
+	
 	/**
 	 * Receives the devices list and updates the corrisponding textView
 	 * 
 	 * @param peers
 	 */
-	public void savePeers(SynchronizedDevicesList peers) {
+	private void savePeers(SynchronizedDevicesList peers) {
 		String[] new_list = new String[peers.size()];
 		for(int i = 0; i < peers.size() ; i++){
 			WifiP2pDevice dev = peers.get(i);
@@ -151,13 +163,6 @@ public class TestBaseActivity extends AbstractMainActivity implements IComponent
 				)
 		);
 		
-	}
-
-	@Override
-	protected void onDestroy() {
-		super.onDestroy();
-		EventDispatcher.getInstance().triggerEvent(new StopSimulationEvent(false,true));
-		android.os.Process.killProcess(android.os.Process.myPid()); 
 	}
 
 	/**
