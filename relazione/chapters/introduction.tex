@@ -15,7 +15,7 @@
 % Here we have the typical use of a "T" for an initial drop letter
 % and "HIS" in caps to complete the first word.
 \IEEEPARstart{R}{esearch} on Vehicular Networks makes large use of software simulations, mainly because it is unfeasible to build a real-life vehicular network for every test project. 
-In order to reduce costs, a possible solution is to use completely software testbed applications, which are able to simulate vehicles traffic and message trasmission\cite{gradinescu}.
+In order to reduce costs, a possible solution is to use completely software testbed applications, which are able to simulate vehicles traffic and message transmission\cite{gradinescu}.
 Another possibility is to equip a small number of vehicles with a test kit to perform real test, using a specific algorithm to simulate a large number of vehicles\cite{rocetti}.
 
 %In order to reduce costs, a possible approach is to use common devices, like smartphones or PCs, from whitin each vehicle to perform real tests whitout the need of dedicated hardware built-in the cars, or even better, take advantage of the features they offer and build a reusable framework to run simulations.
@@ -26,15 +26,15 @@ A complete testbed application for mobile devices requires different features:
 	\item Wireless connectivity.
 \end{itemize}
 
-Nowdays this features are very easy to find: most of the smartphones in the market already have GPS and WI-FI built-in, and the Operating Systems provides the needed APIs.
+Nowadays this features are very easy to find: most of the smartphones in the market already have GPS and WI-FI built-in, and the Operating Systems provides the needed APIs.
 
 The approach we followed, consists in developing a framework to test VANETs protocols using common devices, like smartphones or PCs. 
-The aim of our work was to build a reusable framework which could be used either to run simulations taking advantage of the features this devices offers, or to use this devices from whitin each vehicle to perform real tests whitout the need of dedicated hardware.
+The aim of our work was to build a reusable framework which could be used either to run simulations taking advantage of the features this devices offers, or to use this devices from within each vehicle to perform real tests without the need of dedicated hardware.
 
 Given this, our work is consists in two parts:
 \begin{itemize}
 	\item An \textit{Android framework}, which can be used to build distributed test applications involving a finite number of Andorid devices. It provides users the ability to specify a list of locations for each device in order to simulate an high number of vehicles (each position representing a vehicle) and thus an easy way to modify virtual positions as needed, or to possibility of using real GPS positioning in case of real-life tests. Our framework uses Android WI-FI technologies for devices communication, specifically \direct standard developed by WI-FI Alliance\textsuperscript{\texttrademark}.
-	\item A \textit{Java Desktop framework} based on Linux Kernel and Fedora operating system. It offers the same capabilities as the Android framework (with the exclusion of GPS positioning, although it can be easily implemented with a dedicated device driver), but uses Raw Sockets to reduce system and protocol overheads and obtain a much more realistic simulation result. Morover, it is possible to run multiple instances of the applications built on top of our framework on the same machine (tested with up to 4), thus increasing the number of simulated vehicles.
+	\item A \textit{Java Desktop framework} based on Linux Kernel and Fedora operating system. It offers the same capabilities as the Android framework (with the exclusion of GPS positioning, although it can be easily implemented with a dedicated device driver), but uses Raw Sockets to reduce system and protocol overheads and obtain a much more realistic simulation result. Moreover, it is possible to run multiple instances of the applications built on top of our framework on the same machine (tested with up to 4), thus increasing the number of simulated vehicles.
 \end{itemize}
 
 Both our frameworks share the same architecture, that will be introduced in the next sections. To test it we realized both an Android and a Java Desktop application, implementing the Fast Broadcast algorithm, which will be briefly introduced in section \ref{sec:fast_broadcast}.
