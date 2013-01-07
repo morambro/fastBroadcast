@@ -4,15 +4,12 @@ import it.unipd.vanets.framework.eventdispatcher.EventDispatcher;
 import it.unipd.vanets.framework.eventdispatcher.event.IEvent;
 import it.unipd.vanets.framework.eventdispatcher.event.SetupCompletedEvent;
 import it.unipd.vanets.framework.eventdispatcher.event.connectioninfo.WiFiInfoCollectedEvent;
-import it.unipd.vanets.framework.eventdispatcher.event.location.PositionsTerminatedEvent;
 import it.unipd.vanets.framework.eventdispatcher.event.location.SetupProviderEvent;
 import it.unipd.vanets.framework.eventdispatcher.event.location.UpdateLocationEvent;
 import it.unipd.vanets.framework.eventdispatcher.event.message.MessageReceivedEvent;
 import it.unipd.vanets.framework.eventdispatcher.event.message.SendUnicastMessageEvent;
 import it.unipd.vanets.framework.eventdispatcher.event.message.UpdateStatusEvent;
 import it.unipd.vanets.framework.eventdispatcher.event.protocol.SendBroadcastMessageEvent;
-import it.unipd.vanets.framework.eventdispatcher.event.protocol.SimulationStartEvent;
-import it.unipd.vanets.framework.eventdispatcher.event.protocol.StopSimulationEvent;
 import it.unipd.vanets.framework.helper.DebugLogger;
 import it.unipd.vanets.framework.wificonnection.connectioninfomanager.ConnectionManagerFactory;
 import it.unipd.vanets.framework.wificonnection.connectioninfomanager.IConnectionInfoManager;
@@ -269,7 +266,9 @@ public class AppController implements IControllerComponent {
 	public synchronized void setPeersIdIPmap(Map<String,String> map){
 
 		// If setup was already completed, just do nothing
-		if (setupCompleted) return;
+		if (setupCompleted) {
+			return;
+		}
 		
 		if(peerIdIpMap == null){
 			peerIdIpMap = map;
@@ -294,7 +293,6 @@ public class AppController implements IControllerComponent {
 				sendBroadcast(message);
 				mapSent = true;
 				// Now start simulation
-				EventDispatcher.getInstance().triggerEvent(new SimulationStartEvent());
 				EventDispatcher.getInstance().triggerEvent(new SetupCompletedEvent());
 				EventDispatcher.getInstance().triggerEvent(
 						new UpdateStatusEvent("Group owner setup completed")
@@ -306,7 +304,6 @@ public class AppController implements IControllerComponent {
 			// so I can start simulation
 			setupCompleted = true;
 			EventDispatcher.getInstance().triggerEvent(new UpdateLocationEvent());
-			EventDispatcher.getInstance().triggerEvent(new SimulationStartEvent());
 			EventDispatcher.getInstance().triggerEvent(new SetupCompletedEvent());
 			EventDispatcher.getInstance().triggerEvent(new UpdateStatusEvent("Peer Setup completed"));
 		}
@@ -430,7 +427,6 @@ public class AppController implements IControllerComponent {
 		events.add(WiFiInfoCollectedEvent.class);
 		events.add(SendBroadcastMessageEvent.class);
 		events.add(SendUnicastMessageEvent.class);
-		events.add(PositionsTerminatedEvent.class);
 		events.add(UpdateStatusEvent.class);
 		EventDispatcher.getInstance().registerComponent(this, events);
 	}
@@ -456,10 +452,6 @@ public class AppController implements IControllerComponent {
 			WiFiInfoCollectedEvent ev = (WiFiInfoCollectedEvent) event;
 			groupOwnerAddress 	= ev.wifiConnectionInfo.groupOwnerAddress.getCanonicalHostName();
 			isGroupOwner 		= ev.wifiConnectionInfo.isGroupOwner;
-			return;
-		}
-		if(event instanceof PositionsTerminatedEvent){
-			EventDispatcher.getInstance().triggerEvent(new StopSimulationEvent(true,false));
 			return;
 		}
 		if(event instanceof UpdateStatusEvent){

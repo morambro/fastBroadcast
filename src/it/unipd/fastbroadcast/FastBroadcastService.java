@@ -1,17 +1,18 @@
 package it.unipd.fastbroadcast;
 
+import it.unipd.fastbroadcast.event.SendAlertMessageEvent;
 import it.unipd.vanets.framework.AppController;
 import it.unipd.vanets.framework.eventdispatcher.EventDispatcher;
 import it.unipd.vanets.framework.eventdispatcher.IComponent;
 import it.unipd.vanets.framework.eventdispatcher.event.IEvent;
+import it.unipd.vanets.framework.eventdispatcher.event.SetupCompletedEvent;
 import it.unipd.vanets.framework.eventdispatcher.event.location.LocationChangedEvent;
+import it.unipd.vanets.framework.eventdispatcher.event.location.PositionsTerminatedEvent;
 import it.unipd.vanets.framework.eventdispatcher.event.location.UpdateLocationEvent;
 import it.unipd.vanets.framework.eventdispatcher.event.message.UpdateStatusEvent;
 import it.unipd.vanets.framework.eventdispatcher.event.protocol.NewMessageArrivedEvent;
-import it.unipd.vanets.framework.eventdispatcher.event.protocol.SendAlertMessageEvent;
 import it.unipd.vanets.framework.eventdispatcher.event.protocol.SendBroadcastMessageEvent;
 import it.unipd.vanets.framework.eventdispatcher.event.protocol.ShowSimulationResultsEvent;
-import it.unipd.vanets.framework.eventdispatcher.event.protocol.SimulationStartEvent;
 import it.unipd.vanets.framework.eventdispatcher.event.protocol.StopSimulationEvent;
 import it.unipd.vanets.framework.helper.DebugLogger;
 import it.unipd.vanets.framework.helper.LogPrinter;
@@ -115,7 +116,7 @@ public class FastBroadcastService implements IComponent{
 	/**
 	 * Turn duration in milliseconds
 	 */
-	public static final int TURN_DURATION = 500000;
+	public static final int TURN_DURATION = 500;
 	
 	/**
 	 * Contention window bounds
@@ -370,7 +371,6 @@ public class FastBroadcastService implements IComponent{
 									" from "+message.getSenderID()+" should not have been arrived at new position, discarded."+
 									" Size "+messageQueue.size());
 							} catch (InterruptedException e) {
-								// TODO Auto-generated catch block
 								e.printStackTrace();
 							}
 					}
@@ -634,7 +634,7 @@ public class FastBroadcastService implements IComponent{
 	
 	@Override
 	public void handle(IEvent event) {
-		if(event.getClass().equals(SimulationStartEvent.class)){
+		if(event.getClass().equals(SetupCompletedEvent.class)){
 			if(!started){
 				logger.d("Inizializzo HelloMessageSender");
 			
@@ -748,16 +748,21 @@ public class FastBroadcastService implements IComponent{
 			sendAlert(ev.hops);
 			return;
 		}
+		if(event instanceof PositionsTerminatedEvent){
+			EventDispatcher.getInstance().triggerEvent(new StopSimulationEvent(true,false));
+			return;
+		}
 	}
 
 	@Override
 	public void register() {
 		List<Class<? extends IEvent>> events = new ArrayList<Class<? extends IEvent>>();
-		events.add(SimulationStartEvent.class);
+		events.add(SetupCompletedEvent.class);
 		events.add(LocationChangedEvent.class);
 		events.add(NewMessageArrivedEvent.class);
 		events.add(StopSimulationEvent.class);
 		events.add(SendAlertMessageEvent.class);
+		events.add(PositionsTerminatedEvent.class);
 		EventDispatcher.getInstance().registerComponent(this, events);
 	}
 }

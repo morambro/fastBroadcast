@@ -1,5 +1,6 @@
 package it.unipd.fastbroadcast;
 
+import it.unipd.fastbroadcast.event.SendAlertMessageEvent;
 import it.unipd.testbase.R;
 import it.unipd.vanets.framework.AbstractMainActivity;
 import it.unipd.vanets.framework.AppController.SynchronizedDevicesList;
@@ -7,7 +8,6 @@ import it.unipd.vanets.framework.eventdispatcher.EventDispatcher;
 import it.unipd.vanets.framework.eventdispatcher.IComponent;
 import it.unipd.vanets.framework.eventdispatcher.event.IEvent;
 import it.unipd.vanets.framework.eventdispatcher.event.SetupCompletedEvent;
-import it.unipd.vanets.framework.eventdispatcher.event.protocol.SendAlertMessageEvent;
 import it.unipd.vanets.framework.eventdispatcher.event.protocol.ShowSimulationResultsEvent;
 import it.unipd.vanets.framework.eventdispatcher.event.protocol.StopSimulationEvent;
 import it.unipd.vanets.framework.helper.LogPrinter;
@@ -92,14 +92,11 @@ public class TestBaseActivity extends AbstractMainActivity implements IComponent
 
 	@Override
 	public void implementationOnCreate() {
-		// First operation that must be done!
+		// First operation that have to be done!
 		super.setFilter(new TransportSelectorFilter() {
 				@Override
 				public int getTransportForMessage(IMessage message) {
-					if(
-						message.getType() == FastBroadcastService.HELLO_MESSAGE_TYPE
-					
-							){
+					if(message.getType() == FastBroadcastService.HELLO_MESSAGE_TYPE){
 						return PacketSenderFactory.UNRELIABLE_TRANSPORT;
 					}
 					return PacketSenderFactory.RELIABLE_TRANSPORT;
@@ -117,7 +114,6 @@ public class TestBaseActivity extends AbstractMainActivity implements IComponent
 
 	@Override
 	protected void implementationOnDestroy() {
-		super.onDestroy();
 		EventDispatcher.getInstance().triggerEvent(new StopSimulationEvent(false,true));
 		android.os.Process.killProcess(android.os.Process.myPid()); 
 	}

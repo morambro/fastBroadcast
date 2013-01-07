@@ -1,8 +1,6 @@
 package it.unipd.fastbroadcast;
 
 import it.unipd.testbase.R;
-import it.unipd.testbase.R.id;
-import it.unipd.testbase.R.layout;
 import it.unipd.vanets.framework.helper.LogPrinter;
 import android.app.Activity;
 import android.os.Bundle;
