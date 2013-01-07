@@ -36,7 +36,6 @@ public class DataReceiverService implements IDataReceiverComponent{
 	}
 
 	public DataReceiverService() {
-		logger.d("CREATED DATASERVICEDIOCANE");
 		logger.d("Servizio creato");
 		udpPacketReceiver = new UDPPacketReceiver();
 		tcpPacketReceiver = new TCPPacketReceiver();
