@@ -1,6 +1,7 @@
 package it.unipd.fastbroadcast;
 
 import it.unipd.fastbroadcast.event.SendAlertMessageEvent;
+import it.unipd.fastbroadcast.event.SimulationStartedEvent;
 import it.unipd.testbase.R;
 import it.unipd.vanets.framework.AbstractMainActivity;
 import it.unipd.vanets.framework.AppController.SynchronizedDevicesList;
@@ -13,6 +14,7 @@ import it.unipd.vanets.framework.eventdispatcher.event.protocol.StopSimulationEv
 import it.unipd.vanets.framework.helper.LogPrinter;
 import it.unipd.vanets.framework.wificonnection.message.IMessage;
 import it.unipd.vanets.framework.wificonnection.transmissionmanager.PacketSenderFactory;
+import it.unipd.vanets.framework.wificonnection.transmissionmanager.TransmissionManager;
 import it.unipd.vanets.framework.wificonnection.transmissionmanager.TransmissionManager.TransportSelectorFilter;
 
 import java.lang.ref.WeakReference;
@@ -23,6 +25,8 @@ import android.content.Intent;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.os.Handler;
 import android.os.Message;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
@@ -42,10 +46,9 @@ public class TestBaseActivity extends AbstractMainActivity implements IComponent
 	private Button connectToAllButton;
 
 	private ListView devicesListView;
-	private Button resetSimulation;
 	private TextView statusTextView;
 	private ScrollView progressScrollView;
-
+	private Menu mainMenu;
 	
 	@Override
 	public Handler getGuiHandler() {
@@ -160,6 +163,52 @@ public class TestBaseActivity extends AbstractMainActivity implements IComponent
 		);
 		
 	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		mainMenu = menu;
+		getMenuInflater().inflate(R.menu.activity_main, menu);
+		return true;
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		
+	    switch (item.getItemId()) {
+	        case R.id.upd:
+	        	if(item.isChecked()){
+		        	item.setChecked(false);
+	        	}else{
+	        		TransmissionManager.getInstance().setFilter(new TransportSelectorFilter() {
+						@Override
+						public int getTransportForMessage(IMessage message) {
+							return PacketSenderFactory.UNRELIABLE_TRANSPORT;
+						}
+		        	});
+	        		item.setChecked(true);
+	        	}
+	        	return true;
+	        case R.id.tcp:
+	            if (item.isChecked()) {
+	            	item.setChecked(false);
+	            }else{
+	            	TransmissionManager.getInstance().setFilter(new TransportSelectorFilter() {
+	            		@Override
+	            		public int getTransportForMessage(IMessage message) {
+	            			if(message.getType() == FastBroadcastService.HELLO_MESSAGE_TYPE){
+	            				return PacketSenderFactory.UNRELIABLE_TRANSPORT;
+	            			}
+	            			return PacketSenderFactory.RELIABLE_TRANSPORT;
+	            		}
+	            	});
+	            	item.setChecked(true);
+	            }
+	            return true;
+	        default:
+	            return super.onOptionsItemSelected(item);
+	    }
+	}
+	
 
 	/**
 	 * Does all the initial setup
@@ -170,25 +219,20 @@ public class TestBaseActivity extends AbstractMainActivity implements IComponent
 		sendToAllButton 	= (Button)this.findViewById(R.id.send_button);
 		sendToAllButton.setEnabled(false);
 		devicesListView 	= (ListView)this.findViewById(R.id.devices_list_view);
-		resetSimulation 	= (Button)this.findViewById(R.id.debugSendUDP);
 		statusTextView 		= (TextView)this.findViewById(R.id.ProgressInfo);
 		progressScrollView	= (ScrollView)this.findViewById(R.id.ProgressScroll);
-		
-		resetSimulation.setOnClickListener(new OnClickListener() {
-			
-			@Override
-			public void onClick(View v) {
-				sendToAllButton.setEnabled(true);
-				LogPrinter.getInstance().reset();
-			}
-		});
 		
 		sendToAllButton.setOnClickListener(new OnClickListener() {
 
 			public void onClick(View v) {
 				// Send an Alert message in broadcast
+				mainMenu.setGroupEnabled(0,false);
 				EventDispatcher.getInstance().triggerEvent(new SendAlertMessageEvent(0));
-				resetSimulation.setEnabled(false);
+				runOnUiThread(new Runnable(){
+					public void run() {
+						sendToAllButton.setEnabled(false);
+					};
+				});
 			}
 		});
 
@@ -225,12 +269,14 @@ public class TestBaseActivity extends AbstractMainActivity implements IComponent
 	@Override
 	public void handle(IEvent event) {
 		if(event.getClass().equals(ShowSimulationResultsEvent.class)){
+			
 			runOnUiThread(new Runnable(){
 				public void run() {
-					resetSimulation.setEnabled(true);
-					sendToAllButton.setEnabled(false);
+					mainMenu.setGroupEnabled(0,true);
+					sendToAllButton.setEnabled(true);
 				}
 			});
+			
 			if(!SimulationResultsActivity.isOpened) {
 				Intent myIntent = new Intent(this, SimulationResultsActivity.class);
 				this.startActivity(myIntent);
@@ -241,6 +287,16 @@ public class TestBaseActivity extends AbstractMainActivity implements IComponent
 			runOnUiThread(new Runnable(){
 				public void run() {
 					connectToAllButton.setEnabled(false);
+					sendToAllButton.setEnabled(true);
+				};
+			});
+			return;
+		}
+		if(event.getClass().equals(SimulationStartedEvent.class)){
+			runOnUiThread(new Runnable(){
+				public void run() {
+					sendToAllButton.setEnabled(false);
+					mainMenu.setGroupEnabled(0,false);
 				};
 			});
 			return;
@@ -252,6 +308,7 @@ public class TestBaseActivity extends AbstractMainActivity implements IComponent
 		List<Class<? extends IEvent>> events = new ArrayList<Class<? extends IEvent>>();
 		events.add(ShowSimulationResultsEvent.class);
 		events.add(SetupCompletedEvent.class);
+		events.add(SimulationStartedEvent.class);
 		EventDispatcher.getInstance().registerComponent(this,events);
 	}
 }

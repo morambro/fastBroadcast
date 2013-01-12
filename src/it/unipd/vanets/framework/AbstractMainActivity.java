@@ -1,6 +1,5 @@
 package it.unipd.vanets.framework;
 
-import it.unipd.testbase.R;
 import it.unipd.vanets.framework.helper.DebugLogger;
 import it.unipd.vanets.framework.location.MockLocationService;
 import it.unipd.vanets.framework.wificonnection.receiver.DataReceiverService;
@@ -12,7 +11,6 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.FragmentActivity;
-import android.view.Menu;
 
 /**
  * Abstract class to be subclassed to realize an Activity for a testbed application.
@@ -151,11 +149,6 @@ public abstract class AbstractMainActivity extends FragmentActivity implements G
 	abstract protected void implementationOnPause();
 	
 	
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		getMenuInflater().inflate(R.menu.activity_main, menu);
-		return true;
-	}
 	
 	/***********************************************************************++
 	

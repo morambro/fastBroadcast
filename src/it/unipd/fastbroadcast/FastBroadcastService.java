@@ -1,6 +1,7 @@
 package it.unipd.fastbroadcast;
 
 import it.unipd.fastbroadcast.event.SendAlertMessageEvent;
+import it.unipd.fastbroadcast.event.SimulationStartedEvent;
 import it.unipd.vanets.framework.AppController;
 import it.unipd.vanets.framework.eventdispatcher.EventDispatcher;
 import it.unipd.vanets.framework.eventdispatcher.IComponent;
@@ -54,8 +55,6 @@ public class FastBroadcastService implements IComponent{
 	private DebugLogger logger = new DebugLogger(FastBroadcastService.class);
 	
 	private static FastBroadcastService instance = null;
-	
-	
 	
 	public static FastBroadcastService getInstance() {
 		if(instance == null)
@@ -111,18 +110,18 @@ public class FastBroadcastService implements IComponent{
 	/**
 	 * Slot size in milliseconds
 	 */
-	private static final int SLOT_SIZE = 250;
+	private static final int SLOT_SIZE = 5;
 	
 	/**
 	 * Turn duration in milliseconds
 	 */
-	public static final int TURN_DURATION = 500;
+	public static final int ESTIMATION_TURN_DURATION = 5000000;
 	
 	/**
 	 * Contention window bounds
 	 */
-	private static int CwMax = 10;
-	private static int CwMin = 5;
+	private static int CwMax = 1024;
+	private static int CwMin = 32;
 	
 	private Location currentLocation;
 	
@@ -133,6 +132,8 @@ public class FastBroadcastService implements IComponent{
 	private List<Integer> alreadyReceivedMsgs = new ArrayList<Integer>();
 	
 	private int doubleForward = 0;
+	
+	private boolean __firstAlert = true;
 	
 	/****************************************************** DECLARATIONS ***************************************************/
 	
@@ -153,7 +154,7 @@ public class FastBroadcastService implements IComponent{
 	}
 	
 	/**
-	 * Task scheduled at a fixed TURN_DURATION time, which sends out an hello message 
+	 * Task scheduled at a fixed ESTIMATION_TURN_DURATION time, which sends out an hello message 
 	 * to perform Range estimation
 	 * 
 	 * @author Moreno Ambrosin
@@ -168,7 +169,7 @@ public class FastBroadcastService implements IComponent{
 		public void run(){
 			while(keepRunning){
 				try {
-					Thread.sleep(TURN_DURATION);
+					Thread.sleep(ESTIMATION_TURN_DURATION);
 				} catch (InterruptedException e) {
 					logger.e(e);
 				}
@@ -179,7 +180,7 @@ public class FastBroadcastService implements IComponent{
 				
 				synchronized (this) {
 					helloMessageArrived = false;
-					randomTime = randomGenerator.nextInt(TURN_DURATION);
+					randomTime = randomGenerator.nextInt(ESTIMATION_TURN_DURATION);
 					try{
 						logger.d("Going to sleep for "+randomTime+" ms");
 						this.wait(randomTime);
@@ -191,7 +192,7 @@ public class FastBroadcastService implements IComponent{
 				// After waiting a random time check whether another hello message arrived, and if not, sends an hello message
 				if(!helloMessageArrived){
 					this.sendHelloMessage();
-					logger.d("Sent Hello message to all after " +(TURN_DURATION+randomTime)+"ms");
+					logger.d("Sent Hello message to all after " +(ESTIMATION_TURN_DURATION+randomTime)+"ms");
 				}else{
 					logger.d("Hello Message was already sent!!");
 				}
@@ -552,16 +553,21 @@ public class FastBroadcastService implements IComponent{
 	 */
 	private void handleAlertMessage(final IMessage message){
 		// Using a new thread to prevent main thread interruption
-		new Thread(){
-			@Override
-			public void run() {
-				try {
-					messageForwarder.put(message);
-				} catch (InterruptedException e) {
-					logger.e(e);
-				}
-			}
-		}.start();
+//		new Thread(){
+//			@Override
+//			public void run() {
+//				try {
+//					messageForwarder.put(message);
+//				} catch (InterruptedException e) {
+//					logger.e(e);
+//				}
+//			}
+//		}.start();
+		try {
+			messageForwarder.put(message);
+		} catch (InterruptedException e) {
+			logger.e(e);
+		}
 	}
 	
 	
@@ -676,7 +682,7 @@ public class FastBroadcastService implements IComponent{
 				logger.d("MESSAGE SHOULDN'T HAVE BEEN ARRIVED");
 				return;
 			}
-			// If we reach this code, the message shoul have been arrived!
+			// If we reach this code, the message should have been arrived!
 			if(ev.message.getType() == ALERT_MESSAGE_TYPE){
 				int hops = Integer.valueOf(ev.message.getContent().get(IMessage.MESSAGE_HOP_KEY));
 				if(alreadyReceivedMsgs.contains(hops)) {
@@ -690,6 +696,12 @@ public class FastBroadcastService implements IComponent{
 						"ALERT RECEIVED FROM "+ev.senderID+". " +
 						"#HOPS = "+ev.message.getContent().get(IMessage.MESSAGE_HOP_KEY));
 				
+				if(__firstAlert && !simulationTerminated){
+					// Simulation start
+					LogPrinter.getInstance().setStartTime();
+					__firstAlert = false;
+					EventDispatcher.getInstance().triggerEvent(new SimulationStartedEvent());
+				}
 				this.handleAlertMessage(ev.message);
 			
 			}else if(ev.message.getType() == HELLO_MESSAGE_TYPE){
@@ -741,6 +753,7 @@ public class FastBroadcastService implements IComponent{
 			lmbr = cmbr = cmfr = lmfr = DEFAULT_RANGE;
 			// Clear received hops buffer.
 			alreadyReceivedMsgs.clear();
+			__firstAlert = true;
 			return;
 		}
 		if(event.getClass().equals(SendAlertMessageEvent.class)){
@@ -750,10 +763,13 @@ public class FastBroadcastService implements IComponent{
 		}
 		if(event instanceof PositionsTerminatedEvent){
 			EventDispatcher.getInstance().triggerEvent(new StopSimulationEvent(true,false));
+			simulationTerminated = true;
 			return;
 		}
 	}
 
+	private boolean simulationTerminated = false;
+	
 	@Override
 	public void register() {
 		List<Class<? extends IEvent>> events = new ArrayList<Class<? extends IEvent>>();

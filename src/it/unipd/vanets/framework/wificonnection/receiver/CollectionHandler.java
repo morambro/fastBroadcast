@@ -61,30 +61,10 @@ public class CollectionHandler implements IDataCollectionHandler {
 				logger.d("Ricevuta lista");
 				controller.setPeersIdIPmap(allPeerData);
 				break;
-	
-//			case IMessage.ALERT_MESSAGE_TYPE :
-//				LogPrinter.getInstance().writeLine("\n");
-//				LogPrinter.getInstance().writeTimedLine("ALERT RECEIVED FROM "+hostIp+". #HOPS = "+message.getContent().get(IMessage.MESSAGE_HOP_KEY));
-//				logger.d("Ricevuto ALERT : \n"+message);
-//				EventDispatcher.getInstance().triggerEvent(new NewMessageArrivedEvent(message,hostIp));
-//				break;
-//				
-//				
-//			// case of fast broadcast hello message
-//			case IMessage.HELLO_MESSAGE_TYPE :
-//				logger.d("Ricevuto  HELLO : \n"+message);
-//				EventDispatcher.getInstance().triggerEvent(new HelloMessageArrivedEvent(message));
-//				break;
-				
-//			case IMessage.ALERT_MESSAGE_TYPE :
 			default:
 				logger.d("Ricevuto MESSAGGIO : \n"+message);
 				EventDispatcher.getInstance().triggerEvent(new NewMessageArrivedEvent(message,hostIp));
 				break;
-				
-			// Ignoring unknown messages
-//			default : 
-//				logger.d("Unknown message type "+messageType+", discarded.");
 		}
 	}
 

@@ -21,7 +21,7 @@ public class SimulationResultsActivity extends Activity {
 		results  = (TextView)this.findViewById(R.id.textView1);
 		results.setText(LogPrinter.getInstance().getResults());
 		
-//		LogPrinter.getInstance().reset();
+		LogPrinter.getInstance().reset();
 	}
 	
 	protected void onDestroy() {

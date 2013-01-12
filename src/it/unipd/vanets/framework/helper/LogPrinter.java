@@ -48,14 +48,15 @@ public class LogPrinter {
 	}
 	
 	public void setStartTime(){
+		startTime = System.currentTimeMillis();
+	}
+	
+	public void writeTimedLine(String line) {
 		if(init) {
 			startTime = System.currentTimeMillis();
 			writeLine("Starting simulation at time "+startTime);
 			init = false;
 		}
-	}
-	
-	public void writeTimedLine(String line) {
 		endTime = System.currentTimeMillis();
 		float timestamp = ((float)(endTime-startTime))/1000f;
 		line = (timestamp+"s\t: "+(line));
