@@ -110,12 +110,12 @@ public class FastBroadcastService implements IComponent{
 	/**
 	 * Slot size in milliseconds
 	 */
-	private static final int SLOT_SIZE = 5;
+	private static final int SLOT_SIZE = 10;
 	
 	/**
 	 * Turn duration in milliseconds
 	 */
-	public static final int ESTIMATION_TURN_DURATION = 5000000;
+	public static final int ESTIMATION_TURN_DURATION = 500;
 	
 	/**
 	 * Contention window bounds
@@ -337,6 +337,7 @@ public class FastBroadcastService implements IComponent{
 						return;
 					}
 				}
+				
 				logger.d("BroadcastPhase: waking up");
 				if(messageQueue.size() == 0){
 					// No message arrived while I was asleep

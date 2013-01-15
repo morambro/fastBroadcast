@@ -11,7 +11,6 @@ import it.unipd.vanets.framework.eventdispatcher.event.IEvent;
 import it.unipd.vanets.framework.eventdispatcher.event.SetupCompletedEvent;
 import it.unipd.vanets.framework.eventdispatcher.event.protocol.ShowSimulationResultsEvent;
 import it.unipd.vanets.framework.eventdispatcher.event.protocol.StopSimulationEvent;
-import it.unipd.vanets.framework.helper.LogPrinter;
 import it.unipd.vanets.framework.wificonnection.message.IMessage;
 import it.unipd.vanets.framework.wificonnection.transmissionmanager.PacketSenderFactory;
 import it.unipd.vanets.framework.wificonnection.transmissionmanager.TransmissionManager;
@@ -113,8 +112,9 @@ public class TestBaseActivity extends AbstractMainActivity implements IComponent
 		 */
 		FastBroadcastService.getInstance();
 		register();
+		
 	}
-
+	
 	@Override
 	protected void implementationOnDestroy() {
 		EventDispatcher.getInstance().triggerEvent(new StopSimulationEvent(false,true));
@@ -135,7 +135,7 @@ public class TestBaseActivity extends AbstractMainActivity implements IComponent
 	/*******************************************************************************************/
 	
 	/**
-	 * Receives the devices list and updates the corrisponding textView
+	 * Receives the devices list and updates the corresponding textView
 	 * 
 	 * @param peers
 	 */
@@ -301,8 +301,11 @@ public class TestBaseActivity extends AbstractMainActivity implements IComponent
 			});
 			return;
 		}
+		
 	}
 
+	boolean keepCount = true;
+	
 	@Override
 	public void register() {
 		List<Class<? extends IEvent>> events = new ArrayList<Class<? extends IEvent>>();

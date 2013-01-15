@@ -91,6 +91,7 @@ public class LogPrinter {
 	}
 	
 	public void reset(){
+//		setStartTime();
 		init = true;
 		file = new File(Environment.getExternalStorageDirectory(), fileName);
 		try {
