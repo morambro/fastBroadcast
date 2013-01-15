@@ -14,11 +14,11 @@ To test our Android application built on top of our framework we used three Andr
 \begin{center}
 \begin{tabular}{|m{0.22\textwidth}|m{0.12\textwidth}|}
 	\hline	
-	\ttt{SLOT SIZE} 			& 250 ms \\
+	\ttt{SLOT SIZE} 			& 10 ms \\
 	\hline
-	\ttt{CW MIN}				& 5\\
+	\ttt{CW MIN}				& 32\\
 	\hline
-	\ttt{CW MAX}				& 10\\
+	\ttt{CW MAX}				& 1042\\
 	\hline
 	\ttt{ACTUAL RANGE}			& 1000 m\\
 	\hline
@@ -36,7 +36,7 @@ During the application testing we tried to use UDP protocol to provide a much fa
 
 % UDP EXPERIMENT
 %The transport protocol we choose to send out Alert messages was UDP, this to reduce the protocol stack overhead (with TCP was estimated to be $\geq250$ms), speeding up the execution and let us set more realistic parameters values. This was achieved adding a filter to the transport manager at application startup. Hello messages were exchanged using TCP protocol, to reduce the traffic the UDP server thread had to manage.
-Execution results are shown in table \ref{tab:Android_res}. Execution time, waited slots on contention window and contention window size are the average of the values measured in each device. As can be seen, the time needed to forward the Alert message to the last position is quite big; this is mainly due to slot size and TCP overhead. The number of Hops in some executions equals to the theoretical optimum (with this settings and three devices, optimal hop number is 15: our Fast Broadcast implementation simplistically assumes that when a device forwards a message, only the (two) following devices could hear it; however, more complex scenarios can be modeled).
+Execution results are shown in table \ref{tab:Android_res}. Execution time, waited slots on contention window and contention window size are the average of the values measured in each device. As can be seen, the time needed to forward the Alert message to the last position is quite big; this is mainly due to slot size and TCP overhead. The number of Hops in some executions is quite close to the theoretical optimum (with this settings and three devices, optimal hop number is 11: our Fast Broadcast implementation simplistically assumes that when a device forwards a message, only the (two) following devices could hear it; however, more complex scenarios can be modeled).
 
 \begin{table}
 % increase table row spacing, adjust to taste
@@ -52,25 +52,25 @@ Execution results are shown in table \ref{tab:Android_res}. Execution time, wait
 \hline
 Execution & Total \newline Time (sec) & Average waited slots & Average Contention Window size & Hops \newline number \\
 \hline
-1 & 7,578		& 2.506668 	& 5,67 & 19 \\
+1 & 7,578		& 44,5667 	& 138		& 15 \\
 \hline
-2 & 15,1167 	& 2.324	  	& 5,33 & 15 \\ % 
+2 & 5,2003	 	& 24.3	  	& 45,67		& 15 \\ 
 \hline
-3 & 22,0833 	& 2.341332 	& 5,33 & 15 \\  
+3 & 3,9700		& 13.2	 	& 37,33		& 14 \\  
 \hline
-4 & 16,2190 	& 2.292	  	& 5,33 & 19 \\ % 
+4 & 4,2037	 	& 15	  	& 45,67		& 14 \\ 
 \hline
-5 & 23,3897		& 2.5773 & 	6	 & 20 \\ % 2.5773
+5 & 11,3410		& 22,3667	& 49,33		& 13 \\ 
 \hline
-6 & 22,2300 	& 2.5587 	& 5	 & 18 \\ % 
+6 & 8,2933	 	& 35,1333 	& 111,67 	& 14 \\  
 \hline
-7 & 15,5160 	& 2,072	  	& 5,33 & 20 \\ % 2.072
+7 & 9,8273	 	& 32,7333  	& 59,67 	& 13 \\ 
 \hline
-8 & 15,5780 	& 2.9893 	& 6	 & 16 \\ % 2.989332
+8 & 5,2787	 	& 23,5333	& 46,33	 	& 14 \\ 
 \hline
-9 & 15,6140 	& 2.424     & 6	 & 15 \\ % 2.424
+9 & 6,9930	 	& 26,2667   & 113,67 	& 13 \\ 
 \hline
-10 & 18,997 	& 2.9827 	& 5,67 & 17 \\ % 2.982668
+10 & 6,3570 	& 27,9		& 49,67 	& 13 \\ 
 \hline
 \end{tabular}
 \end{table}  
