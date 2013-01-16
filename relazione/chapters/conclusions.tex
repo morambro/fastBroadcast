@@ -10,5 +10,5 @@
 	Our Desktop framework adopts a faster and more dynamic method to transmit data: since in general vehicular algorithms do not need a complete network in order to exchange messages (message exchange nature is tipically broadcast), a possible solution involves the use of Data Link level Raw Sockets to implement a light, connectionless protocol in order to achieve a real ad-hoc network behaviour.% closer to the theoretical. 
 	This kind of Socket was implemented on Fedora operating system (theoretically should work under every Linux distribution, but we experienced inconsistencies with Ubuntu distributions and its derivatives, so we recommend the use of a Fedora operating system). We also tried to port the Raw Socket library on a Nexus 7, but unfortunately the lack of essential modules and the inability to use Monitor Mode (it is not supported in most mobile network chipsets) resulted in a failure. 
 	
-	Future works will focus on ...  
+	Future works will focus on improving Android framework transmission mechanism: in fact the use of \direct framework makes applications rather instable, both at connection startup and for subsequent data exchange.
 
