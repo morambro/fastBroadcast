@@ -2,7 +2,6 @@ package it.unipd.testbase.wificonnection.receiver.protocols;
 
 import it.unipd.testbase.eventdispatcher.EventDispatcher;
 import it.unipd.testbase.eventdispatcher.event.message.MessageReceivedEvent;
-import it.unipd.testbase.helper.Log;
 import it.unipd.testbase.wificonnection.__RawInterface__;
 import it.unipd.testbase.wificonnection.message.IMessage;
 import it.unipd.testbase.wificonnection.message.MessageBuilder;

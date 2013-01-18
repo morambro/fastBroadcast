@@ -1,3 +1,6 @@
+#fix this line accordingly to you Java path
+JAVA_DISTR_PATH=/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.9.x86_64/include
+
 if [ $# -lt 1 ]
 then
 	printf 'error, use -j for javac or -c for gcc or -all to compile everithing\n'
@@ -18,7 +21,7 @@ RAW_SCK_LIB_PATH=${BASEDIR}clib
 JAVA_SRC_PATH=${RELPATH_LIN_FB}src
 JAVA_BUILD_PATH=${BASEDIR}build
 JAVA_SRC_FILE_LIST=${BASEDIR}jfile.list
-JAVA_DISTR_PATH=/usr/lib/jvm/java-1.7.0-openjdk-amd64/include
+
 
 if [ $1 == '-clean' ]
 then
@@ -102,7 +105,7 @@ else
 		mv $RAW_SCK_SRC_PATH/libraw_socket.so $RAW_SCK_LIB_PATH
 		JNI_C_FILE=$(ls $RELPATH_LIB/*.c)
 		printf "\n\nbuilding JNI shared library..\n"
-		printf "gcc -shared -fPIC -I /usr/lib/jvm/java-1.7.0-openjdk-1.7.=.9.x86_64/include/ -I /usr/lib/jvm/java-1.7.0-openjdk-1.7.0.9.x86_64/include/linux/ -I%s/lib/ %s/%s %s/libraw_socket.so -o libjin_rawsocket.so\n" $RELPATH $C_SRC_PATH $JNI_C_FILE $RAW_SCK_LIB_PATH
+		printf "gcc -shared -fPIC -I %s/ -I %s/linux/ -I%s/lib/ %s/%s %s/libraw_socket.so -o libjin_rawsocket.so\n" $JAVA_DISTR_PATH $JAVA_DISTR_PATH $RELPATH $C_SRC_PATH $JNI_C_FILE $RAW_SCK_LIB_PATH
 		if ! gcc -shared -fPIC -I$JAVA_DISTR_PATH/ -I$JAVA_DISTR_PATH/linux/ -I$RELPATH/lib/ $JNI_C_FILE $RAW_SCK_LIB_PATH/libraw_socket.so -o libjni_rawsocket.so
 		then
 			printf "Compilation error, aborting\n"

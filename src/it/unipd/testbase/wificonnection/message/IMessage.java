@@ -21,6 +21,7 @@ abstract public class IMessage {
 	public static final int HELLO_MESSAGE_TYPE = 3;
 	public static final int BEGIN_SETUP_FASE = 4;
 	public static final int COMPLETE_FILE_COUNTER_INDEX = 5;
+	public static final int RESET_SIMULATION_TYPE = 6;
 	
 	
 	/**

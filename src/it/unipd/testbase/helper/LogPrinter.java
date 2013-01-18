@@ -7,8 +7,10 @@ import java.io.IOException;
 
 public class LogPrinter {
 
-	private static String fileName = "fast_broadcast_log.txt";
+	private static String fileName = "";
+	private static String idStr = "";
 	private static LogPrinter log = null;
+	private static int simulation_number = 1;
 	private FileWriter file;
 	private BufferedWriter writer;
 	private boolean init = true;
@@ -25,9 +27,11 @@ public class LogPrinter {
 	}
 
 	public static void setup(String id) {
-		fileName = fileName.concat(id);
+		idStr = id;
+		String temp = new String("sim"+simulation_number+"_");
+		fileName = temp+id+"_fb_log.txt";
 	}
-
+	
 	protected LogPrinter() {
 		try {
 			file = new FileWriter(fileName);
@@ -67,7 +71,7 @@ public class LogPrinter {
 
 	public void release() {
 		try {
-//			writer.write(internalBuffer.toString()+"\n\nok");
+			file.close();
 			writer.close();
 		} catch (IOException e) {
 			Log.e("LogPrinter", e.getMessage());
@@ -77,11 +81,17 @@ public class LogPrinter {
 
 	public void writeResults(String res){
 		writeLine("\n\n\n\t\tRESULTS:\n");
-		writeLine("\nExecution Time:\t"+((float)(endTime-startTime))/1000f + "sec");
+		writeLine("\nExecution Time: "+((float)(endTime-startTime))/1000f + " sec");
+		writeLine(""+((float)(endTime-startTime))/1000f);
 		writeLine(res);
 	}
 
 	public void reset(){
+		release();
+		++simulation_number;
+		setup(idStr);
+		log = new LogPrinter();
+		++simulation_number;
 		init = true;
 		try {
 			file = new FileWriter(fileName);

@@ -75,39 +75,4 @@ public class FastBroadcast {
 			return false;
 		}
 	}
-
-	//	protected static void cleanup() {
-	//	FastBroadcastService.getInstance().terminate();
-	//	DataReceiverService.getInstance().terminate();
-	//	MockLocationService.getInstance().terminate();
-	//	Log.d(TAG, FastBroadcast.class.getSimpleName()+": Cleanup called");
-	//
-	//}
-
-	//	@Override
-	//	public void register() {
-	//		List<Class<? extends IEvent>> events = new ArrayList<Class<? extends IEvent>>();
-	//		events.add(MessageReceivedEvent.class);
-	//		events.add(SendBroadcastMessageEvent.class);
-	//		EventDispatcher.getInstance().registerComponent(this, events);
-	//	}
-	//
-	//	@Override
-	//	public void handle(IEvent event) {
-	//		if(event instanceof MessageReceivedEvent){
-	//			MessageReceivedEvent ev = (MessageReceivedEvent) event;
-	//			String message = ev.message.__debug_get_message();
-	//			EventDispatcher.getInstance().triggerEvent(new UpdateGuiEvent(UpdateGuiEvent.GUI_UPDATE_NEW_MESSAGE, message));
-	//			EventDispatcher.getInstance().triggerEvent(new UpdateGuiEvent(UpdateGuiEvent.GUI_UPDATE_CONT_WINDOW_START, new Integer[]{500, 1024}));
-	//			return;
-	//		}
-	//		if(event instanceof SendBroadcastMessageEvent){
-	//			SendBroadcastMessageEvent ev = (SendBroadcastMessageEvent) event;
-	//			IMessage temp = MessageBuilder.getInstance().getMessage("");
-	//			temp.__debug_set_message("message sent");
-	//			Log.d(TAG, this.getClass().getSimpleName()+": sending message");
-	//			TransmissionManagerFactory.getInstance().getTransmissionManager().send("", temp);
-	//			return;
-	//		}
-	//	}
 }

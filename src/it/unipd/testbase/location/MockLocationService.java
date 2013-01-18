@@ -3,10 +3,11 @@ package it.unipd.testbase.location;
 import it.unipd.testbase.eventdispatcher.EventDispatcher;
 import it.unipd.testbase.eventdispatcher.event.IEvent;
 import it.unipd.testbase.eventdispatcher.event.ShutdownEvent;
-import it.unipd.testbase.eventdispatcher.event.gui.UpdateGuiEvent;
+import it.unipd.testbase.eventdispatcher.event.gui.UpdateStatusEvent;
 import it.unipd.testbase.eventdispatcher.event.location.LocationChangedEvent;
 import it.unipd.testbase.eventdispatcher.event.location.SetupProviderEvent;
 import it.unipd.testbase.eventdispatcher.event.location.UpdateLocationEvent;
+import it.unipd.testbase.eventdispatcher.event.protocol.ResetSimulationEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.StopSimulationEvent;
 import it.unipd.testbase.helper.Log;
 import it.unipd.testbase.helper.LogPrinter;
@@ -24,7 +25,6 @@ public class MockLocationService implements IMockLocationComponent{
 
 	protected static final long TIME_THRESHOLD = 60000;//ms
 	protected static final int ACCURACY_THRESHOLD = 50;//m
-	protected Location lastLoc = null;
 	private boolean isSetup = false;
 	private int counter;
 	private int peersNumber;
@@ -45,13 +45,6 @@ public class MockLocationService implements IMockLocationComponent{
 	private List<String> lines;
 	int currentIndex = 1;
 
-
-	/*				DEBUG & PROFILING STUFF				*/
-	private int __tmp_debug_counter = 1;
-	private static void __debug_print_log(String message)
-	{
-		Log.e(TAG, MockLocationService.class.getSimpleName()+": "+message);
-	}
 
 	public static IMockLocationComponent getInstance()
 	{
@@ -77,6 +70,12 @@ public class MockLocationService implements IMockLocationComponent{
 			SetupProviderEvent ev = (SetupProviderEvent) event;
 			setup(ev.counter, ev.peersNumber);
 		}
+		if(event instanceof ResetSimulationEvent) {
+			isSetup = false;
+			Log.d(TAG, "Location succesfully resetted!");
+			firstExec = true;
+			setup(counter, peersNumber);
+		}
 		if(event instanceof ShutdownEvent) {
 			terminate();
 			return;
@@ -89,6 +88,7 @@ public class MockLocationService implements IMockLocationComponent{
 		events.add(UpdateLocationEvent.class);
 		events.add(SetupProviderEvent.class);
 		events.add(ShutdownEvent.class);
+		events.add(ResetSimulationEvent.class);
 		EventDispatcher.getInstance().registerComponent(this, events);
 		Log.d(TAG,this.getClass().getSimpleName()+" : service regitered to EventDispatcher");
 	}
@@ -120,7 +120,7 @@ public class MockLocationService implements IMockLocationComponent{
 		if(lines.size() <= currentIndex){
 			Log.d(TAG,this.getClass().getSimpleName()+": End of file reached");
 			// Trigger an event to communicate the end of positions
-			EventDispatcher.getInstance().triggerEvent(new UpdateGuiEvent(UpdateGuiEvent.GUI_UPDATE_NEW_MESSAGE, "SIMULATION TERMINATED"));
+			EventDispatcher.getInstance().triggerEvent(new UpdateStatusEvent(UpdateStatusEvent.GUI_UPDATE_NEW_MESSAGE, "SIMULATION TERMINATED"));
 			EventDispatcher.getInstance().triggerEvent(new StopSimulationEvent());
 			return;
 		}
@@ -147,6 +147,7 @@ public class MockLocationService implements IMockLocationComponent{
 		Log.d(TAG, MockLocationService.class.getSimpleName()+": file counter: "+counter+"; peers number: "+peersNumber);
 		this.counter = counter;
 		this.peersNumber = peersNumber;
+		currentIndex = 2;
 		updateLocation();
 	}
 

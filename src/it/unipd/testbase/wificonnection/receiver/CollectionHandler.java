@@ -3,15 +3,12 @@ package it.unipd.testbase.wificonnection.receiver;
 import it.unipd.testbase.AppController;
 import it.unipd.testbase.AppController.IDataCollectionHandler;
 import it.unipd.testbase.eventdispatcher.EventDispatcher;
-import it.unipd.testbase.eventdispatcher.event.gui.UpdateGuiEvent;
 import it.unipd.testbase.eventdispatcher.event.message.BeginSetupEvent;
 import it.unipd.testbase.eventdispatcher.event.message.CompleteFileIndexReceivedEvent;
 import it.unipd.testbase.eventdispatcher.event.message.PartialFileIndexReceivedEvent;
-import it.unipd.testbase.eventdispatcher.event.protocol.AlertMessageArrivedEvent;
-import it.unipd.testbase.eventdispatcher.event.protocol.HelloMessageArrivedEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.NewMessageArrivedEvent;
+import it.unipd.testbase.eventdispatcher.event.protocol.ResetSimulationEvent;
 import it.unipd.testbase.helper.Log;
-import it.unipd.testbase.helper.LogPrinter;
 import it.unipd.testbase.wificonnection.message.IMessage;
 
 public class CollectionHandler implements IDataCollectionHandler {
@@ -29,22 +26,6 @@ public class CollectionHandler implements IDataCollectionHandler {
 		}
 
 		switch(messageType){
-		case IMessage.PING_MESSAGE_TYPE :
-			//TODO: map devices to position file
-			break;
-
-//		case IMessage.ALERT_MESSAGE_TYPE :
-//			//LogPrinter.getInstance().writeTimedLine("alert message received from "+hostIp+". Hop number: "+message.getContent().get(IMessage.MESSAGE_HOP_KEY));
-//			Log.d(TAG, this.getClass().getSimpleName()+": Ricevuto ALERT : \n"+message);
-//			EventDispatcher.getInstance().triggerEvent(new UpdateGuiEvent(UpdateGuiEvent.GUI_UPDATE_NEW_MESSAGE, processMessageForEvent(message)));
-//			EventDispatcher.getInstance().triggerEvent(new AlertMessageArrivedEvent(message));
-//			break;
-//
-//			// case of fast broadcast hello message
-//		case IMessage.HELLO_MESSAGE_TYPE :
-//			Log.d(TAG, this.getClass().getSimpleName()+": Ricevuto  HELLO: \n");
-//			EventDispatcher.getInstance().triggerEvent(new HelloMessageArrivedEvent(message));
-//			break;
 
 		case IMessage.BEGIN_SETUP_FASE:
 			Log.d(TAG, this.getClass().getSimpleName()+": Ricevuto  BEGIN_SETUP: \n"+message);
@@ -62,6 +43,10 @@ public class CollectionHandler implements IDataCollectionHandler {
 			CompleteFileIndexReceivedEvent ev1 = new CompleteFileIndexReceivedEvent(message.getContent());
 			EventDispatcher.getInstance().triggerEvent(ev1);
 			break;
+			
+		case IMessage.RESET_SIMULATION_TYPE:
+			Log.d(TAG, this.getClass().getSimpleName()+": Ricevuto  RESET_SIMULATION_TYPE: \n"+message);
+			EventDispatcher.getInstance().triggerEvent(new ResetSimulationEvent());
 
 		default:
 			Log.d(TAG, "Ricevuto Messaggio "+ (messageType==IMessage.ALERT_MESSAGE_TYPE?message:"")+(messageType==IMessage.HELLO_MESSAGE_TYPE?"Hello":""));
@@ -69,10 +54,4 @@ public class CollectionHandler implements IDataCollectionHandler {
 			break;
 		}
 	}
-
-//	private String processMessageForEvent(IMessage message)
-//	{
-//		String result = "ALERT - time: "+System.currentTimeMillis()+", hops: "+message.getContent().get(IMessage.MESSAGE_HOP_KEY);
-//		return result;
-//	}
 }

@@ -2,7 +2,7 @@ package it.unipd.testbase;
 
 import it.unipd.testbase.eventdispatcher.EventDispatcher;
 import it.unipd.testbase.eventdispatcher.event.IEvent;
-import it.unipd.testbase.eventdispatcher.event.gui.UpdateGuiEvent;
+import it.unipd.testbase.eventdispatcher.event.gui.UpdateStatusEvent;
 import it.unipd.testbase.eventdispatcher.event.location.LocationChangedEvent;
 import it.unipd.testbase.eventdispatcher.event.location.SetupProviderEvent;
 import it.unipd.testbase.eventdispatcher.event.location.UpdateLocationEvent;
@@ -11,9 +11,11 @@ import it.unipd.testbase.eventdispatcher.event.message.CompleteFileIndexReceived
 import it.unipd.testbase.eventdispatcher.event.message.PartialFileIndexReceivedEvent;
 import it.unipd.testbase.eventdispatcher.event.message.MessageReceivedEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.EstimationPhaseStartEvent;
+import it.unipd.testbase.eventdispatcher.event.protocol.ResetSimulationEvent;
 import it.unipd.testbase.eventdispatcher.event.protocol.SendBroadcastMessageEvent;
 import it.unipd.testbase.helper.Log;
 import it.unipd.testbase.helper.LogPrinter;
+import it.unipd.testbase.location.IMockLocationComponent;
 import it.unipd.testbase.location.Location;
 import it.unipd.testbase.protocol.IFastBroadcastComponent;
 import it.unipd.testbase.wificonnection.message.IMessage;
@@ -22,6 +24,7 @@ import it.unipd.testbase.wificonnection.receiver.CollectionHandler;
 import it.unipd.testbase.wificonnection.transmissionmanager.ITranmissionManager;
 import it.unipd.testbase.wificonnection.transmissionmanager.TransmissionManagerFactory;
 
+import java.awt.Event;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -76,7 +79,7 @@ public class AppController implements IControllerComponent {
 						m.prepare();
 						EventDispatcher.getInstance().triggerEvent(new SendBroadcastMessageEvent(m));
 						EventDispatcher.getInstance().triggerEvent(new SetupProviderEvent(0, devices.size()+1));
-						EventDispatcher.getInstance().triggerEvent(new UpdateGuiEvent(UpdateGuiEvent.GUI_UPDATE_UNLOCK, null));
+						EventDispatcher.getInstance().triggerEvent(new UpdateStatusEvent(UpdateStatusEvent.GUI_UPDATE_UNLOCK, null));
 						EventDispatcher.getInstance().triggerEvent(new EstimationPhaseStartEvent());
 					} catch (InterruptedException e) {
 						e.printStackTrace();
@@ -88,7 +91,7 @@ public class AppController implements IControllerComponent {
 		public synchronized void addDevice(int device) {
 			if(!devices.contains(device) && !locked) {
 				devices.add(device);
-				EventDispatcher.getInstance().triggerEvent(new UpdateGuiEvent(UpdateGuiEvent.GUI_UPDATE_ADD_PEER, null));
+				EventDispatcher.getInstance().triggerEvent(new UpdateStatusEvent(UpdateStatusEvent.GUI_UPDATE_ADD_PEER, null));
 			}
 		}
 
@@ -146,6 +149,7 @@ public class AppController implements IControllerComponent {
 		events.add(SendBroadcastMessageEvent.class);
 		events.add(PartialFileIndexReceivedEvent.class);
 		events.add(CompleteFileIndexReceivedEvent.class);
+		events.add(ResetSimulationEvent.class);
 		EventDispatcher.getInstance().registerComponent(this, events);
 	}
 
@@ -175,6 +179,7 @@ public class AppController implements IControllerComponent {
 					@Override
 					public void run() {
 						try {
+							EventDispatcher.getInstance().triggerEvent(new UpdateStatusEvent(UpdateStatusEvent.GUI_UPDATE_LOCK, null));
 							Thread.sleep(SETUP_SLEEP_TIME);
 							IMessage message = MessageBuilder.getInstance().getMessage(IMessage.PARTIAL_FILE_COUNTER_INDEX, ""+APPLICATION_RUN_ID);
 							message.prepare();
@@ -203,8 +208,10 @@ public class AppController implements IControllerComponent {
 			int index = Integer.valueOf(i);
 			EventDispatcher.getInstance().triggerEvent(new SetupProviderEvent(index, deviceNum));
 			EventDispatcher.getInstance().triggerEvent(new EstimationPhaseStartEvent());
-			EventDispatcher.getInstance().triggerEvent(new UpdateGuiEvent(UpdateGuiEvent.GUI_UPDATE_UNLOCK, null));
-			EventDispatcher.getInstance().triggerEvent(new UpdateGuiEvent(UpdateGuiEvent.GUI_UPDATE_ADD_PEER, new Integer(deviceNum)));
+			EventDispatcher.getInstance().triggerEvent(new UpdateStatusEvent(UpdateStatusEvent.GUI_UPDATE_UNLOCK, null));
+			EventDispatcher.getInstance().triggerEvent(new UpdateStatusEvent(UpdateStatusEvent.GUI_UPDATE_ADD_PEER, new Integer(deviceNum)));
+		}
+		if(event instanceof ResetSimulationEvent) {
 		}
 	}
 
